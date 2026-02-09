@@ -1,0 +1,22 @@
+{
+  "name": "northradar",
+  "version": "1.0.0",
+  "description": "NorthRadar - Integração com Operview API",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "dev": "node src/main.js",
+    "setup": "npm install && echo Setup concluido!"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "puppeteer": "^22.15.0"
+  },
+  "keywords": [
+    "operview",
+    "enel",
+    "northradar"
+  ],
+  "author": "",
+  "license": "ISC"
+}
