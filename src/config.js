@@ -26,6 +26,12 @@ const config = {
     edgePath: process.env.EDGE_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   },
 
+  // Token de acesso (lido do .env ou preenchido em runtime)
+  tokenAccess: process.env.TOKEN_ACCESS || '',
+
+  // Caminho do arquivo .env (para salvar o token)
+  envFilePath: require('path').resolve(__dirname, '..', '.env'),
+
   // Refresh interval em milissegundos
   refreshIntervalMs: (parseInt(process.env.REFRESH_INTERVAL_MINUTES) || 110) * 60 * 1000,
 };
