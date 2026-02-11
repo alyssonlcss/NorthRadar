@@ -73,6 +73,26 @@ class PuppeteerAuthProvider extends IAuthProvider {
     console.log('[AuthProvider] Serviço encerrado');
   }
 
+  /**
+   * Força re-autenticação: invalida token atual, limpa dados do browser
+   * e recarrega a página para capturar /autenticacao/autenticar novamente.
+   * Chamado externamente quando um 401/403 é recebido da API.
+   * @returns {Promise<string>} novo token
+   */
+  async reAuthenticate() {
+    console.log('[AuthProvider] ⚠️  Re-autenticação forçada (token inválido ou 401)');
+    this._token = null;
+    this._tokenExpiry = null;
+
+    if (!this._browser) {
+      await this._launchBrowser();
+    }
+
+    const token = await this._authenticate();
+    this._saveTokenToEnv(token);
+    return token;
+  }
+
   // ═══════ privados ═══════
 
   async _launchBrowser() {
@@ -170,6 +190,22 @@ class PuppeteerAuthProvider extends IAuthProvider {
         }
       }
 
+      // Se não capturou o token, limpar dados e recarregar a página
+      if (!capturedToken && !browserDisconnected) {
+        console.log('[AuthProvider] ⚠️  Token não capturado — limpando dados do browser e recarregando...');
+        await this._clearBrowserDataAndReload(page);
+
+        // Aguardar mais 60 s após reload
+        attempts = 0;
+        while (!capturedToken && attempts < maxAttempts && !browserDisconnected) {
+          await new Promise((r) => setTimeout(r, 1000));
+          attempts++;
+          if (attempts % 10 === 0) {
+            console.log(`[AuthProvider] Aguardando token após reload... (${attempts}s)`);
+          }
+        }
+      }
+
       // Fechar a aba com segurança
       await this._safeClosePage(page);
 
@@ -185,12 +221,46 @@ class PuppeteerAuthProvider extends IAuthProvider {
         return capturedToken;
       }
 
-      throw new Error(`Não foi possível capturar o token após ${maxAttempts}s`);
+      throw new Error(`Não foi possível capturar o token após tentativa com reload`);
     } catch (error) {
       await this._safeClosePage(page);
       throw error;
     } finally {
       this._browser?.off('disconnected', onDisconnect);
+    }
+  }
+
+  /**
+   * Limpa cookies, localStorage, sessionStorage, cache e recarrega a página.
+   * Força o site a executar /autenticacao/autenticar novamente.
+   */
+  async _clearBrowserDataAndReload(page) {
+    try {
+      const client = await page.createCDPSession();
+
+      // Limpar cookies
+      await client.send('Network.clearBrowserCookies');
+      console.log('[AuthProvider]   Cookies limpos');
+
+      // Limpar cache
+      await client.send('Network.clearBrowserCache');
+      console.log('[AuthProvider]   Cache limpo');
+
+      // Limpar localStorage e sessionStorage via JS
+      await page.evaluate(() => {
+        try { localStorage.clear(); } catch (_) {}
+        try { sessionStorage.clear(); } catch (_) {}
+      });
+      console.log('[AuthProvider]   Storage limpo');
+
+      await client.detach();
+
+      // Recarregar a página para forçar nova autenticação
+      console.log('[AuthProvider]   Recarregando página...');
+      await page.reload({ waitUntil: 'networkidle0', timeout: 90000 });
+      console.log('[AuthProvider]   Página recarregada');
+    } catch (err) {
+      console.error('[AuthProvider] Erro ao limpar dados do browser:', err.message);
     }
   }
 

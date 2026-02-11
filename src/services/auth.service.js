@@ -73,6 +73,23 @@ class AuthService {
     console.log('[AuthService] Serviço encerrado');
   }
 
+  /**
+   * Força re-autenticação: invalida token, limpa dados do browser e recarrega.
+   * @returns {Promise<string>} novo token
+   */
+  async reAuthenticate() {
+    console.log('[AuthService] ⚠️  Re-autenticação forçada (token inválido ou 401)');
+    this._token = null;
+    this._tokenExpiry = null;
+
+    if (!this._browser) {
+      await this._launchBrowser();
+    }
+
+    const token = await this._authenticate();
+    return token;
+  }
+
   // ===== Métodos Privados =====
 
   async _launchBrowser() {
@@ -147,6 +164,18 @@ class AuthService {
         attempts++;
       }
 
+      // Se não capturou, limpar dados e recarregar
+      if (!capturedToken) {
+        console.log('[AuthService] ⚠️  Token não capturado — limpando dados e recarregando...');
+        await this._clearBrowserDataAndReload(page);
+
+        attempts = 0;
+        while (!capturedToken && attempts < 30) {
+          await this._sleep(1000);
+          attempts++;
+        }
+      }
+
       await page.close();
 
       if (capturedToken) {
@@ -184,6 +213,31 @@ class AuthService {
     if (this._refreshInterval) {
       clearInterval(this._refreshInterval);
       this._refreshInterval = null;
+    }
+  }
+
+  /**
+   * Limpa cookies, localStorage, sessionStorage, cache e recarrega a página.
+   * Força o site a executar /autenticacao/autenticar novamente.
+   */
+  async _clearBrowserDataAndReload(page) {
+    try {
+      const client = await page.createCDPSession();
+      await client.send('Network.clearBrowserCookies');
+      console.log('[AuthService]   Cookies limpos');
+      await client.send('Network.clearBrowserCache');
+      console.log('[AuthService]   Cache limpo');
+      await page.evaluate(() => {
+        try { localStorage.clear(); } catch (_) {}
+        try { sessionStorage.clear(); } catch (_) {}
+      });
+      console.log('[AuthService]   Storage limpo');
+      await client.detach();
+      console.log('[AuthService]   Recarregando página...');
+      await page.reload({ waitUntil: 'networkidle2', timeout: 60000 });
+      console.log('[AuthService]   Página recarregada');
+    } catch (err) {
+      console.error('[AuthService] Erro ao limpar dados do browser:', err.message);
     }
   }
 

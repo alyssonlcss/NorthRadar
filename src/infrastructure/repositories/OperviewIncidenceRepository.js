@@ -7,6 +7,7 @@
 const IIncidenceRepository = require('../../domain/repositories/IIncidenceRepository');
 const Incidence = require('../../domain/entities/Incidence');
 const HttpClient = require('../http/HttpClient');
+const { HttpAuthError } = require('../http/HttpClient');
 const config = require('../../config');
 
 class OperviewIncidenceRepository extends IIncidenceRepository {
@@ -37,11 +38,28 @@ class OperviewIncidenceRepository extends IIncidenceRepository {
       throw new Error('Token não disponível. Execute authProvider.initialize() antes.');
     }
 
-    const data = await this._http.get(
-      '/incidencias/consultar',
-      { colNumOrder, orderAsc, skip, take, polos: polo },
-      token
-    );
+    let data;
+    try {
+      data = await this._http.get(
+        '/incidencias/consultar',
+        { colNumOrder, orderAsc, skip, take, polos: polo },
+        token
+      );
+    } catch (error) {
+      // Se recebeu 401/403, forçar re-autenticação e tentar novamente
+      if (error instanceof HttpAuthError) {
+        console.warn(`[IncidenceRepo] ${error.status} recebido — forçando re-autenticação...`);
+        await this._authProvider.reAuthenticate();
+        const newToken = this._authProvider.getToken();
+        data = await this._http.get(
+          '/incidencias/consultar',
+          { colNumOrder, orderAsc, skip, take, polos: polo },
+          newToken
+        );
+      } else {
+        throw error;
+      }
+    }
 
     // Mapear resposta bruta → entidades de domínio
     const rawItems = data.items || data.data || data || [];

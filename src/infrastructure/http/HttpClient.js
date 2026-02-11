@@ -4,6 +4,19 @@
  * Cliente HTTP genérico usando fetch nativo do Node 18+.
  * Centraliza headers, Bearer token e tratamento de erros.
  */
+
+/**
+ * Erro específico para falhas de autenticação (401/403).
+ * Permite que camadas superiores detectem e disparem re-autenticação.
+ */
+class HttpAuthError extends Error {
+  constructor(status, statusText, url, body = '') {
+    super(`HTTP ${status} ${statusText} — ${url}\n${body}`);
+    this.name = 'HttpAuthError';
+    this.status = status;
+  }
+}
+
 class HttpClient {
   /**
    * @param {string} baseURL — ex.: 'https://operview-ce-dapi.enel.com'
@@ -29,6 +42,9 @@ class HttpClient {
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      if (response.status === 401 || response.status === 403) {
+        throw new HttpAuthError(response.status, response.statusText, url, body);
+      }
       throw new Error(
         `HTTP ${response.status} ${response.statusText} — ${url}\n${body}`
       );
@@ -58,6 +74,9 @@ class HttpClient {
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
+      if (response.status === 401 || response.status === 403) {
+        throw new HttpAuthError(response.status, response.statusText, url, text);
+      }
       throw new Error(
         `HTTP ${response.status} ${response.statusText} — ${url}\n${text}`
       );
@@ -91,3 +110,4 @@ class HttpClient {
 }
 
 module.exports = HttpClient;
+module.exports.HttpAuthError = HttpAuthError;
