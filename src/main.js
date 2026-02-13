@@ -34,7 +34,7 @@ const scheduler = new Scheduler(fetchIncidencesUC, REFRESH_INTERVAL);
 
 // Web server
 const PORT = process.env.PORT || 3000;
-const webServer = new WebServer(scheduler, PORT);
+const webServer = new WebServer(scheduler, PORT, authProvider);
 
 // ═══════════════════════════════════════════════════
 //  Main

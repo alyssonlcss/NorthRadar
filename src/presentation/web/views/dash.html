@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="pt-BR" ng-app="dashApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NorthRadar – Dashboard Operacional Enel</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+  <style>
+    /* ══════════════════════════════════════════════════════════
+       CSS VARIABLES & RESET
+       ══════════════════════════════════════════════════════════ */
+    :root {
+      --enel-blue: #003DA5;
+      --enel-dark: #00235E;
+      --enel-light: #E8F0FE;
+      --enel-accent: #0066CC;
+      --bg-body: #ECEEF1;
+      --bg-card: #FFFFFF;
+      --border: #D5D9E0;
+      --text-primary: #1A1D23;
+      --text-secondary: #5A6270;
+      --text-header: #FFFFFF;
+      --success: #1B8A3D;
+      --success-bg: #D4EDDA;
+      --warning: #C79100;
+      --warning-bg: #FFF3CD;
+      --orange: #D45B07;
+      --orange-bg: #FFE0CC;
+      --danger: #C62828;
+      --danger-bg: #F8D7DA;
+      --danger-dark: #8B0000;
+      --danger-dark-bg: #E8B4B4;
+      --info: #0277BD;
+      --info-bg: #D1ECF1;
+      --shadow: 0 2px 10px rgba(0,0,0,0.07);
+      --radius: 8px;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.4;
+      min-height: 100vh;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       HEADER
+       ══════════════════════════════════════════════════════════ */
+    .header {
+      background: linear-gradient(135deg, var(--enel-dark), var(--enel-blue));
+      color: var(--text-header);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-brand .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: #FFFFFF;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--enel-blue);
+    }
+
+    .header-brand h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .header-brand .subtitle {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-left: 4px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* ── Filtro Master ── */
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-group label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.8;
+      margin-right: 4px;
+    }
+
+    .filter-btn {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 5px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255,255,255,0.22);
+      border-color: rgba(255,255,255,0.5);
+    }
+
+    .filter-btn.active {
+      background: #FFFFFF;
+      color: var(--enel-blue);
+      border-color: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    /* ── Status ── */
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      opacity: 0.85;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ADE80;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .pulse-dot.error { background: #EF4444; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       MAIN CONTENT
+       ══════════════════════════════════════════════════════════ */
+    .main-content {
+      padding: 20px 24px 40px;
+      max-width: 1920px;
+      margin: 0 auto;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       PANELS
+       ══════════════════════════════════════════════════════════ */
+    .panel {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .panel-header {
+      background: var(--enel-blue);
+      color: var(--text-header);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header h2 {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .panel-header .badge-count {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .panel-body {
+      padding: 0;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       DATA TABLES
+       ══════════════════════════════════════════════════════════ */
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .data-table thead th {
+      background: #2C5AA0;
+      color: #fff;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,0.1);
+      position: sticky;
+      top: 0;
+    }
+
+    .data-table thead th:last-child {
+      border-right: none;
+    }
+
+    .data-table tbody tr {
+      transition: background 0.15s;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+      background: #F7F8FA;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--enel-light);
+    }
+
+    .data-table tbody td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #EDF0F4;
+      white-space: nowrap;
+    }
+
+    .data-table tbody td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Total row ── */
+    .data-table tfoot td {
+      padding: 8px 10px;
+      font-weight: 700;
+      background: #E8EDF5;
+      border-top: 2px solid var(--enel-blue);
+      white-space: nowrap;
+    }
+
+    .data-table tfoot td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Color-coded cells ── */
+    .cell-green {
+      background: var(--success-bg) !important;
+      color: var(--success);
+      font-weight: 600;
+      text-align: center;
+    }
+    .cell-yellow {
+      background: var(--warning-bg) !important;
+      color: var(--warning);
+      font-weight: 600;
+      text-align: center;
+    }
+    .cell-orange {
+      background: var(--orange-bg) !important;
+      color: var(--orange);
+      font-weight: 600;
+      text-align: center;
+    }
+    .cell-red {
+      background: var(--danger-bg) !important;
+      color: var(--danger);
+      font-weight: 600;
+      text-align: center;
+    }
+    .cell-darkred {
+      background: var(--danger-dark-bg) !important;
+      color: var(--danger-dark);
+      font-weight: 700;
+      text-align: center;
+    }
+    .cell-blue {
+      background: var(--info-bg) !important;
+      color: var(--info);
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       TOP 10 GRID
+       ══════════════════════════════════════════════════════════ */
+    .top10-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .top10-grid .panel {
+      margin-bottom: 0;
+    }
+
+    .top10-grid .panel-header {
+      background: #37474F;
+    }
+
+    .top10-grid .data-table {
+      font-size: 11px;
+    }
+
+    .top10-grid .data-table thead th {
+      background: #455A64;
+      font-size: 9.5px;
+      padding: 6px 8px;
+    }
+
+    .top10-grid .data-table tbody td {
+      padding: 5px 8px;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       LOADING & EMPTY STATES
+       ══════════════════════════════════════════════════════════ */
+    .loading-overlay {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--enel-blue);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .error-state {
+      text-align: center;
+      padding: 20px;
+      color: var(--danger);
+      background: var(--danger-bg);
+      font-size: 13px;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       KPI SUMMARY BAR
+       ══════════════════════════════════════════════════════════ */
+    .kpi-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .kpi-item {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .kpi-item .kpi-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--enel-blue);
+      line-height: 1.1;
+    }
+
+    .kpi-item .kpi-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-top: 4px;
+    }
+
+    .kpi-item.kpi-danger .kpi-value { color: var(--danger); }
+    .kpi-item.kpi-success .kpi-value { color: var(--success); }
+    .kpi-item.kpi-warning .kpi-value { color: var(--warning); }
+
+    /* ══════════════════════════════════════════════════════════
+       EQUIPES TABLES
+       ══════════════════════════════════════════════════════════ */
+    .equipes-panel .panel-header {
+      background: #1B5E20;
+    }
+
+    .equipes-panel .data-table thead th {
+      background: #2E7D32;
+    }
+
+    .equipes2-panel .panel-header {
+      background: #E65100;
+    }
+
+    .equipes2-panel .data-table thead th {
+      background: #EF6C00;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       FOOTER
+       ══════════════════════════════════════════════════════════ */
+    .footer {
+      text-align: center;
+      padding: 16px;
+      color: var(--text-secondary);
+      font-size: 11px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-card);
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════════ */
+    @media (max-width: 1400px) {
+      .top10-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .header {
+        flex-direction: column;
+        height: auto;
+        padding: 12px 16px;
+        gap: 8px;
+      }
+      .header-right {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .main-content {
+        padding: 12px;
+      }
+      .top10-grid {
+        grid-template-columns: 1fr;
+      }
+      .kpi-bar {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       SCROLLBAR
+       ══════════════════════════════════════════════════════════ */
+    ::-webkit-scrollbar { height: 6px; width: 6px; }
+    ::-webkit-scrollbar-track { background: #F0F0F0; }
+    ::-webkit-scrollbar-thumb { background: #B0B8C4; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #8890A0; }
+
+    /* ══════════════════════════════════════════════════════════
+       HIGHLIGHT EFFECTS
+       ══════════════════════════════════════════════════════════ */
+    .highlight-row { animation: highlightFade 1.5s ease-out; }
+    @keyframes highlightFade {
+      from { background: var(--enel-light); }
+      to { background: transparent; }
+    }
+
+    /* Refresh icon spin */
+    .refresh-spin { animation: spin 1s linear infinite; display: inline-block; }
+  </style>
+</head>
+
+<body ng-controller="DashCtrl as vm">
+
+  <!-- ═══════════════════════════════════════════════════════
+       HEADER + FILTRO MASTER
+       ═══════════════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="logo-icon">E</div>
+      <h1>NorthRadar</h1>
+      <span class="subtitle">· Dashboard Operacional</span>
+    </div>
+
+    <div class="header-right">
+      <div class="filter-group">
+        <label>POLO:</label>
+        <button class="filter-btn"
+                ng-repeat="p in vm.polos"
+                ng-class="{'active': vm.selectedPolo === p}"
+                ng-click="vm.changePolo(p)">
+          {{p}}
+        </button>
+      </div>
+
+      <div class="status-indicator">
+        <span class="pulse-dot" ng-class="{'error': vm.hasError}"></span>
+        <span ng-if="vm.lastUpdate">Atualizado: {{vm.lastUpdate | date:'HH:mm:ss'}}</span>
+        <span ng-if="!vm.lastUpdate">Conectando...</span>
+        <span ng-if="vm.refreshing" class="refresh-spin">&#x21bb;</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MAIN CONTENT
+       ═══════════════════════════════════════════════════════ -->
+  <div class="main-content">
+
+    <!-- ── KPI Summary ── -->
+    <div class="kpi-bar" ng-if="!vm.loadingInc">
+      <div class="kpi-item">
+        <div class="kpi-value">{{vm.kpis.totalIncidencias | number}}</div>
+        <div class="kpi-label">Incidências Ativas</div>
+      </div>
+      <div class="kpi-item kpi-danger">
+        <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
+        <div class="kpi-label">Clientes Afetados</div>
+      </div>
+      <div class="kpi-item kpi-success">
+        <div class="kpi-value">{{vm.kpis.totalEquipes | number}}</div>
+        <div class="kpi-label">Equipes em Turno</div>
+      </div>
+      <div class="kpi-item kpi-warning">
+        <div class="kpi-value">{{vm.kpis.naoDespachados | number}}</div>
+        <div class="kpi-label">Não Despachados</div>
+      </div>
+      <div class="kpi-item">
+        <div class="kpi-value">{{vm.kpis.gt48h | number}}</div>
+        <div class="kpi-label">&gt; 48h</div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TABELA PANORAMA DE INCIDÊNCIAS
+         ═══════════════════════════════════════════════════════ -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Panorama de Incidências – {{vm.selectedPolo}}</h2>
+        <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} municípios</span>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-overlay" ng-if="vm.loadingInc">
+        <div class="spinner"></div>
+        <div class="loading-text">Carregando incidências...</div>
+      </div>
+
+      <!-- Error -->
+      <div class="error-state" ng-if="vm.errorInc && !vm.loadingInc">
+        ⚠ Erro ao carregar incidências: {{vm.errorInc}}
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrapper" ng-if="!vm.loadingInc && !vm.errorInc">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Município</th>
+              <th>Cli. Afetados</th>
+              <th>Inc. Ativas</th>
+              <th>Não Desp.</th>
+              <th>Equipes</th>
+              <th>Inc/Equipe</th>
+              <th>Qtt 2º Rec.</th>
+              <th>1 Aviso</th>
+              <th>&lt; 08h</th>
+              <th>08h &lt; 16h</th>
+              <th>16h &lt; 24h</th>
+              <th>24h &lt; 48h</th>
+              <th>&gt; 48h</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="r in vm.panorama track by r.municipio">
+              <td><strong>{{r.municipio}}</strong></td>
+              <td class="num">{{r.clientesAfetados | number}}</td>
+              <td class="num">{{r.incidenciasAtivas}}</td>
+              <td class="num" ng-class="{'cell-red': r.naoDespachados > 0}">{{r.naoDespachados}}</td>
+              <td class="num">{{r.equipes}}</td>
+              <td class="num">{{r.incPorEquipe}}</td>
+              <td class="num" ng-class="{'cell-yellow': r.qtt2Rec > 0}">{{r.qtt2Rec}}</td>
+              <td class="num" ng-class="{'cell-blue': r.umAviso > 0}">{{r.umAviso}}</td>
+              <td class="num" ng-class="{'cell-green': r.lt8h > 0}">{{r.lt8h}}</td>
+              <td class="num" ng-class="{'cell-yellow': r.h8_16 > 0}">{{r.h8_16}}</td>
+              <td class="num" ng-class="{'cell-orange': r.h16_24 > 0}">{{r.h16_24}}</td>
+              <td class="num" ng-class="{'cell-red': r.h24_48 > 0}">{{r.h24_48}}</td>
+              <td class="num" ng-class="{'cell-darkred': r.gt48h > 0}">{{r.gt48h}}</td>
+            </tr>
+          </tbody>
+          <tfoot ng-if="vm.panorama.length">
+            <tr>
+              <td><strong>TOTAL</strong></td>
+              <td class="num">{{vm.totals.clientesAfetados | number}}</td>
+              <td class="num">{{vm.totals.incidenciasAtivas}}</td>
+              <td class="num">{{vm.totals.naoDespachados}}</td>
+              <td class="num">{{vm.totals.equipes}}</td>
+              <td class="num">{{vm.totals.incPorEquipe}}</td>
+              <td class="num">{{vm.totals.qtt2Rec}}</td>
+              <td class="num">{{vm.totals.umAviso}}</td>
+              <td class="num">{{vm.totals.lt8h}}</td>
+              <td class="num">{{vm.totals.h8_16}}</td>
+              <td class="num">{{vm.totals.h16_24}}</td>
+              <td class="num">{{vm.totals.h24_48}}</td>
+              <td class="num">{{vm.totals.gt48h}}</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="empty-state" ng-if="!vm.panorama.length">Nenhuma incidência encontrada para o polo selecionado.</div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TOP 10 TABLES
+         ═══════════════════════════════════════════════════════ -->
+    <div class="top10-grid">
+
+      <!-- TOP 10 CHI -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>TOP 10 – CHI</h2>
+        </div>
+        <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
+          <div class="spinner"></div>
+        </div>
+        <div class="table-wrapper" ng-if="!vm.loadingInc">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Incidência</th>
+                <th>NT</th>
+                <th>CLI. AF.</th>
+                <th>CHI</th>
+                <th>TMA</th>
+                <th>Avisos</th>
+                <th>Atribuição</th>
+                <th>Alimentador</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="r in vm.top10Chi track by $index">
+                <td>{{r.incidencia}}</td>
+                <td>{{r.nt}}</td>
+                <td class="num">{{r.cli | number}}</td>
+                <td class="num" ng-class="{'cell-red': r.chi > 0}">{{r.chi | number:1}}</td>
+                <td class="num">{{r.tmaFormatted}}</td>
+                <td class="num">{{r.avisos}}</td>
+                <td>{{r.atribuicao}}</td>
+                <td>{{r.alimentador}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty-state" ng-if="!vm.top10Chi.length">Sem dados</div>
+        </div>
+      </section>
+
+      <!-- TOP 10 TMA -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>TOP 10 – TMA</h2>
+        </div>
+        <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
+          <div class="spinner"></div>
+        </div>
+        <div class="table-wrapper" ng-if="!vm.loadingInc">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Incidência</th>
+                <th>NT</th>
+                <th>CLI. AF.</th>
+                <th>CHI</th>
+                <th>TMA</th>
+                <th>Avisos</th>
+                <th>Atribuição</th>
+                <th>Alimentador</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="r in vm.top10Tma track by $index">
+                <td>{{r.incidencia}}</td>
+                <td>{{r.nt}}</td>
+                <td class="num">{{r.cli | number}}</td>
+                <td class="num">{{r.chi | number:1}}</td>
+                <td class="num" ng-class="{'cell-orange': r.tma > 0}">{{r.tmaFormatted}}</td>
+                <td class="num">{{r.avisos}}</td>
+                <td>{{r.atribuicao}}</td>
+                <td>{{r.alimentador}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty-state" ng-if="!vm.top10Tma.length">Sem dados</div>
+        </div>
+      </section>
+
+      <!-- TOP 10 CLI -->
+      <section class="panel">
+        <div class="panel-header">
+          <h2>TOP 10 – CLI. AFETADOS</h2>
+        </div>
+        <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
+          <div class="spinner"></div>
+        </div>
+        <div class="table-wrapper" ng-if="!vm.loadingInc">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Incidência</th>
+                <th>NT</th>
+                <th>CLI. AF.</th>
+                <th>CHI</th>
+                <th>TMA</th>
+                <th>Avisos</th>
+                <th>Atribuição</th>
+                <th>Alimentador</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="r in vm.top10Cli track by $index">
+                <td>{{r.incidencia}}</td>
+                <td>{{r.nt}}</td>
+                <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
+                <td class="num">{{r.chi | number:1}}</td>
+                <td class="num">{{r.tmaFormatted}}</td>
+                <td class="num">{{r.avisos}}</td>
+                <td>{{r.atribuicao}}</td>
+                <td>{{r.alimentador}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="empty-state" ng-if="!vm.top10Cli.length">Sem dados</div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         EQUIPES EM TURNO
+         ═══════════════════════════════════════════════════════ -->
+    <section class="panel equipes-panel">
+      <div class="panel-header">
+        <h2>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}</h2>
+        <span class="badge-count">{{vm.totalEquipes}} equipes</span>
+      </div>
+
+      <div class="loading-overlay" ng-if="vm.loadingEq">
+        <div class="spinner"></div>
+        <div class="loading-text">Carregando equipes...</div>
+      </div>
+
+      <div class="error-state" ng-if="vm.errorEq && !vm.loadingEq">
+        ⚠ Erro ao carregar equipes: {{vm.errorEq}}
+      </div>
+
+      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Polo</th>
+              <th>Sucursal</th>
+              <th>Nível Tensão</th>
+              <th>Nível Tensão Atual</th>
+              <th>Atribuídas</th>
+              <th>Improdutivas</th>
+              <th>Emergenciais</th>
+              <th>Comerciais</th>
+              <th>Tempo Serviço</th>
+              <th>Data/Hora Início</th>
+              <th>Produtividade/Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="eq in vm.equipes track by $index">
+              <td><strong>{{eq.nome}}</strong></td>
+              <td>{{eq.polo}}</td>
+              <td>{{eq.sucursal}}</td>
+              <td>{{eq.nivelTensao}}</td>
+              <td>{{eq.nivelTensaoAtual}}</td>
+              <td class="num">{{eq.atribuidas}}</td>
+              <td class="num" ng-class="{'cell-red': eq.improdutivas > 0}">{{eq.improdutivas}}</td>
+              <td class="num">{{eq.emergenciais}}</td>
+              <td class="num">{{eq.comerciais}}</td>
+              <td>{{eq.tempoServico}}</td>
+              <td>{{vm.formatDateTime(eq.dataHoraInicio)}}</td>
+              <td class="num">{{eq.produtividadeHora}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" ng-if="!vm.equipes.length">Nenhuma equipe em turno encontrada.</div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         EQUIPES EM TURNO 2º RECURSO
+         ═══════════════════════════════════════════════════════ -->
+    <section class="panel equipes2-panel">
+      <div class="panel-header">
+        <h2>EQUIPES EM TURNO 2º RECURSO – TOTAL: {{vm.totalEquipes2}}</h2>
+        <span class="badge-count">{{vm.totalEquipes2}} equipes</span>
+      </div>
+
+      <div class="loading-overlay" ng-if="vm.loadingEq">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Polo</th>
+              <th>Sucursal</th>
+              <th>Nível Tensão</th>
+              <th>Nível Tensão Atual</th>
+              <th>Atribuídas</th>
+              <th>Improdutivas</th>
+              <th>Emergenciais</th>
+              <th>Comerciais</th>
+              <th>Tempo Serviço</th>
+              <th>Data/Hora Início</th>
+              <th>Produtividade/Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="eq in vm.equipes2Recurso track by $index">
+              <td><strong>{{eq.nome}}</strong></td>
+              <td>{{eq.polo}}</td>
+              <td>{{eq.sucursal}}</td>
+              <td>{{eq.nivelTensao}}</td>
+              <td>{{eq.nivelTensaoAtual}}</td>
+              <td class="num">{{eq.atribuidas}}</td>
+              <td class="num" ng-class="{'cell-red': eq.improdutivas > 0}">{{eq.improdutivas}}</td>
+              <td class="num">{{eq.emergenciais}}</td>
+              <td class="num">{{eq.comerciais}}</td>
+              <td>{{eq.tempoServico}}</td>
+              <td>{{vm.formatDateTime(eq.dataHoraInicio)}}</td>
+              <td class="num">{{eq.produtividadeHora}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" ng-if="!vm.equipes2Recurso.length">Nenhuma equipe 2º recurso encontrada.</div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════ -->
+  <footer class="footer">
+    NorthRadar &copy; 2026 — Enel Distribuição Ceará · Refresh automático a cada 60 s
+  </footer>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ANGULARJS APPLICATION
+       ═══════════════════════════════════════════════════════ -->
+  <script>
+    angular.module('dashApp', [])
+
+    /* ═══════════════════════════════════════════════════════
+       CONTROLLER
+       ═══════════════════════════════════════════════════════ */
+    .controller('DashCtrl', ['$http', '$interval', '$timeout', function($http, $interval, $timeout) {
+      var vm = this;
+
+      // ── State ──
+      vm.polos = ['ATLANTICO', 'DECEN', 'DNORT'];
+      vm.selectedPolo = 'ATLANTICO';
+      vm.loadingInc = true;
+      vm.loadingEq = true;
+      vm.errorInc = null;
+      vm.errorEq = null;
+      vm.hasError = false;
+      vm.refreshing = false;
+      vm.lastUpdate = null;
+
+      // ── Data ──
+      vm.rawIncidencias = [];
+      vm.panorama = [];
+      vm.totals = {};
+      vm.kpis = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, gt48h: 0 };
+      vm.top10Chi = [];
+      vm.top10Tma = [];
+      vm.top10Cli = [];
+      vm.equipes = [];
+      vm.equipes2Recurso = [];
+      vm.totalEquipes = 0;
+      vm.totalEquipes2 = 0;
+
+      // ── Public methods ──
+      vm.changePolo = changePolo;
+      vm.formatDateTime = formatDateTime;
+
+      // ── Init ──
+      loadAll();
+      $interval(function() { loadAll(); }, 60000);
+
+      // ═══════════════════════════════════════════════════════
+      // FUNCTIONS
+      // ═══════════════════════════════════════════════════════
+
+      function changePolo(polo) {
+        vm.selectedPolo = polo;
+        loadAll();
+      }
+
+      function loadAll() {
+        vm.refreshing = true;
+        vm.hasError = false;
+        loadIncidencias();
+        loadEquipes();
+      }
+
+      // ── Incidências ──
+      function loadIncidencias() {
+        vm.loadingInc = true;
+        vm.errorInc = null;
+
+        $http.get('/api/dash/incidencias', { params: { polos: vm.selectedPolo } })
+          .then(function(res) {
+            var data = res.data;
+            var items = data.items || data.data || [];
+            if (!Array.isArray(items)) {
+              if (Array.isArray(data)) items = data;
+              else items = [];
+            }
+            vm.rawIncidencias = items;
+            processIncidencias();
+            vm.loadingInc = false;
+            vm.lastUpdate = new Date();
+            vm.refreshing = false;
+          })
+          .catch(function(err) {
+            console.error('Erro incidencias:', err);
+            vm.errorInc = (err.data && err.data.error) || err.statusText || 'Erro de conexão';
+            vm.loadingInc = false;
+            vm.hasError = true;
+            vm.refreshing = false;
+          });
+      }
+
+      // ── Equipes ──
+      function loadEquipes() {
+        vm.loadingEq = true;
+        vm.errorEq = null;
+
+        $http.get('/api/dash/equipes', { params: { polos: vm.selectedPolo } })
+          .then(function(res) {
+            var data = res.data;
+            var list = data.items || data.data || [];
+            if (!Array.isArray(list)) {
+              if (Array.isArray(data)) list = data;
+              else list = [];
+            }
+
+            vm.equipes = list;
+            vm.totalEquipes = list.length;
+
+            // ── 2º Recurso filter ──
+            var tags = ['PD','ML','EP','LC','LL','CO','MP','IN','EN','MO','LV'];
+            vm.equipes2Recurso = list.filter(function(eq) {
+              var nome = (eq.nome || '').toUpperCase();
+              return tags.some(function(tag) {
+                return nome.indexOf(tag) >= 0;
+              });
+            });
+            vm.totalEquipes2 = vm.equipes2Recurso.length;
+
+            // Update KPI for equipes
+            vm.kpis.totalEquipes = vm.totalEquipes;
+
+            vm.loadingEq = false;
+          })
+          .catch(function(err) {
+            console.error('Erro equipes:', err);
+            vm.errorEq = (err.data && err.data.error) || err.statusText || 'Erro de conexão';
+            vm.loadingEq = false;
+          });
+      }
+
+      // ═══════════════════════════════════════════════════════
+      // DATA PROCESSING
+      // ═══════════════════════════════════════════════════════
+
+      function processIncidencias() {
+        var items = vm.rawIncidencias;
+        var now = new Date();
+
+        // ── Separate active (no dataFim) and closed (has dataFim) ──
+        var active = [];
+        var closed = [];
+
+        items.forEach(function(inc) {
+          var df = gf(inc, 'dataFim', 'dataFimIncidencia');
+          if (!df) {
+            active.push(inc);
+          } else {
+            closed.push(inc);
+          }
+        });
+
+        // ═══════════════════════════════════════════
+        // PANORAMA — Group by município (active only)
+        // ═══════════════════════════════════════════
+        var groups = {};
+
+        active.forEach(function(inc) {
+          var mun = gf(inc, 'municipio', 'localidade', 'nomeLocalidade', 'nomeMunicipio') || 'Desconhecido';
+
+          if (!groups[mun]) {
+            groups[mun] = {
+              municipio: mun,
+              clientesAfetados: 0,
+              incidenciasAtivas: 0,
+              naoDespachados: 0,
+              equipesObj: {},
+              umAviso: 0,
+              lt8h: 0,
+              h8_16: 0,
+              h16_24: 0,
+              h24_48: 0,
+              gt48h: 0
+            };
+          }
+
+          var g = groups[mun];
+          g.clientesAfetados += (gf(inc, 'clientesAfetados', 'qtdClientesAfetados', 'qtdClientes') || 0);
+          g.incidenciasAtivas++;
+
+          // Não despachado
+          var desp = gf(inc, 'despachado', 'isDespachado', 'flagDespachado');
+          if (!desp) g.naoDespachados++;
+
+          // Equipes únicas
+          var equipe = gf(inc, 'nomeEquipe', 'equipeAtribuida', 'equipe', 'atribuicao');
+          if (equipe) g.equipesObj[equipe] = true;
+
+          // Avisos
+          var avisos = gf(inc, 'qtdAvisos', 'avisos', 'totalAvisos') || 0;
+          if (avisos === 1) g.umAviso++;
+
+          // Time buckets
+          var di = gf(inc, 'dataInicio', 'dataInicioIncidencia');
+          if (di) {
+            var hours = (now - new Date(di)) / 3600000;
+            if (hours < 8) g.lt8h++;
+            else if (hours < 16) g.h8_16++;
+            else if (hours < 24) g.h16_24++;
+            else if (hours < 48) g.h24_48++;
+            else g.gt48h++;
+          }
+        });
+
+        // Convert groups object to array
+        var panoramaList = [];
+        var keys = Object.keys(groups);
+        for (var k = 0; k < keys.length; k++) {
+          var g = groups[keys[k]];
+          var eqCount = Object.keys(g.equipesObj).length;
+          var qtt2 = Math.max(0, g.incidenciasAtivas - eqCount);
+          panoramaList.push({
+            municipio: g.municipio,
+            clientesAfetados: g.clientesAfetados,
+            incidenciasAtivas: g.incidenciasAtivas,
+            naoDespachados: g.naoDespachados,
+            equipes: eqCount,
+            incPorEquipe: eqCount > 0 ? (g.incidenciasAtivas / eqCount).toFixed(1) : '—',
+            qtt2Rec: qtt2,
+            umAviso: g.umAviso,
+            lt8h: g.lt8h,
+            h8_16: g.h8_16,
+            h16_24: g.h16_24,
+            h24_48: g.h24_48,
+            gt48h: g.gt48h
+          });
+        }
+
+        // Sort by clientes afetados desc
+        panoramaList.sort(function(a, b) { return b.clientesAfetados - a.clientesAfetados; });
+        vm.panorama = panoramaList;
+
+        // ── Calculate totals ──
+        var t = { clientesAfetados: 0, incidenciasAtivas: 0, naoDespachados: 0, equipes: 0, qtt2Rec: 0, umAviso: 0, lt8h: 0, h8_16: 0, h16_24: 0, h24_48: 0, gt48h: 0 };
+        panoramaList.forEach(function(r) {
+          t.clientesAfetados += r.clientesAfetados;
+          t.incidenciasAtivas += r.incidenciasAtivas;
+          t.naoDespachados += r.naoDespachados;
+          t.equipes += r.equipes;
+          t.qtt2Rec += r.qtt2Rec;
+          t.umAviso += r.umAviso;
+          t.lt8h += r.lt8h;
+          t.h8_16 += r.h8_16;
+          t.h16_24 += r.h16_24;
+          t.h24_48 += r.h24_48;
+          t.gt48h += r.gt48h;
+        });
+        t.incPorEquipe = t.equipes > 0 ? (t.incidenciasAtivas / t.equipes).toFixed(1) : '—';
+        vm.totals = t;
+
+        // ── KPIs ──
+        vm.kpis.totalIncidencias = t.incidenciasAtivas;
+        vm.kpis.totalClientes = t.clientesAfetados;
+        vm.kpis.naoDespachados = t.naoDespachados;
+        vm.kpis.gt48h = t.gt48h;
+
+        // ═══════════════════════════════════════════
+        // TOP 10 CHI — active, sorted by CHI desc
+        // ═══════════════════════════════════════════
+        vm.top10Chi = active
+          .map(function(inc) { return mapIncidence(inc, now); })
+          .sort(function(a, b) { return b.chi - a.chi; })
+          .slice(0, 10);
+
+        // ═══════════════════════════════════════════
+        // TOP 10 TMA — closed, sorted by TMA desc
+        // ═══════════════════════════════════════════
+        vm.top10Tma = closed
+          .map(function(inc) { return mapIncidence(inc, now); })
+          .sort(function(a, b) { return b.tma - a.tma; })
+          .slice(0, 10);
+
+        // ═══════════════════════════════════════════
+        // TOP 10 CLI — active, sorted by CLI desc
+        // ═══════════════════════════════════════════
+        vm.top10Cli = active
+          .map(function(inc) { return mapIncidence(inc, now); })
+          .sort(function(a, b) { return b.cli - a.cli; })
+          .slice(0, 10);
+      }
+
+      // ═══════════════════════════════════════════════════════
+      // MAPPERS & HELPERS
+      // ═══════════════════════════════════════════════════════
+
+      function mapIncidence(inc, now) {
+        var cli = gf(inc, 'clientesAfetados', 'qtdClientesAfetados', 'qtdClientes') || 0;
+        var di = gf(inc, 'dataInicio', 'dataInicioIncidencia');
+        var df = gf(inc, 'dataFim', 'dataFimIncidencia');
+        var hours = 0;
+
+        if (di) {
+          var end = df ? new Date(df) : now;
+          hours = (end - new Date(di)) / 3600000;
+        }
+
+        // CHI = clientes * horas de interrupção
+        var chiVal = gf(inc, 'chi', 'CHI', 'customerHoursInterruption');
+        if (chiVal === null || chiVal === undefined) {
+          chiVal = cli * hours;
+        }
+
+        // TMA = horas desde início até fim (ou agora)
+        var tmaVal = gf(inc, 'tma', 'TMA', 'tempoMedioAtendimento');
+        if (tmaVal === null || tmaVal === undefined) {
+          tmaVal = hours;
+        }
+
+        // Format TMA as HH:mm
+        var tmaHours = Math.floor(tmaVal);
+        var tmaMinutes = Math.floor((tmaVal - tmaHours) * 60);
+        var tmaFormatted = padZero(tmaHours) + ':' + padZero(tmaMinutes);
+
+        return {
+          incidencia: gf(inc, 'incidenciaId', 'id', 'codigo', 'codigoIncidencia') || '',
+          nt: gf(inc, 'nivelTensao', 'nt', 'NT', 'nivelDeTensao') || '',
+          cli: cli,
+          chi: Math.round(chiVal * 10) / 10,
+          tma: tmaVal,
+          tmaFormatted: tmaFormatted,
+          avisos: gf(inc, 'qtdAvisos', 'avisos', 'totalAvisos') || 0,
+          atribuicao: gf(inc, 'nomeEquipe', 'equipeAtribuida', 'equipe', 'atribuicao') || '—',
+          alimentador: gf(inc, 'alimentador', 'nomeAlimentador', 'codAlimentador') || ''
+        };
+      }
+
+      /**
+       * Get first non-null field from object
+       * gf(obj, 'field1', 'field2', ...)
+       */
+      function gf(obj) {
+        for (var i = 1; i < arguments.length; i++) {
+          var val = obj[arguments[i]];
+          if (val !== undefined && val !== null && val !== '') {
+            return val;
+          }
+        }
+        return null;
+      }
+
+      function padZero(n) {
+        return n < 10 ? '0' + n : '' + n;
+      }
+
+      function formatDateTime(str) {
+        if (!str) return '—';
+        try {
+          var d = new Date(str);
+          if (isNaN(d.getTime())) return str;
+          return padZero(d.getDate()) + '/' +
+                 padZero(d.getMonth() + 1) + '/' +
+                 d.getFullYear() + ' ' +
+                 padZero(d.getHours()) + ':' +
+                 padZero(d.getMinutes());
+        } catch (e) {
+          return str;
+        }
+      }
+
+    }]);
+  </script>
+
+</body>
+</html>
