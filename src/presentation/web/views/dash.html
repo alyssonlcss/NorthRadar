@@ -560,9 +560,9 @@
 
     <!-- ── KPI Summary ── -->
     <div class="kpi-bar" ng-if="!vm.loadingInc">
-      <div class="kpi-item">
-        <div class="kpi-value">{{vm.kpis.totalIncidencias | number}}</div>
-        <div class="kpi-label">Incidências Ativas</div>
+      <div class="kpi-item kpi-warning">
+        <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
+        <div class="kpi-label">Inc. Ativas | Não Despach.</div>
       </div>
       <div class="kpi-item kpi-danger">
         <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
@@ -571,10 +571,6 @@
       <div class="kpi-item kpi-success">
         <div class="kpi-value">{{vm.kpis.totalEquipes | number}}</div>
         <div class="kpi-label">Equipes em Turno</div>
-      </div>
-      <div class="kpi-item kpi-warning">
-        <div class="kpi-value">{{vm.kpis.naoDespachados | number}}</div>
-        <div class="kpi-label">Não Despachados</div>
       </div>
       <div class="kpi-item kpi-danger">
         <div class="kpi-value">{{vm.kpis.urgentes | number}} | {{vm.kpis.eletrodependentes | number}}</div>
