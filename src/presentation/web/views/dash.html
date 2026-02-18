@@ -576,9 +576,9 @@
         <div class="kpi-value">{{vm.kpis.naoDespachados | number}}</div>
         <div class="kpi-label">Não Despachados</div>
       </div>
-      <div class="kpi-item">
-        <div class="kpi-value">{{vm.kpis.gt48h | number}}</div>
-        <div class="kpi-label">&gt; 48h</div>
+      <div class="kpi-item kpi-danger">
+        <div class="kpi-value">{{vm.kpis.urgentes | number}} | {{vm.kpis.eletrodependentes | number}}</div>
+        <div class="kpi-label">Urgentes | Eletrodep.</div>
       </div>
     </div>
 
@@ -977,7 +977,7 @@
       vm.rawIncidencias = [];
       vm.panorama = [];
       vm.totals = {};
-      vm.kpis = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, gt48h: 0 };
+      vm.kpis = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, urgentes: 0, eletrodependentes: 0 };
       vm.top10Chi = [];
       vm.top10Tma = [];
       vm.top10Cli = [];
@@ -1368,7 +1368,16 @@
         vm.kpis.totalIncidencias = t.incidenciasAtivas;
         vm.kpis.totalClientes = t.clientesAfetados;
         vm.kpis.naoDespachados = t.naoDespachados;
-        vm.kpis.gt48h = t.gt48h;
+
+        // Contar urgentes e eletrodependentes entre as ativas
+        var urgCount = 0;
+        var eleCount = 0;
+        active.forEach(function(inc) {
+          if (inc.urgente === true || inc.urgente === 'true') urgCount++;
+          if (inc.eletrodependente === true || inc.eletrodependente === 'true') eleCount++;
+        });
+        vm.kpis.urgentes = urgCount;
+        vm.kpis.eletrodependentes = eleCount;
 
         // ═══════════════════════════════════════════
         // TOP 10 CHI — active, sorted by CHI desc
