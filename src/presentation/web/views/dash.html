@@ -576,6 +576,10 @@
         <div class="kpi-value">{{vm.kpis.urgentes | number}} | {{vm.kpis.eletrodependentes | number}}</div>
         <div class="kpi-label">Urgentes | Eletrodep.</div>
       </div>
+      <div class="kpi-item">
+        <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
+        <div class="kpi-label">CHI Total</div>
+      </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
@@ -973,7 +977,7 @@
       vm.rawIncidencias = [];
       vm.panorama = [];
       vm.totals = {};
-      vm.kpis = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, urgentes: 0, eletrodependentes: 0 };
+      vm.kpis = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, urgentes: 0, eletrodependentes: 0, totalChi: 0 };
       vm.top10Chi = [];
       vm.top10Tma = [];
       vm.top10Cli = [];
@@ -1374,6 +1378,15 @@
         });
         vm.kpis.urgentes = urgCount;
         vm.kpis.eletrodependentes = eleCount;
+
+        // CHI total = soma de (clientesAfetadosAtual * duracao em horas) de todas as ativas
+        var chiTotal = 0;
+        active.forEach(function(inc) {
+          var cli = inc.clientesAfetadosAtual || 0;
+          var hrs = parseDuracao(inc.duracao);
+          chiTotal += cli * hrs;
+        });
+        vm.kpis.totalChi = Math.round(chiTotal);
 
         // ═══════════════════════════════════════════
         // TOP 10 CHI — active, sorted by CHI desc
