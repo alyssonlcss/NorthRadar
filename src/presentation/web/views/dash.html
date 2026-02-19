@@ -608,6 +608,7 @@
           <thead>
             <tr>
               <th>CONJUNTO</th>
+              <th>CHI</th>
               <th>Cli. Afetados</th>
               <th>Inc. Ativas</th>
               <th>Não Desp.</th>
@@ -627,6 +628,7 @@
           <tbody>
             <tr ng-repeat="r in vm.panorama track by r.conjunto">
               <td><strong>{{r.conjunto}}</strong></td>
+              <td class="num">{{r.chi | number}}</td>
               <td class="num">{{r.clientesAfetados | number}}</td>
               <td class="num">{{r.incidenciasAtivas}}</td>
               <td class="num" ng-class="{'cell-red': r.naoDespachados > 0}">{{r.naoDespachados}}</td>
@@ -646,6 +648,7 @@
           <tfoot ng-if="vm.panorama.length">
             <tr>
               <td><strong>TOTAL</strong></td>
+              <td class="num">{{vm.totals.chi | number}}</td>
               <td class="num">{{vm.totals.clientesAfetados | number}}</td>
               <td class="num">{{vm.totals.incidenciasAtivas}}</td>
               <td class="num">{{vm.totals.naoDespachados}}</td>
@@ -1261,6 +1264,7 @@
           if (!groups[conj]) {
             groups[conj] = {
               conjunto: conj,
+              chi: 0,
               clientesAfetados: 0,
               incidenciasAtivas: 0,
               naoDespachados: 0,
@@ -1279,8 +1283,13 @@
 
           var g = groups[conj];
 
+          // CHI = clientesAfetadosAtual * duracao(horas)
+          var incCli = inc.clientesAfetadosAtual || 0;
+          var incHrs = parseDuracao(inc.duracao);
+          g.chi += incCli * incHrs;
+
           // Clientes afetados = clientesAfetadosAtual
-          g.clientesAfetados += (inc.clientesAfetadosAtual || 0);
+          g.clientesAfetados += incCli;
           g.incidenciasAtivas++;
 
           // Não despachado = equipeAtribuida === "-"
@@ -1323,6 +1332,7 @@
           var eq2Count = Object.keys(g.equipes2RecObj).length;
           panoramaList.push({
             conjunto: g.conjunto,
+            chi: Math.round(g.chi),
             clientesAfetados: g.clientesAfetados,
             incidenciasAtivas: g.incidenciasAtivas,
             naoDespachados: g.naoDespachados,
@@ -1345,8 +1355,9 @@
         vm.panorama = panoramaList;
 
         // ── Calculate totals ──
-        var t = { clientesAfetados: 0, incidenciasAtivas: 0, naoDespachados: 0, equipes: 0, qtt2Rec: 0, qttAvisos: 0, clEssencial: 0, eletrodependente: 0, lt8h: 0, h8_16: 0, h16_24: 0, h24_48: 0, gt48h: 0 };
+        var t = { chi: 0, clientesAfetados: 0, incidenciasAtivas: 0, naoDespachados: 0, equipes: 0, qtt2Rec: 0, qttAvisos: 0, clEssencial: 0, eletrodependente: 0, lt8h: 0, h8_16: 0, h16_24: 0, h24_48: 0, gt48h: 0 };
         panoramaList.forEach(function(r) {
+          t.chi += r.chi;
           t.clientesAfetados += r.clientesAfetados;
           t.incidenciasAtivas += r.incidenciasAtivas;
           t.naoDespachados += r.naoDespachados;
