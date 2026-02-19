@@ -1,21 +1,11 @@
 /**
- * Infrastructure — HttpClient
+ * HttpClient — cliente HTTP genérico
  *
- * Cliente HTTP genérico usando fetch nativo do Node 18+.
+ * Usa fetch nativo do Node 18+.
  * Centraliza headers, Bearer token e tratamento de erros.
  */
-
-/**
- * Erro específico para falhas de autenticação (401/403).
- * Permite que camadas superiores detectem e disparem re-autenticação.
- */
-class HttpAuthError extends Error {
-  constructor(status, statusText, url, body = '') {
-    super(`HTTP ${status} ${statusText} — ${url}\n${body}`);
-    this.name = 'HttpAuthError';
-    this.status = status;
-  }
-}
+const HttpAuthError = require('./errors/HttpAuthError');
+const Logger = require('./Logger');
 
 class HttpClient {
   /**
@@ -23,20 +13,21 @@ class HttpClient {
    */
   constructor(baseURL) {
     this._baseURL = baseURL.replace(/\/+$/, '');
+    this._logger = Logger.create('HttpClient');
   }
 
   /**
    * GET com Bearer token
-   * @param {string} path    — ex.: '/incidencias/consultar'
-   * @param {Object} [query] — query-string params
-   * @param {string} [token] — JWT token
+   * @param {string} path
+   * @param {Object} [query]
+   * @param {string} [token]
    * @returns {Promise<any>}
    */
   async get(path, query = {}, token = null) {
     const url = this._buildURL(path, query);
     const headers = this._buildHeaders(token);
 
-    console.log(`[HttpClient] GET ${url}`);
+    this._logger.info(`GET ${url}`);
 
     const response = await fetch(url, { method: 'GET', headers });
 
@@ -45,9 +36,7 @@ class HttpClient {
       if (response.status === 401 || response.status === 403) {
         throw new HttpAuthError(response.status, response.statusText, url, body);
       }
-      throw new Error(
-        `HTTP ${response.status} ${response.statusText} — ${url}\n${body}`
-      );
+      throw new Error(`HTTP ${response.status} ${response.statusText} — ${url}\n${body}`);
     }
 
     return response.json();
@@ -64,7 +53,7 @@ class HttpClient {
     const url = this._buildURL(path);
     const headers = this._buildHeaders(token);
 
-    console.log(`[HttpClient] POST ${url}`);
+    this._logger.info(`POST ${url}`);
 
     const response = await fetch(url, {
       method: 'POST',
@@ -77,9 +66,7 @@ class HttpClient {
       if (response.status === 401 || response.status === 403) {
         throw new HttpAuthError(response.status, response.statusText, url, text);
       }
-      throw new Error(
-        `HTTP ${response.status} ${response.statusText} — ${url}\n${text}`
-      );
+      throw new Error(`HTTP ${response.status} ${response.statusText} — ${url}\n${text}`);
     }
 
     return response.json();
@@ -110,4 +97,3 @@ class HttpClient {
 }
 
 module.exports = HttpClient;
-module.exports.HttpAuthError = HttpAuthError;

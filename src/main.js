@@ -1,40 +1,37 @@
 /**
- * NorthRadar — Bootstrap (Composition Root)
+ * NorthRadar — Bootstrap
  *
- * Ponto de entrada que monta o grafo de dependências DDD:
- *   Domain  →  Infrastructure  →  Application  →  Presentation
+ * Ponto de entrada que monta as dependências e inicia a aplicação.
  *
  * Uso: node src/main.js
  */
 
-// ── Infrastructure ──
-const PuppeteerAuthProvider = require('./infrastructure/auth/PuppeteerAuthProvider');
-const OperviewIncidenceRepository = require('./infrastructure/repositories/OperviewIncidenceRepository');
-
-// ── Application ──
-const FetchIncidences = require('./application/use-cases/FetchIncidences');
-const Scheduler = require('./application/use-cases/Scheduler');
-
-// ── Presentation ──
-const WebServer = require('./presentation/web/server');
-
 // ── Config ──
 const config = require('./config');
+const Logger = require('./shared/Logger');
+
+// ── Modules ──
+const PuppeteerAuthProvider = require('./modules/auth/PuppeteerAuthProvider');
+const IncidenceRepository = require('./modules/incidences/IncidenceRepository');
+const IncidenceService = require('./modules/incidences/IncidenceService');
+
+// ── Server ──
+const ExpressServer = require('./server/ExpressServer');
+
+// ── Logger ──
+const logger = Logger.create('Main');
 
 // ═══════════════════════════════════════════════════
-//  Instanciar dependências (Composition Root)
+//  Montar dependências
 // ═══════════════════════════════════════════════════
 const authProvider = new PuppeteerAuthProvider();
-const incidenceRepo = new OperviewIncidenceRepository(authProvider);
-const fetchIncidencesUC = new FetchIncidences(incidenceRepo);
+const incidenceRepo = new IncidenceRepository(authProvider);
 
-// Scheduler: refresh a cada 60 min (config ou padrão)
 const REFRESH_INTERVAL = 60 * 60 * 1000; // 60 min
-const scheduler = new Scheduler(fetchIncidencesUC, REFRESH_INTERVAL);
+const incidenceService = new IncidenceService(incidenceRepo, REFRESH_INTERVAL);
 
-// Web server
 const PORT = process.env.PORT || 3000;
-const webServer = new WebServer(scheduler, PORT, authProvider);
+const webServer = new ExpressServer({ incidenceService, authProvider }, PORT);
 
 // ═══════════════════════════════════════════════════
 //  Main
@@ -42,46 +39,45 @@ const webServer = new WebServer(scheduler, PORT, authProvider);
 async function main() {
   console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
-║  NorthRadar — DDD Architecture                                  ║
+║  NorthRadar — Modular Architecture                               ║
 ║  Integração com Operview API                                     ║
 ╚══════════════════════════════════════════════════════════════════╝
 `);
 
   try {
     // 1. Autenticação
-    console.log('[Main] 1/3 — Inicializando autenticação...');
+    logger.info('1/3 — Inicializando autenticação...');
     const token = await authProvider.initialize();
-    console.log(`[Main]     Token: ${token.substring(0, 50)}...`);
+    logger.info(`    Token: ${token.substring(0, 50)}...`);
 
-    // 2. Scheduler (primeira carga + auto-refresh)
-    console.log('[Main] 2/3 — Iniciando scheduler (refresh 60 min)...');
-    await scheduler.start();
+    // 2. Incidences (primeira carga + auto-refresh)
+    logger.info('2/3 — Iniciando scheduler (refresh 60 min)...');
+    await incidenceService.startScheduler();
 
     // 3. Web server
-    console.log('[Main] 3/3 — Iniciando servidor web...');
+    logger.info('3/3 — Iniciando servidor web...');
     await webServer.start();
 
-    console.log('\n[Main] ✅ Tudo pronto! Ctrl+C para encerrar.\n');
+    logger.info('✅ Tudo pronto! Ctrl+C para encerrar.\n');
 
     // Graceful shutdown
     process.on('SIGINT', async () => {
-      console.log('\n[Main] Encerrando...');
-      scheduler.stop();
+      logger.info('Encerrando...');
+      incidenceService.stopScheduler();
       await webServer.stop();
       await authProvider.shutdown();
       process.exit(0);
     });
-
   } catch (error) {
-    console.error('[Main] ❌ Erro fatal:', error.message);
-    scheduler.stop();
+    logger.error(`Erro fatal: ${error.message}`);
+    incidenceService.stopScheduler();
     await authProvider.shutdown();
     process.exit(1);
   }
 }
 
 // Exportar para uso como módulo
-module.exports = { authProvider, scheduler, webServer };
+module.exports = { authProvider, incidenceService, webServer };
 
 // Executar se chamado diretamente
 if (require.main === module) {

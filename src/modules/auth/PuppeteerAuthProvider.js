@@ -1,17 +1,18 @@
 /**
- * Infrastructure — PuppeteerAuthProvider
+ * PuppeteerAuthProvider
  *
- * Implementação concreta de IAuthProvider usando Puppeteer + Edge.
- * Mantém o token JWT atualizado automaticamente.
+ * Implementação concreta de AuthProvider usando Puppeteer + Edge.
+ * Intercepta o token JWT do Operview e mantém-no atualizado.
  */
 const puppeteer = require('puppeteer');
 const path = require('path');
 const os = require('os');
 const fs = require('fs');
 const config = require('../../config');
-const IAuthProvider = require('../../domain/repositories/IAuthProvider');
+const AuthProvider = require('./AuthProvider');
+const Logger = require('../../shared/Logger');
 
-class PuppeteerAuthProvider extends IAuthProvider {
+class PuppeteerAuthProvider extends AuthProvider {
   constructor() {
     super();
     this._token = null;
@@ -19,6 +20,7 @@ class PuppeteerAuthProvider extends IAuthProvider {
     this._browser = null;
     this._refreshInterval = null;
     this._isInitialized = false;
+    this._logger = Logger.create('AuthProvider');
   }
 
   async initialize() {
@@ -29,17 +31,17 @@ class PuppeteerAuthProvider extends IAuthProvider {
     if (savedToken && this._isTokenValid(savedToken)) {
       this._token = savedToken;
       this._tokenExpiry = this._getTokenExpiry(savedToken);
-      console.log('[AuthProvider] ✅ Token carregado do .env (ainda válido)');
-      console.log(`[AuthProvider]   Expira em: ${new Date(this._tokenExpiry).toLocaleString()}`);
+      this._logger.info('✅ Token carregado do .env (ainda válido)');
+      this._logger.info(`  Expira em: ${new Date(this._tokenExpiry).toLocaleString()}`);
       this._startAutoRefresh();
       this._isInitialized = true;
       return this._token;
     }
 
     if (savedToken) {
-      console.log('[AuthProvider] ⚠️  Token no .env expirado — autenticando via browser...');
+      this._logger.warn('Token no .env expirado — autenticando via browser...');
     } else {
-      console.log('[AuthProvider] Nenhum token salvo — autenticando via browser...');
+      this._logger.info('Nenhum token salvo — autenticando via browser...');
     }
 
     // 2. Autenticar via browser
@@ -70,17 +72,11 @@ class PuppeteerAuthProvider extends IAuthProvider {
       this._browser = null;
     }
     this._isInitialized = false;
-    console.log('[AuthProvider] Serviço encerrado');
+    this._logger.info('Serviço encerrado');
   }
 
-  /**
-   * Força re-autenticação: invalida token atual, limpa dados do browser
-   * e recarrega a página para capturar /autenticacao/autenticar novamente.
-   * Chamado externamente quando um 401/403 é recebido da API.
-   * @returns {Promise<string>} novo token
-   */
   async reAuthenticate() {
-    console.log('[AuthProvider] ⚠️  Re-autenticação forçada (token inválido ou 401)');
+    this._logger.warn('Re-autenticação forçada (token inválido ou 401)');
     this._token = null;
     this._tokenExpiry = null;
 
@@ -98,7 +94,7 @@ class PuppeteerAuthProvider extends IAuthProvider {
   async _launchBrowser() {
     const tempDir = path.join(os.tmpdir(), 'northradar-edge-profile');
     const originalUserData = path.join(
-      os.homedir(), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data'
+      os.homedir(), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data',
     );
 
     if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
@@ -114,8 +110,8 @@ class PuppeteerAuthProvider extends IAuthProvider {
       } catch (_) { /* arquivo em uso */ }
     }
 
-    console.log('[AuthProvider] Iniciando browser...');
-    console.log(`[AuthProvider]   headless=${config.browser.headless}, edge=${config.browser.edgePath}`);
+    this._logger.info('Iniciando browser...');
+    this._logger.info(`  headless=${config.browser.headless}, edge=${config.browser.edgePath}`);
 
     this._browser = await puppeteer.launch({
       headless: config.browser.headless,
@@ -132,14 +128,13 @@ class PuppeteerAuthProvider extends IAuthProvider {
       protocolTimeout: 120000,
     });
 
-    // Se o browser fechar inesperadamente, logar
     this._browser.on('disconnected', () => {
-      console.warn('[AuthProvider] ⚠️  Browser desconectou');
+      this._logger.warn('Browser desconectou');
     });
   }
 
   async _authenticate() {
-    console.log('[AuthProvider] Autenticando com Operview...');
+    this._logger.info('Autenticando com Operview...');
 
     let page = null;
     try {
@@ -150,7 +145,6 @@ class PuppeteerAuthProvider extends IAuthProvider {
 
     let capturedToken = null;
 
-    // Interceptar resposta de autenticação
     page.on('response', async (response) => {
       try {
         if (
@@ -160,53 +154,48 @@ class PuppeteerAuthProvider extends IAuthProvider {
           const data = await response.json();
           if (data && data.token) {
             capturedToken = data.token;
-            console.log('[AuthProvider] Token interceptado via response listener');
+            this._logger.info('Token interceptado via response listener');
           }
         }
       } catch (_) { /* resposta não-JSON ou já consumida */ }
     });
 
-    // Monitorar se o browser desconecta inesperadamente
     let browserDisconnected = false;
     const onDisconnect = () => { browserDisconnected = true; };
     this._browser.on('disconnected', onDisconnect);
 
     try {
-      console.log('[AuthProvider] Navegando para operview-ce.enel.com...');
+      this._logger.info('Navegando para operview-ce.enel.com...');
       await page.goto('https://operview-ce.enel.com', {
         waitUntil: 'networkidle0',
         timeout: 90000,
       });
-      console.log('[AuthProvider] Página carregada — aguardando token...');
+      this._logger.info('Página carregada — aguardando token...');
 
-      // Aguardar até 60 s pelo token
       let attempts = 0;
       const maxAttempts = 60;
       while (!capturedToken && attempts < maxAttempts && !browserDisconnected) {
         await new Promise((r) => setTimeout(r, 1000));
         attempts++;
         if (attempts % 10 === 0) {
-          console.log(`[AuthProvider] Aguardando token... (${attempts}s)`);
+          this._logger.info(`Aguardando token... (${attempts}s)`);
         }
       }
 
-      // Se não capturou o token, limpar dados e recarregar a página
       if (!capturedToken && !browserDisconnected) {
-        console.log('[AuthProvider] ⚠️  Token não capturado — limpando dados do browser e recarregando...');
+        this._logger.warn('Token não capturado — limpando dados do browser e recarregando...');
         await this._clearBrowserDataAndReload(page);
 
-        // Aguardar mais 60 s após reload
         attempts = 0;
         while (!capturedToken && attempts < maxAttempts && !browserDisconnected) {
           await new Promise((r) => setTimeout(r, 1000));
           attempts++;
           if (attempts % 10 === 0) {
-            console.log(`[AuthProvider] Aguardando token após reload... (${attempts}s)`);
+            this._logger.info(`Aguardando token após reload... (${attempts}s)`);
           }
         }
       }
 
-      // Fechar a aba com segurança
       await this._safeClosePage(page);
 
       if (browserDisconnected) {
@@ -216,12 +205,12 @@ class PuppeteerAuthProvider extends IAuthProvider {
       if (capturedToken) {
         this._token = capturedToken;
         this._tokenExpiry = this._getTokenExpiry(capturedToken);
-        console.log('[AuthProvider] ✅ Token obtido com sucesso');
+        this._logger.info('✅ Token obtido com sucesso');
         this._saveTokenToEnv(capturedToken);
         return capturedToken;
       }
 
-      throw new Error(`Não foi possível capturar o token após tentativa com reload`);
+      throw new Error('Não foi possível capturar o token após tentativa com reload');
     } catch (error) {
       await this._safeClosePage(page);
       throw error;
@@ -230,41 +219,32 @@ class PuppeteerAuthProvider extends IAuthProvider {
     }
   }
 
-  /**
-   * Limpa cookies, localStorage, sessionStorage, cache e recarrega a página.
-   * Força o site a executar /autenticacao/autenticar novamente.
-   */
   async _clearBrowserDataAndReload(page) {
     try {
       const client = await page.createCDPSession();
 
-      // Limpar cookies
       await client.send('Network.clearBrowserCookies');
-      console.log('[AuthProvider]   Cookies limpos');
+      this._logger.info('  Cookies limpos');
 
-      // Limpar cache
       await client.send('Network.clearBrowserCache');
-      console.log('[AuthProvider]   Cache limpo');
+      this._logger.info('  Cache limpo');
 
-      // Limpar localStorage e sessionStorage via JS
       await page.evaluate(() => {
         try { localStorage.clear(); } catch (_) {}
         try { sessionStorage.clear(); } catch (_) {}
       });
-      console.log('[AuthProvider]   Storage limpo');
+      this._logger.info('  Storage limpo');
 
       await client.detach();
 
-      // Recarregar a página para forçar nova autenticação
-      console.log('[AuthProvider]   Recarregando página...');
+      this._logger.info('  Recarregando página...');
       await page.reload({ waitUntil: 'networkidle0', timeout: 90000 });
-      console.log('[AuthProvider]   Página recarregada');
+      this._logger.info('  Página recarregada');
     } catch (err) {
-      console.error('[AuthProvider] Erro ao limpar dados do browser:', err.message);
+      this._logger.error(`Erro ao limpar dados do browser: ${err.message}`);
     }
   }
 
-  /** Fecha a página sem lançar erro se já estiver fechada */
   async _safeClosePage(page) {
     try {
       if (page && !page.isClosed()) await page.close();
@@ -274,14 +254,14 @@ class PuppeteerAuthProvider extends IAuthProvider {
   _startAutoRefresh() {
     const intervalMs = config.refreshIntervalMs;
     const intervalMin = Math.round(intervalMs / 60000);
-    console.log(`[AuthProvider] Auto-refresh configurado (${intervalMin} min)`);
+    this._logger.info(`Auto-refresh configurado (${intervalMin} min)`);
 
     this._refreshInterval = setInterval(async () => {
-      console.log(`[AuthProvider] Renovando token... (${new Date().toLocaleTimeString()})`);
+      this._logger.info(`Renovando token... (${new Date().toLocaleTimeString()})`);
       try {
         await this._authenticate();
       } catch (error) {
-        console.error('[AuthProvider] Erro ao renovar token:', error.message);
+        this._logger.error(`Erro ao renovar token: ${error.message}`);
       }
     }, intervalMs);
   }
@@ -295,41 +275,24 @@ class PuppeteerAuthProvider extends IAuthProvider {
 
   // ═══════ Token persistence ═══════
 
-  /**
-   * Decodifica o payload JWT e verifica se o token ainda é válido
-   * @param {string} token
-   * @returns {boolean}
-   */
   _isTokenValid(token) {
     try {
       const payload = this._decodeJwt(token);
       if (!payload || !payload.exp) return false;
-      // Margem de 5 minutos
       return (payload.exp * 1000) > (Date.now() + 5 * 60 * 1000);
     } catch (_) {
       return false;
     }
   }
 
-  /**
-   * Extrai a data de expiração do JWT
-   * @param {string} token
-   * @returns {number} timestamp ms
-   */
   _getTokenExpiry(token) {
     try {
       const payload = this._decodeJwt(token);
       if (payload && payload.exp) return payload.exp * 1000;
     } catch (_) {}
-    // fallback: 2 horas a partir de agora
     return Date.now() + 2 * 60 * 60 * 1000;
   }
 
-  /**
-   * Decodifica o payload de um JWT (sem validar assinatura)
-   * @param {string} token
-   * @returns {Object|null}
-   */
   _decodeJwt(token) {
     try {
       const parts = token.split('.');
@@ -341,31 +304,23 @@ class PuppeteerAuthProvider extends IAuthProvider {
     }
   }
 
-  /**
-   * Salva o token no arquivo .env (cria ou atualiza a linha TOKEN_ACCESS=)
-   * @param {string} token
-   */
   _saveTokenToEnv(token) {
     try {
       const envPath = config.envFilePath;
       let content = fs.readFileSync(envPath, 'utf8');
 
       if (content.match(/^TOKEN_ACCESS=.*/m)) {
-        // Atualizar linha existente
         content = content.replace(/^TOKEN_ACCESS=.*/m, `TOKEN_ACCESS=${token}`);
       } else {
-        // Adicionar ao final
         content += `\nTOKEN_ACCESS=${token}\n`;
       }
 
       fs.writeFileSync(envPath, content, 'utf8');
-
-      // Atualizar também o process.env em memória
       process.env.TOKEN_ACCESS = token;
 
-      console.log('[AuthProvider] 💾 Token salvo no .env');
+      this._logger.info('💾 Token salvo no .env');
     } catch (err) {
-      console.error('[AuthProvider] ⚠️  Não foi possível salvar token no .env:', err.message);
+      this._logger.warn(`Não foi possível salvar token no .env: ${err.message}`);
     }
   }
 }

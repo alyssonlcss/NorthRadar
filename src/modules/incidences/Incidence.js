@@ -1,8 +1,8 @@
 /**
- * Domain Entity — Incidence (Incidência)
+ * Incidence — modelo de dados
  *
  * Representa uma incidência do sistema Operview.
- * Entidade pura de domínio — sem dependências externas.
+ * Sem dependências externas.
  */
 class Incidence {
   /**
@@ -51,7 +51,7 @@ class Incidence {
   get durationMinutes() {
     if (!this.dataFim) return null;
     return Math.round(
-      (new Date(this.dataFim) - new Date(this.dataInicio)) / 60000
+      (new Date(this.dataFim) - new Date(this.dataInicio)) / 60000,
     );
   }
 

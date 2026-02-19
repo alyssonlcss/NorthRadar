@@ -1,29 +1,35 @@
 /**
- * Infrastructure — OperviewIncidenceRepository
+ * IncidenceRepository
  *
- * Implementação concreta de IIncidenceRepository.
- * Faz GET na API Operview com Bearer token.
+ * Consulta a API Operview com Bearer token e mapeia a resposta
+ * para objetos Incidence.
  */
-const IIncidenceRepository = require('../../domain/repositories/IIncidenceRepository');
-const Incidence = require('../../domain/entities/Incidence');
-const HttpClient = require('../http/HttpClient');
-const { HttpAuthError } = require('../http/HttpClient');
+const Incidence = require('./Incidence');
+const HttpClient = require('../../shared/HttpClient');
+const HttpAuthError = require('../../shared/errors/HttpAuthError');
 const config = require('../../config');
+const Logger = require('../../shared/Logger');
 
-class OperviewIncidenceRepository extends IIncidenceRepository {
+class IncidenceRepository {
   /**
-   * @param {import('../../domain/repositories/IAuthProvider')} authProvider
+   * @param {import('../auth/AuthProvider')} authProvider
    */
   constructor(authProvider) {
-    super();
     this._authProvider = authProvider;
     this._http = new HttpClient(config.operview.domainApi);
+    this._logger = Logger.create('IncidenceRepo');
   }
 
   /**
-   * GET /incidencias/consultar
-   * @param {Object} params
-   * @returns {Promise<{items: Incidence[], total: number}>}
+   * Busca incidências na API com filtros e paginação.
+   *
+   * @param {Object}  [params]
+   * @param {string}  [params.polo='ATLANTICO']
+   * @param {number}  [params.skip=0]
+   * @param {number}  [params.take=50]
+   * @param {number}  [params.colNumOrder=0]
+   * @param {boolean} [params.orderAsc=true]
+   * @returns {Promise<{items: Incidence[], total: number, raw: Object}>}
    */
   async findAll({
     polo = 'ATLANTICO',
@@ -43,25 +49,23 @@ class OperviewIncidenceRepository extends IIncidenceRepository {
       data = await this._http.get(
         '/incidencias/consultar',
         { colNumOrder, orderAsc, skip, take, polos: polo },
-        token
+        token,
       );
     } catch (error) {
-      // Se recebeu 401/403, forçar re-autenticação e tentar novamente
       if (error instanceof HttpAuthError) {
-        console.warn(`[IncidenceRepo] ${error.status} recebido — forçando re-autenticação...`);
+        this._logger.warn(`${error.status} recebido — forçando re-autenticação...`);
         await this._authProvider.reAuthenticate();
         const newToken = this._authProvider.getToken();
         data = await this._http.get(
           '/incidencias/consultar',
           { colNumOrder, orderAsc, skip, take, polos: polo },
-          newToken
+          newToken,
         );
       } else {
         throw error;
       }
     }
 
-    // Mapear resposta bruta → entidades de domínio
     const rawItems = data.items || data.data || data || [];
     const items = Array.isArray(rawItems)
       ? rawItems.map((raw) => this._toDomain(raw))
@@ -70,14 +74,11 @@ class OperviewIncidenceRepository extends IIncidenceRepository {
     return {
       items,
       total: data.total ?? data.totalCount ?? items.length,
-      raw: data, // manter original para debug
+      raw: data,
     };
   }
 
-  /**
-   * Converte objeto cru da API → entidade Incidence
-   * (campos serão ajustados quando virmos o payload real)
-   */
+  /** @private */
   _toDomain(raw) {
     return new Incidence({
       id: raw.id ?? raw.incidenciaId ?? raw.codigo ?? String(Math.random()),
@@ -94,4 +95,4 @@ class OperviewIncidenceRepository extends IIncidenceRepository {
   }
 }
 
-module.exports = OperviewIncidenceRepository;
+module.exports = IncidenceRepository;
