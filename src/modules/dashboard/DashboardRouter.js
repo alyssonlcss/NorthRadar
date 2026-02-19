@@ -20,16 +20,16 @@ function createDashboardRouter(authProvider) {
   const router = Router();
   const proxy = new DashboardProxy(authProvider);
   const logger = Logger.create('Dashboard');
-  const viewsPath = path.join(__dirname, '..', '..', 'views');
+  const publicPath = path.join(__dirname, '..', '..', 'public');
 
   // ── Páginas HTML ──
 
   router.get('/', (_req, res) => {
-    res.sendFile(path.join(viewsPath, 'dash.html'));
+    res.sendFile(path.join(publicPath, 'dash.html'));
   });
 
   router.get('/dash', (_req, res) => {
-    res.sendFile(path.join(viewsPath, 'dash.html'));
+    res.sendFile(path.join(publicPath, 'dash.html'));
   });
 
   // ── Status ──

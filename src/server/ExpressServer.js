@@ -25,7 +25,7 @@ class ExpressServer {
     this._app = express();
 
     this._app.use(express.json());
-    this._app.use(express.static(path.join(__dirname, '..', 'views')));
+    this._app.use(express.static(path.join(__dirname, '..', 'public')));
 
     registerRoutes(this._app, { incidenceService, authProvider });
 
