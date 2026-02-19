@@ -64,7 +64,7 @@
         tma: duracaoHours,
         tmaFormatted: duracaoStr,
         avisos: inc.totalAvisos || 0,
-        atribuicao: inc.equipeAtribuida || '-',
+        atribuicao: (inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null) || inc.equipeAtribuida || '-',
         alimentador: inc.alimentador || '',
         cd: inc.cd || ''
       };

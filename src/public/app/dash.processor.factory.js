@@ -115,7 +115,7 @@
         g.clientesAfetados += incCli;
         g.incidenciasAtivas++;
 
-        var eq = inc.equipeAtribuida || '-';
+        var eq = (inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null) || inc.equipeAtribuida || '-';
         if (eq === '-') {
           g.naoDespachados++;
         } else {
