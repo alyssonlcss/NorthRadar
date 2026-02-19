@@ -231,9 +231,9 @@ class WebServer {
 
         const polos = req.query.polos || 'ATLANTICO';
         const now = new Date();
-        const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+        const weekDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-        const dataInicio = this._formatDate(threeDaysAgo) + ' 00:00:00';
+        const dataInicio = this._formatDate(weekDaysAgo) + ' 00:00:00';
         const dataFim = this._formatDate(now) + ' 23:59:59';
 
         const url = `${baseUrl}/incidencias/consultar?colNumOrder=0&orderAsc=true&skip=0&take=5000` +

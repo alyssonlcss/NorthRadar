@@ -588,7 +588,7 @@
     <section class="panel">
       <div class="panel-header">
         <h2>Panorama de Incidências – {{vm.selectedPolo}}</h2>
-        <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} municípios</span>
+        <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} conjuntos</span>
       </div>
 
       <!-- Loading -->
@@ -607,7 +607,7 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Município</th>
+              <th>CONJUNTO</th>
               <th>Cli. Afetados</th>
               <th>Inc. Ativas</th>
               <th>Não Desp.</th>
@@ -625,8 +625,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="r in vm.panorama track by r.municipio">
-              <td><strong>{{r.municipio}}</strong></td>
+            <tr ng-repeat="r in vm.panorama track by r.conjunto">
+              <td><strong>{{r.conjunto}}</strong></td>
               <td class="num">{{r.clientesAfetados | number}}</td>
               <td class="num">{{r.incidenciasAtivas}}</td>
               <td class="num" ng-class="{'cell-red': r.naoDespachados > 0}">{{r.naoDespachados}}</td>
@@ -1223,7 +1223,7 @@
         if (items.length > 0) {
           var sample = items[0];
           console.log('[Dash] Amostra item[0]:', JSON.stringify(sample).substring(0, 500));
-          console.log('[Dash]   estado=' + sample.estado + ', dataFim=' + sample.dataFim + ', municipio=' + sample.municipio);
+          console.log('[Dash]   estado=' + sample.estado + ', dataFim=' + sample.dataFim + ', conjunto=' + sample.conjunto);
           console.log('[Dash]   clientesAfetadosAtual=' + sample.clientesAfetadosAtual + ', duracao=' + sample.duracao);
         } else {
           console.warn('[Dash] ⚠️ rawIncidencias está vazio! Nenhum dado para processar.');
@@ -1256,11 +1256,11 @@
         var groups = {};
 
         active.forEach(function(inc) {
-          var mun = inc.municipio || 'Desconhecido';
+          var conj = inc.conjunto || ('N/A - REGIÃO: ' + (inc.regiao || '—'));
 
-          if (!groups[mun]) {
-            groups[mun] = {
-              municipio: mun,
+          if (!groups[conj]) {
+            groups[conj] = {
+              conjunto: conj,
               clientesAfetados: 0,
               incidenciasAtivas: 0,
               naoDespachados: 0,
@@ -1277,7 +1277,7 @@
             };
           }
 
-          var g = groups[mun];
+          var g = groups[conj];
 
           // Clientes afetados = clientesAfetadosAtual
           g.clientesAfetados += (inc.clientesAfetadosAtual || 0);
@@ -1322,7 +1322,7 @@
           var eqCount = Object.keys(g.equipesObj).length;
           var eq2Count = Object.keys(g.equipes2RecObj).length;
           panoramaList.push({
-            municipio: g.municipio,
+            conjunto: g.conjunto,
             clientesAfetados: g.clientesAfetados,
             incidenciasAtivas: g.incidenciasAtivas,
             naoDespachados: g.naoDespachados,
