@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/main.js",
     "dev": "node src/main.js",
+    "test": "jest --verbose",
     "setup": "npm install && echo Setup concluido!"
   },
   "dependencies": {
@@ -19,5 +20,8 @@
     "northradar"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
 }

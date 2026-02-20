@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="pt-BR" ng-app="dashApp">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NorthRadar – TESTE VISUAL: Clientes Críticos com Aviso</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+
+  <style>
+    /* Barra de teste no topo */
+    .test-banner {
+      background: #E63946;
+      color: #fff;
+      padding: 10px 24px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.5px;
+      position: sticky;
+      top: 0;
+      z-index: 9999;
+    }
+    .test-banner span {
+      background: rgba(0,0,0,0.2);
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-left: 6px;
+      font-weight: 400;
+      font-size: 11px;
+    }
+    .test-scenarios {
+      background: #1a1a2e;
+      color: #ccc;
+      padding: 12px 24px;
+      font-family: monospace;
+      font-size: 12px;
+      border-bottom: 2px solid #E63946;
+    }
+    .test-scenarios h3 {
+      color: #E63946;
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+    .test-scenarios ul {
+      margin: 0;
+      padding-left: 20px;
+      line-height: 1.8;
+    }
+    .test-scenarios li.pass { color: #4ADE80; }
+    .test-scenarios li.check { color: #FFC107; }
+    .test-highlight {
+      background: #FFF3CD;
+      border: 2px solid #FFB74D;
+      border-radius: 6px;
+      padding: 8px 16px;
+      margin: 10px 24px;
+      font-size: 12px;
+      color: #856404;
+    }
+  </style>
+</head>
+
+<body ng-controller="DashCtrl as vm">
+
+  <!-- ═══════════════════════════════════════════════════════
+       BARRA DE TESTE (não existe no dash.html real)
+       ═══════════════════════════════════════════════════════ -->
+  <div class="test-banner">
+    🧪 MODO TESTE VISUAL — Dados Mock de Clientes Críticos com Aviso
+    <span>Não conecta ao servidor real</span>
+  </div>
+
+  <div class="test-scenarios">
+    <h3>📋 Cenários injetados neste mock:</h3>
+    <ul>
+      <li class="check">🔺 FORTALEZA: 2 clientes Vital (1 COM aviso "AV-001", 1 SEM) → deve PISCAR na coluna Eletrodep.</li>
+      <li class="check">🔺 CAUCAIA: 1 cliente Vital COM aviso "AV-300" → deve PISCAR</li>
+      <li class="check">🔺 MARACANAÚ: 1 cliente Essencial SEM aviso → NÃO deve piscar</li>
+      <li class="pass">✅ KPI "Urgentes | Eletrodep." deve mostrar contagem correta</li>
+      <li class="pass">✅ Clicar na célula Eletrodep. deve abrir popup com colunas CC (UC, Nome, Segmento, Aviso)</li>
+      <li class="pass">✅ No popup, linhas com aviso devem mostrar o número do aviso (ex: AV-001)</li>
+      <li class="pass">✅ Incidência INC-005 sem clientes críticos deve mostrar "—" nos campos CC</li>
+    </ul>
+  </div>
+
+  <div class="test-highlight">
+    👆 <strong>O que verificar:</strong> Na tabela "Panorama de Incidências", as células <strong>Eletrodep.</strong> de
+    FORTALEZA e CAUCAIA devem estar <strong>piscando</strong> (animação blink). Ao clicar nelas, o popup deve
+    mostrar os dados de cada cliente crítico com aviso.
+  </div>
+
+  <!-- O conteúdo abaixo é IDÊNTICO ao dash.html original -->
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- Incluído via script inline no final do arquivo         -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+
+  <!--
+    Reutilizamos os scripts reais do app (module, helpers, filters, processor, controller).
+    Apenas substituímos o DashApi por uma versão mock.
+  -->
+
+  <!-- Carrega o módulo AngularJS -->
+  <script src="/app/dash.module.js"></script>
+  <script src="/app/dash.helpers.js"></script>
+  <script src="/app/dash.filters.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       MOCK: DashApi com dados de teste
+       ═══════════════════════════════════════════════════════ -->
+  <script>
+  (function () {
+    'use strict';
+
+    angular.module('dashApp')
+      .factory('DashApi', ['$q', function ($q) {
+
+        // ── DADOS MOCK ──────────────────────────────────────
+
+        var INCIDENCIAS = [
+          // FORTALEZA: 3 incidências
+          {
+            numero: 'INC-001', estado: 'ACTIVO', dataFim: '-',
+            conjunto: 'FORTALEZA', polo: 'ATLANTICO', regiao: 'NORTE',
+            clientesAfetadosAtual: 500, duracao: '04:00',
+            totalAvisos: 3, clienteEssencial: 0,
+            eletrodependente: false, urgente: false,
+            equipeAtribuida: 'EQ-01', equipeDeslocada: '-',
+            nivelTensao: 'BT', alimentador: 'ALM-FTZ-01', cd: 'CD-01',
+            sucursal: 'FORTALEZA', municipio: 'Fortaleza',
+            tipo: 'Emergencial', causa: 'Queda de árvore',
+            dataInicio: '2026-02-20T06:00:00',
+          },
+          {
+            numero: 'INC-002', estado: 'ACTIVO', dataFim: '-',
+            conjunto: 'FORTALEZA', polo: 'ATLANTICO', regiao: 'NORTE',
+            clientesAfetadosAtual: 200, duracao: '01:30',
+            totalAvisos: 1, clienteEssencial: 1,
+            eletrodependente: true, urgente: true,
+            equipeAtribuida: 'EQ-02', equipeDeslocada: 'EQ-02',
+            nivelTensao: 'MT', alimentador: 'ALM-FTZ-02', cd: 'CD-02',
+            sucursal: 'FORTALEZA', municipio: 'Fortaleza',
+            tipo: 'Emergencial', causa: 'Cabo partido',
+            dataInicio: '2026-02-20T08:30:00',
+          },
+          {
+            numero: 'INC-003', estado: 'ACTIVO', dataFim: '-',
+            conjunto: 'FORTALEZA', polo: 'ATLANTICO', regiao: 'NORTE',
+            clientesAfetadosAtual: 80, duracao: '00:45',
+            totalAvisos: 0, clienteEssencial: 0,
+            eletrodependente: false, urgente: false,
+            equipeAtribuida: '-', equipeDeslocada: '-',
+            nivelTensao: 'BT', alimentador: 'ALM-FTZ-03', cd: 'CD-01',
+            sucursal: 'FORTALEZA', municipio: 'Fortaleza',
+            tipo: 'Emergencial', causa: 'Sobrecarga',
+            dataInicio: '2026-02-20T09:15:00',
+          },
+
+          // CAUCAIA: 2 incidências
+          {
+            numero: 'INC-004', estado: 'ACTIVO', dataFim: '-',
+            conjunto: 'CAUCAIA', polo: 'ATLANTICO', regiao: 'METROPOLITANA',
+            clientesAfetadosAtual: 100, duracao: '10:00',
+            totalAvisos: 5, clienteEssencial: 2,
+            eletrodependente: false, urgente: false,
+            equipeAtribuida: 'EQ-03', equipeDeslocada: 'EQ-03',
+            nivelTensao: 'BT', alimentador: 'ALM-CAU-01', cd: 'CD-03',
+            sucursal: 'CAUCAIA', municipio: 'Caucaia',
+            tipo: 'Emergencial', causa: 'Ventania',
+            dataInicio: '2026-02-19T23:00:00',
+          },
+          {
+            numero: 'INC-005', estado: 'ACTIVO', dataFim: '-',
+            conjunto: 'CAUCAIA', polo: 'ATLANTICO', regiao: 'METROPOLITANA',
+            clientesAfetadosAtual: 50, duracao: '25:00',
+            totalAvisos: 0, clienteEssencial: 0,
+            eletrodependente: false, urgente: false,
+            equipeAtribuida: 'PD-01', equipeDeslocada: '-',
+            nivelTensao: 'BT', alimentador: 'ALM-CAU-02', cd: 'CD-03',
+            sucursal: 'CAUCAIA', municipio: 'Caucaia',
+            tipo: 'Comercial', causa: 'Manutenção',
+            dataInicio: '2026-02-19T08:00:00',
+          },
+
+          // MARACANAÚ: 1 incidência
+          {
+            numero: 'INC-006', estado: 'ACTIVO', dataFim: '-',
+            conjunto: 'MARACANAÚ', polo: 'ATLANTICO', regiao: 'METROPOLITANA',
+            clientesAfetadosAtual: 30, duracao: '02:00',
+            totalAvisos: 1, clienteEssencial: 1,
+            eletrodependente: false, urgente: true,
+            equipeAtribuida: 'EQ-05', equipeDeslocada: 'EQ-05',
+            nivelTensao: 'MT', alimentador: 'ALM-MAR-01', cd: 'CD-04',
+            sucursal: 'MARACANAÚ', municipio: 'Maracanaú',
+            tipo: 'Emergencial', causa: 'Transformador queimado',
+            dataInicio: '2026-02-20T07:00:00',
+          },
+
+          // Incidência ENCERRADA (não deve aparecer no panorama)
+          {
+            numero: 'INC-099', estado: 'ENCERRADO', dataFim: '2026-02-20T05:00:00',
+            conjunto: 'FORTALEZA', polo: 'ATLANTICO', regiao: 'NORTE',
+            clientesAfetadosAtual: 10, duracao: '01:00',
+            totalAvisos: 0, clienteEssencial: 0,
+            eletrodependente: false, urgente: false,
+            equipeAtribuida: 'EQ-01', equipeDeslocada: 'EQ-01',
+            nivelTensao: 'BT', alimentador: 'ALM-FTZ-01', cd: 'CD-01',
+            sucursal: 'FORTALEZA', municipio: 'Fortaleza',
+            tipo: 'Emergencial', causa: 'Desconhecida',
+            dataInicio: '2026-02-20T04:00:00',
+          },
+        ];
+
+        var CLIENTES_CRITICOS = [
+          // INC-001: 2 Vitais → 1 COM aviso, 1 SEM
+          {
+            incidencia: 'INC-001',
+            uc: '100001',
+            nome: 'Hospital São José',
+            segmento: 'Vital',
+            criticidade: 1,
+            aviso: 'AV-001',
+          },
+          {
+            incidencia: 'INC-001',
+            uc: '100002',
+            nome: 'Clínica Santa Maria',
+            segmento: 'Vital',
+            criticidade: 2,
+            aviso: null,
+          },
+
+          // INC-002: 1 Essencial (não é Vital, não conta como eletrodep do cruzamento)
+          {
+            incidencia: 'INC-002',
+            uc: '200001',
+            nome: 'Escola Municipal Centro',
+            segmento: 'Essencial',
+            criticidade: 3,
+            aviso: '-',
+          },
+
+          // INC-004 (CAUCAIA): 1 Vital COM aviso
+          {
+            incidencia: 'INC-004',
+            uc: '400001',
+            nome: 'UTI Central Caucaia',
+            segmento: 'Vital',
+            criticidade: 1,
+            aviso: 'AV-300',
+          },
+
+          // INC-006 (MARACANAÚ): 1 Essencial SEM aviso → conjunto NÃO pisca
+          {
+            incidencia: 'INC-006',
+            uc: '600001',
+            nome: 'CRAS Maracanaú',
+            segmento: 'Essencial',
+            criticidade: 3,
+            aviso: null,
+          },
+        ];
+
+        var EQUIPES = [
+          {
+            nome: 'EQ-01', polo: 'ATLANTICO', sucursal: 'FORTALEZA',
+            nivelTensao: 'BT', nivelTensaoAtual: 'BT',
+            atribuidas: 3, improdutivas: 0, emergenciais: 3, comerciais: 0,
+            tempoServico: '04:00', dataHoraInicio: '2026-02-20T05:00:00',
+            produtividadeHora: 1.2,
+          },
+          {
+            nome: 'EQ-02', polo: 'ATLANTICO', sucursal: 'FORTALEZA',
+            nivelTensao: 'MT', nivelTensaoAtual: 'MT',
+            atribuidas: 1, improdutivas: 0, emergenciais: 1, comerciais: 0,
+            tempoServico: '02:30', dataHoraInicio: '2026-02-20T07:00:00',
+            produtividadeHora: 0.8,
+          },
+          {
+            nome: 'EQ-03', polo: 'ATLANTICO', sucursal: 'CAUCAIA',
+            nivelTensao: 'BT', nivelTensaoAtual: 'BT',
+            atribuidas: 2, improdutivas: 1, emergenciais: 1, comerciais: 1,
+            tempoServico: '10:00', dataHoraInicio: '2026-02-19T23:00:00',
+            produtividadeHora: 0.5,
+          },
+          {
+            nome: 'PD-01', polo: 'ATLANTICO', sucursal: 'CAUCAIA',
+            nivelTensao: 'BT', nivelTensaoAtual: 'BT',
+            atribuidas: 1, improdutivas: 0, emergenciais: 0, comerciais: 1,
+            tempoServico: '03:00', dataHoraInicio: '2026-02-20T06:00:00',
+            produtividadeHora: 0.3,
+          },
+          {
+            nome: 'EQ-05', polo: 'ATLANTICO', sucursal: 'MARACANAÚ',
+            nivelTensao: 'MT', nivelTensaoAtual: 'MT',
+            atribuidas: 1, improdutivas: 0, emergenciais: 1, comerciais: 0,
+            tempoServico: '02:00', dataHoraInicio: '2026-02-20T07:00:00',
+            produtividadeHora: 1.0,
+          },
+        ];
+
+        // ── API MOCK ──────────────────────────────────────
+
+        return {
+          getStatus: function () {
+            return $q.resolve({
+              auth: { hasToken: true, tokenPreview: 'MOCK-TOKEN-***' },
+              config: { domainApi: 'http://mock-test' },
+            });
+          },
+
+          getIncidencias: function (polo) {
+            console.log('[MockApi] getIncidencias polo=' + polo);
+            return $q.resolve(INCIDENCIAS);
+          },
+
+          getEquipes: function (polo) {
+            console.log('[MockApi] getEquipes polo=' + polo);
+            return $q.resolve(EQUIPES);
+          },
+
+          getClientesCriticos: function (polo) {
+            console.log('[MockApi] getClientesCriticos polo=' + polo);
+            return $q.resolve(CLIENTES_CRITICOS);
+          },
+
+          getDebug: function (polo) {
+            return $q.resolve({
+              mock: true,
+              incidencias: INCIDENCIAS.length,
+              clientesCriticos: CLIENTES_CRITICOS.length,
+              equipes: EQUIPES.length,
+            });
+          },
+        };
+      }]);
+  })();
+  </script>
+
+  <!-- Carrega o processor e controller REAIS -->
+  <script src="/app/dash.processor.factory.js"></script>
+  <script src="/app/dash.controller.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CSS: Reutiliza o estilo do dash.html real (inline)
+       Incluído via link (se servido pelo Express) ou inline
+       ═══════════════════════════════════════════════════════ -->
+  <style>
+    :root {
+      --enel-blue: #003DA5;
+      --enel-dark: #00235E;
+      --enel-light: #E8F0FE;
+      --enel-accent: #0066CC;
+      --bg-body: #ECEEF1;
+      --bg-card: #FFFFFF;
+      --border: #D5D9E0;
+      --text-primary: #1A1D23;
+      --text-secondary: #5A6270;
+      --text-header: #FFFFFF;
+      --success: #1B8A3D;
+      --success-bg: #D4EDDA;
+      --warning: #df6c13;
+      --warning-bg: #FFF3CD;
+      --orange: #D45B07;
+      --orange-bg: #FFE0CC;
+      --danger: #C62828;
+      --danger-bg: #F8D7DA;
+      --danger-dark: #8B0000;
+      --danger-dark-bg: #E8B4B4;
+      --info: #0277BD;
+      --info-bg: #D1ECF1;
+      --shadow: 0 2px 10px rgba(0,0,0,0.07);
+      --radius: 8px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+      background: var(--bg-body);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.4;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--enel-dark), var(--enel-blue));
+      color: var(--text-header);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      position: sticky; top: 32px; z-index: 100;
+    }
+    .header-brand { display: flex; align-items: center; gap: 12px; }
+    .header-brand .logo-icon {
+      width: 32px; height: 32px; background: #FFFFFF; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 800; color: var(--enel-blue);
+    }
+    .header-brand h1 { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+    .header-brand .subtitle { font-size: 12px; opacity: 0.7; margin-left: 4px; }
+    .header-right { display: flex; align-items: center; gap: 20px; }
+    .filter-group { display: flex; align-items: center; gap: 6px; }
+    .filter-group label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-right: 4px; }
+    .filter-btn {
+      background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+      padding: 5px 16px; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.5); }
+    .filter-btn.active { background: #FFFFFF; color: var(--enel-blue); border-color: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .status-indicator { display: flex; align-items: center; gap: 6px; font-size: 11px; opacity: 0.85; }
+    .pulse-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; animation: pulse 2s ease-in-out infinite; }
+    .pulse-dot.error { background: #EF4444; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.85); } }
+    .main-content { padding: 20px 24px 40px; max-width: 1920px; margin: 0 auto; }
+    .panel { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; border: 1px solid var(--border); }
+    .panel-header { background: var(--enel-blue); color: var(--text-header); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .panel-header h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .panel-header .badge-count { background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+    .table-wrapper { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .data-table thead th { background: #2C5AA0; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; }
+    .data-table thead th:last-child { border-right: none; }
+    .data-table tbody tr { transition: background 0.15s; }
+    .data-table tbody tr:nth-child(even) { background: #F7F8FA; }
+    .data-table tbody tr:hover { background: var(--enel-light); }
+    .data-table tbody td { padding: 6px 10px; border-bottom: 1px solid #EDF0F4; white-space: nowrap; }
+    .data-table tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .data-table tfoot td { padding: 8px 10px; font-weight: 700; background: #E8EDF5; border-top: 2px solid var(--enel-blue); white-space: nowrap; }
+    .data-table tfoot td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .cell-green { background: var(--success-bg) !important; color: var(--success); font-weight: 600; text-align: center; }
+    .cell-yellow { background: var(--warning-bg) !important; color: var(--warning); font-weight: 600; text-align: center; }
+    .cell-orange { background: var(--orange-bg) !important; color: var(--orange); font-weight: 600; text-align: center; }
+    .cell-red { background: var(--danger-bg) !important; color: var(--danger); font-weight: 600; text-align: center; }
+    .cell-darkred { background: var(--danger-dark-bg) !important; color: var(--danger-dark); font-weight: 700; text-align: center; }
+    .cell-blue { background: var(--info-bg) !important; color: var(--info); font-weight: 600; text-align: center; }
+    .top10-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+    .top10-grid .panel { margin-bottom: 0; }
+    .top10-grid .panel-header { background: #37474F; }
+    .top10-grid .data-table { font-size: 11px; }
+    .top10-grid .data-table thead th { background: #455A64; font-size: 9.5px; padding: 6px 8px; }
+    .top10-grid .data-table tbody td { padding: 5px 8px; }
+    .loading-overlay { display: flex; align-items: center; justify-content: center; padding: 40px 20px; flex-direction: column; gap: 12px; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--enel-blue); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: var(--text-secondary); font-size: 13px; }
+    .empty-state { text-align: center; padding: 30px 20px; color: var(--text-secondary); font-size: 13px; }
+    .error-state { text-align: center; padding: 20px; color: var(--danger); background: var(--danger-bg); font-size: 13px; }
+    .kpi-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .kpi-item { background: var(--bg-card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 14px 16px; text-align: center; }
+    .kpi-item .kpi-value { font-size: 26px; font-weight: 800; color: var(--enel-blue); line-height: 1.1; }
+    .kpi-item .kpi-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-top: 4px; }
+    .kpi-item.kpi-danger .kpi-value { color: var(--danger); }
+    .kpi-item.kpi-success .kpi-value { color: var(--success); }
+    .kpi-item.kpi-warning .kpi-value { color: var(--warning); }
+    .equipes-panel .panel-header { background: #1B5E20; }
+    .equipes-panel .data-table thead th { background: #2E7D32; }
+    .equipes2-panel .panel-header { background: #E65100; }
+    .equipes2-panel .data-table thead th { background: #EF6C00; }
+    .refresh-spin { animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes blink-eletrodep { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .cell-blink { animation: blink-eletrodep 1s ease-in-out infinite; font-weight: 700; }
+    .clickable { cursor: pointer; }
+    .clickable:hover { text-decoration: underline; opacity: 0.85; }
+    .sortable { cursor: pointer; user-select: none; position: relative; padding-right: 16px !important; transition: background 0.15s; }
+    .sortable:hover { filter: brightness(1.25); }
+    .sort-indicator { font-size: 9px; margin-left: 3px; opacity: 0.9; display: inline-block; vertical-align: middle; }
+    .sort-hint { font-size: 8px; margin-left: 3px; opacity: 0.35; display: inline-block; vertical-align: middle; }
+
+    /* Popup */
+    .popup-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    .popup-container { background: #fff; border-radius: 10px; width: 94vw; max-height: 88vh; display: flex; flex-direction: column; box-shadow: 0 12px 48px rgba(0,0,0,0.3); border: 1px solid var(--border); }
+    .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--enel-blue); border-radius: 10px 10px 0 0; color: #fff; }
+    .popup-header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+    .popup-close { background: none; border: none; color: #fff; font-size: 22px; cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 4px; }
+    .popup-close:hover { background: rgba(255,255,255,0.2); }
+    .popup-info { padding: 8px 20px; font-size: 12px; color: var(--text-secondary); border-bottom: 1px solid var(--border); background: #F7F8FA; }
+    .popup-body { overflow: auto; flex: 1; padding: 0; }
+    .popup-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .popup-table thead th { position: sticky; top: 0; background: #2C5AA0; color: #fff; padding: 8px 10px; text-align: left; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.4px; white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.1); }
+    .popup-table thead th.sortable:hover { filter: brightness(1.25); }
+    .popup-table tbody td { padding: 6px 10px; border-bottom: 1px solid #EDF0F4; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .popup-table tbody tr:nth-child(even) { background: #F7F8FA; }
+    .popup-table tbody tr:hover { background: var(--enel-light); }
+    .footer { text-align: center; padding: 16px; color: var(--text-secondary); font-size: 11px; border-top: 1px solid var(--border); background: var(--bg-card); }
+  </style>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CONTEÚDO HTML IDÊNTICO AO DASH.HTML
+       ═══════════════════════════════════════════════════════ -->
+
+  <header class="header">
+    <div class="header-brand">
+      <div class="logo-icon">E</div>
+      <h1>NorthRadar</h1>
+      <span class="subtitle">· Dashboard Operacional · <strong style="color:#FFC107">TESTE VISUAL</strong></span>
+    </div>
+    <div class="header-right">
+      <div class="filter-group">
+        <label>POLO:</label>
+        <button class="filter-btn"
+                ng-repeat="p in vm.polos"
+                ng-class="{'active': vm.selectedPolo === p}"
+                ng-click="vm.changePolo(p)">
+          {{p}}
+        </button>
+      </div>
+      <div class="status-indicator">
+        <span class="pulse-dot" ng-class="{'error': vm.hasError}"></span>
+        <span ng-if="!vm.authReady" style="color:#FFC107">{{vm.authStatus}}</span>
+        <span ng-if="vm.authReady && vm.lastUpdate">Atualizado: {{vm.lastUpdate | date:'HH:mm:ss'}}</span>
+        <span ng-if="vm.authReady && !vm.lastUpdate">Carregando dados...</span>
+        <span ng-if="vm.refreshing" class="refresh-spin">&#x21bb;</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-content">
+
+    <!-- KPIs -->
+    <div class="kpi-bar" ng-if="!vm.loadingInc">
+      <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
+        <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
+        <div class="kpi-label">Inc. Ativas | Não Despach.</div>
+      </div>
+      <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
+        <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
+        <div class="kpi-label">Clientes Afetados</div>
+      </div>
+      <div class="kpi-item kpi-success">
+        <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
+        <div class="kpi-label">Equipes em Turno | 2º Recurso</div>
+      </div>
+      <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
+        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
+        <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Eletrodep.</span></div>
+      </div>
+      <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
+        <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
+        <div class="kpi-label">CHI Total</div>
+      </div>
+    </div>
+
+    <!-- PANORAMA -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Panorama de Incidências – {{vm.selectedPolo}}</h2>
+        <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} conjuntos</span>
+      </div>
+      <div class="loading-overlay" ng-if="vm.loadingInc"><div class="spinner"></div><div class="loading-text">Carregando...</div></div>
+      <div class="error-state" ng-if="vm.errorInc && !vm.loadingInc">⚠ {{vm.errorInc}}</div>
+      <div class="table-wrapper" ng-if="!vm.loadingInc && !vm.errorInc">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable" ng-click="vm.sortBy('panorama','conjunto')">CONJUNTO<span class="sort-indicator" ng-if="vm.sort.panorama.field==='conjunto'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='conjunto'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.panorama.field==='chi'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='chi'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','clientesAfetados')">Cli. Afetados<span class="sort-indicator" ng-if="vm.sort.panorama.field==='clientesAfetados'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='clientesAfetados'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','incidenciasAtivas')">Inc. Ativas<span class="sort-indicator" ng-if="vm.sort.panorama.field==='incidenciasAtivas'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='incidenciasAtivas'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','naoDespachados')">Não Desp.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='naoDespachados'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='naoDespachados'">⇅</span></th>
+              <th>Equipes</th>
+              <th>Inc/Equipe</th>
+              <th>Qtt 2º Rec.</th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','qttAvisos')">Qtt Avisos<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qttAvisos'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qttAvisos'">⇅</span></th>
+              <th>Cl. Essencial</th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','eletrodependente')">Eletrodep.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='eletrodependente'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='eletrodependente'">⇅</span></th>
+              <th>&lt; 08h</th>
+              <th>08h &lt; 16h</th>
+              <th>16h &lt; 24h</th>
+              <th>24h &lt; 48h</th>
+              <th>&gt; 48h</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="r in vm.panorama | orderBy:vm.sort.panorama.field:vm.sort.panorama.reverse track by r.conjunto">
+              <td class="clickable" ng-click="vm.abrirPopup('panorama', 'conjunto', r.conjunto)"><strong>{{r.conjunto}}</strong></td>
+              <td class="num">{{r.chi | number}}</td>
+              <td class="num">{{r.clientesAfetados | number}}</td>
+              <td class="num">{{r.incidenciasAtivas}}</td>
+              <td class="num" ng-class="{'cell-red': r.naoDespachados > 0}">{{r.naoDespachados}}</td>
+              <td class="num">{{r.equipes}}</td>
+              <td class="num">{{r.incPorEquipe}}</td>
+              <td class="num" ng-class="{'cell-yellow': r.qtt2Rec > 0}">{{r.qtt2Rec}}</td>
+              <td class="num" ng-class="{'cell-blue': r.qttAvisos > 0}">{{r.qttAvisos}}</td>
+              <td class="num" ng-class="{'cell-orange': r.clEssencial > 0}">{{r.clEssencial}}</td>
+              <td class="num clickable" ng-class="{'cell-orange': r.eletrodependente > 0}" ng-click="vm.abrirPopup('panorama', 'eletrodependente', r.conjunto)">{{r.eletrodependente}}</td>
+              <td class="num" ng-class="{'cell-green': r.lt8h > 0}">{{r.lt8h}}</td>
+              <td class="num" ng-class="{'cell-yellow': r.h8_16 > 0}">{{r.h8_16}}</td>
+              <td class="num" ng-class="{'cell-orange': r.h16_24 > 0}">{{r.h16_24}}</td>
+              <td class="num" ng-class="{'cell-red': r.h24_48 > 0}">{{r.h24_48}}</td>
+              <td class="num" ng-class="{'cell-darkred': r.gt48h > 0}">{{r.gt48h}}</td>
+            </tr>
+          </tbody>
+          <tfoot ng-if="vm.panorama.length">
+            <tr>
+              <td><strong>TOTAL</strong></td>
+              <td class="num">{{vm.totals.chi | number}}</td>
+              <td class="num">{{vm.totals.clientesAfetados | number}}</td>
+              <td class="num">{{vm.totals.incidenciasAtivas}}</td>
+              <td class="num">{{vm.totals.naoDespachados}}</td>
+              <td class="num">{{vm.totals.equipes}}</td>
+              <td class="num">{{vm.totals.incPorEquipe}}</td>
+              <td class="num">{{vm.totals.qtt2Rec}}</td>
+              <td class="num">{{vm.totals.qttAvisos}}</td>
+              <td class="num">{{vm.totals.clEssencial}}</td>
+              <td class="num">{{vm.totals.eletrodependente}}</td>
+              <td class="num">{{vm.totals.lt8h}}</td>
+              <td class="num">{{vm.totals.h8_16}}</td>
+              <td class="num">{{vm.totals.h16_24}}</td>
+              <td class="num">{{vm.totals.h24_48}}</td>
+              <td class="num">{{vm.totals.gt48h}}</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div class="empty-state" ng-if="!vm.panorama.length">Nenhuma incidência encontrada.</div>
+      </div>
+    </section>
+
+    <!-- EQUIPES -->
+    <section class="panel equipes-panel">
+      <div class="panel-header">
+        <h2>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}</h2>
+        <span class="badge-count">{{vm.totalEquipes}} equipes</span>
+      </div>
+      <div class="loading-overlay" ng-if="vm.loadingEq"><div class="spinner"></div></div>
+      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th><th>Polo</th><th>Sucursal</th><th>Nível Tensão</th>
+              <th>Atribuídas</th><th>Improdutivas</th><th>Emergenciais</th><th>Comerciais</th>
+              <th>Tempo Serviço</th><th>Data/Hora Início</th><th>Produtividade/Hora</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="eq in vm.equipes track by $index">
+              <td><strong>{{eq.nome}}</strong></td>
+              <td>{{eq.polo}}</td>
+              <td>{{eq.sucursal}}</td>
+              <td>{{eq.nivelTensao}}</td>
+              <td class="num">{{eq.atribuidas}}</td>
+              <td class="num" ng-class="{'cell-red': eq.improdutivas > 0}">{{eq.improdutivas}}</td>
+              <td class="num">{{eq.emergenciais}}</td>
+              <td class="num">{{eq.comerciais}}</td>
+              <td>{{eq.tempoServico}}</td>
+              <td>{{eq.dataHoraInicio | dashDateTime}}</td>
+              <td class="num">{{eq.produtividadeHora}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- POPUP UNIVERSAL -->
+  <div class="popup-overlay" ng-show="vm.popup.visible" ng-click="vm.fecharPopup()">
+    <div class="popup-container" ng-click="$event.stopPropagation()">
+      <div class="popup-header">
+        <h3>{{vm.popup.titulo}}</h3>
+        <button class="popup-close" ng-click="vm.fecharPopup()">&times;</button>
+      </div>
+      <div class="popup-info">
+        Total: <strong>{{vm.popup.dados.length}}</strong> registro(s)
+      </div>
+      <div class="popup-body">
+        <table class="popup-table">
+          <thead>
+            <tr>
+              <th class="sortable" ng-repeat="col in vm.popup.colunasContexto" ng-click="vm.sortBy('popup', col.key)">{{col.label}}<span class="sort-indicator" ng-if="vm.sort.popup.field===col.key">{{vm.sort.popup.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.popup.field!==col.key">⇅</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="row in vm.popup.dados | orderBy:vm.sort.popup.field:vm.sort.popup.reverse track by $index">
+              <td ng-repeat="col in vm.popup.colunasContexto">
+                <span ng-if="row[col.key] === true || row[col.key] === false">{{row[col.key] ? 'Sim' : 'Não'}}</span>
+                <span ng-if="row[col.key] !== true && row[col.key] !== false">{{row[col.key]}}</span>
+              </td>
+            </tr>
+            <tr ng-if="vm.popup.dados.length === 0">
+              <td colspan="{{vm.popup.colunasContexto.length}}" style="text-align:center;padding:30px;color:var(--text-secondary)">Nenhum registro encontrado.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    NorthRadar &copy; 2026 · <strong style="color:#E63946">MODO TESTE</strong> — Dados mock injetados
+  </footer>
+
+</body>
+</html>

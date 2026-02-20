@@ -689,8 +689,8 @@
         <div class="kpi-label">Equipes em Turno | 2º Recurso</div>
       </div>
       <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline">{{vm.kpis.eletrodependentes | number}}</span></div>
-        <div class="kpi-label">Urgentes | Eletrodep.</div>
+        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
+        <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Eletrodep.</span></div>
       </div>
       <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
         <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
@@ -753,7 +753,7 @@
               <td class="num clickable" ng-class="{'cell-yellow': r.qtt2Rec > 0}" ng-click="vm.abrirPopup('panorama', 'qtt2Rec', r.conjunto)">{{r.qtt2Rec}}</td>
               <td class="num clickable" ng-class="{'cell-blue': r.qttAvisos > 0}" ng-click="vm.abrirPopup('panorama', 'qttAvisos', r.conjunto)">{{r.qttAvisos}}</td>
               <td class="num clickable" ng-class="{'cell-orange': r.clEssencial > 0}" ng-click="vm.abrirPopup('panorama', 'clEssencial', r.conjunto)">{{r.clEssencial}}</td>
-              <td class="num clickable" ng-class="{'cell-orange': r.eletrodependente > 0, 'cell-blink': r.temAviso}" ng-click="vm.abrirPopup('panorama', 'eletrodependente', r.conjunto)">{{r.eletrodependente}}</td>
+              <td class="num clickable" ng-class="{'cell-orange': r.eletrodependente > 0}" ng-click="vm.abrirPopup('panorama', 'eletrodependente', r.conjunto)">{{r.eletrodependente}}</td>
               <td class="num clickable" ng-class="{'cell-green': r.lt8h > 0}" ng-click="vm.abrirPopup('panorama', 'lt8h', r.conjunto)">{{r.lt8h}}</td>
               <td class="num clickable" ng-class="{'cell-yellow': r.h8_16 > 0}" ng-click="vm.abrirPopup('panorama', 'h8_16', r.conjunto)">{{r.h8_16}}</td>
               <td class="num clickable" ng-class="{'cell-orange': r.h16_24 > 0}" ng-click="vm.abrirPopup('panorama', 'h16_24', r.conjunto)">{{r.h16_24}}</td>
@@ -773,7 +773,7 @@
               <td class="num">{{vm.totals.qtt2Rec}}</td>
               <td class="num">{{vm.totals.qttAvisos}}</td>
               <td class="num">{{vm.totals.clEssencial}}</td>
-              <td class="num" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.totals.eletrodependente}}</td>
+              <td class="num">{{vm.totals.eletrodependente}}</td>
               <td class="num">{{vm.totals.lt8h}}</td>
               <td class="num">{{vm.totals.h8_16}}</td>
               <td class="num">{{vm.totals.h16_24}}</td>
