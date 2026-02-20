@@ -517,6 +517,81 @@
 
     /* Refresh icon spin */
     .refresh-spin { animation: spin 1s linear infinite; display: inline-block; }
+
+    /* ══════════════════════════════════════════════════════════
+       POPUP MODAL
+       ══════════════════════════════════════════════════════════ */
+    .popup-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .popup-container {
+      background: #fff;
+      border-radius: 10px;
+      width: 94vw; max-height: 88vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+    }
+    .popup-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--enel-blue);
+      border-radius: 10px 10px 0 0;
+      color: #fff;
+    }
+    .popup-header h3 { margin: 0; font-size: 15px; font-weight: 700; }
+    .popup-close {
+      background: none; border: none; color: #fff; font-size: 22px;
+      cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 4px;
+    }
+    .popup-close:hover { background: rgba(255,255,255,0.2); }
+    .popup-info {
+      padding: 8px 20px;
+      font-size: 12px; color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+      background: #F7F8FA;
+    }
+    .popup-body {
+      overflow: auto; flex: 1;
+      padding: 0;
+    }
+    .popup-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 11.5px;
+    }
+    .popup-table thead th {
+      position: sticky; top: 0;
+      background: #2C5AA0; color: #fff;
+      padding: 8px 10px; text-align: left;
+      font-weight: 600; text-transform: uppercase;
+      font-size: 10px; letter-spacing: 0.4px;
+      white-space: nowrap;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .popup-table tbody td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #EDF0F4;
+      max-width: 280px;
+      overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .popup-table tbody tr:nth-child(even) { background: #F7F8FA; }
+    .popup-table tbody tr:hover { background: var(--enel-light); }
+    .cliente-critico-badge {
+      display: inline-block;
+      background: #FFF3E0; border: 1px solid #FFB74D;
+      border-radius: 4px; padding: 2px 6px; margin: 1px 2px;
+      font-size: 10px; color: #E65100;
+      white-space: nowrap;
+    }
+
+    /* Clickable cells */
+    .clickable { cursor: pointer; }
+    .clickable:hover { text-decoration: underline; opacity: 0.85; }
   </style>
 </head>
 
@@ -560,11 +635,11 @@
 
     <!-- ── KPI Summary ── -->
     <div class="kpi-bar" ng-if="!vm.loadingInc">
-      <div class="kpi-item kpi-warning">
+      <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
         <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
         <div class="kpi-label">Inc. Ativas | Não Despach.</div>
       </div>
-      <div class="kpi-item kpi-danger">
+      <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
         <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
         <div class="kpi-label">Clientes Afetados</div>
       </div>
@@ -572,11 +647,11 @@
         <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
         <div class="kpi-label">Equipes em Turno | 2º Recurso</div>
       </div>
-      <div class="kpi-item kpi-danger">
-        <div class="kpi-value">{{vm.kpis.urgentes | number}} | {{vm.kpis.eletrodependentes | number}}</div>
+      <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
+        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline">{{vm.kpis.eletrodependentes | number}}</span></div>
         <div class="kpi-label">Urgentes | Eletrodep.</div>
       </div>
-      <div class="kpi-item">
+      <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
         <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
         <div class="kpi-label">CHI Total</div>
       </div>
@@ -627,22 +702,22 @@
           </thead>
           <tbody>
             <tr ng-repeat="r in vm.panorama track by r.conjunto">
-              <td><strong>{{r.conjunto}}</strong></td>
-              <td class="num">{{r.chi | number}}</td>
-              <td class="num">{{r.clientesAfetados | number}}</td>
-              <td class="num">{{r.incidenciasAtivas}}</td>
-              <td class="num" ng-class="{'cell-red': r.naoDespachados > 0}">{{r.naoDespachados}}</td>
-              <td class="num">{{r.equipes}}</td>
+              <td class="clickable" ng-click="vm.abrirPopup('panorama', 'conjunto', r.conjunto)"><strong>{{r.conjunto}}</strong></td>
+              <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'chi', r.conjunto)">{{r.chi | number}}</td>
+              <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'clientesAfetados', r.conjunto)">{{r.clientesAfetados | number}}</td>
+              <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'incidenciasAtivas', r.conjunto)">{{r.incidenciasAtivas}}</td>
+              <td class="num clickable" ng-class="{'cell-red': r.naoDespachados > 0}" ng-click="vm.abrirPopup('panorama', 'naoDespachados', r.conjunto)">{{r.naoDespachados}}</td>
+              <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'equipes', r.conjunto)">{{r.equipes}}</td>
               <td class="num">{{r.incPorEquipe}}</td>
-              <td class="num" ng-class="{'cell-yellow': r.qtt2Rec > 0}">{{r.qtt2Rec}}</td>
-              <td class="num" ng-class="{'cell-blue': r.qttAvisos > 0}">{{r.qttAvisos}}</td>
-              <td class="num" ng-class="{'cell-orange': r.clEssencial > 0}">{{r.clEssencial}}</td>
-              <td class="num" ng-class="{'cell-orange': r.eletrodependente > 0}">{{r.eletrodependente}}</td>
-              <td class="num" ng-class="{'cell-green': r.lt8h > 0}">{{r.lt8h}}</td>
-              <td class="num" ng-class="{'cell-yellow': r.h8_16 > 0}">{{r.h8_16}}</td>
-              <td class="num" ng-class="{'cell-orange': r.h16_24 > 0}">{{r.h16_24}}</td>
-              <td class="num" ng-class="{'cell-red': r.h24_48 > 0}">{{r.h24_48}}</td>
-              <td class="num" ng-class="{'cell-darkred': r.gt48h > 0}">{{r.gt48h}}</td>
+              <td class="num clickable" ng-class="{'cell-yellow': r.qtt2Rec > 0}" ng-click="vm.abrirPopup('panorama', 'qtt2Rec', r.conjunto)">{{r.qtt2Rec}}</td>
+              <td class="num clickable" ng-class="{'cell-blue': r.qttAvisos > 0}" ng-click="vm.abrirPopup('panorama', 'qttAvisos', r.conjunto)">{{r.qttAvisos}}</td>
+              <td class="num clickable" ng-class="{'cell-orange': r.clEssencial > 0}" ng-click="vm.abrirPopup('panorama', 'clEssencial', r.conjunto)">{{r.clEssencial}}</td>
+              <td class="num clickable" ng-class="{'cell-orange': r.eletrodependente > 0}" ng-click="vm.abrirPopup('panorama', 'eletrodependente', r.conjunto)">{{r.eletrodependente}}</td>
+              <td class="num clickable" ng-class="{'cell-green': r.lt8h > 0}" ng-click="vm.abrirPopup('panorama', 'lt8h', r.conjunto)">{{r.lt8h}}</td>
+              <td class="num clickable" ng-class="{'cell-yellow': r.h8_16 > 0}" ng-click="vm.abrirPopup('panorama', 'h8_16', r.conjunto)">{{r.h8_16}}</td>
+              <td class="num clickable" ng-class="{'cell-orange': r.h16_24 > 0}" ng-click="vm.abrirPopup('panorama', 'h16_24', r.conjunto)">{{r.h16_24}}</td>
+              <td class="num clickable" ng-class="{'cell-red': r.h24_48 > 0}" ng-click="vm.abrirPopup('panorama', 'h24_48', r.conjunto)">{{r.h24_48}}</td>
+              <td class="num clickable" ng-class="{'cell-darkred': r.gt48h > 0}" ng-click="vm.abrirPopup('panorama', 'gt48h', r.conjunto)">{{r.gt48h}}</td>
             </tr>
           </tbody>
           <tfoot ng-if="vm.panorama.length">
@@ -699,7 +774,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="r in vm.top10Chi track by $index">
+              <tr ng-repeat="r in vm.top10Chi track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
                 <td>{{r.incidencia}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
@@ -740,7 +815,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="r in vm.top10Tma track by $index">
+              <tr ng-repeat="r in vm.top10Tma track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
                 <td>{{r.incidencia}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
@@ -781,7 +856,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="r in vm.top10Cli track by $index">
+              <tr ng-repeat="r in vm.top10Cli track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
                 <td>{{r.incidencia}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
@@ -836,7 +911,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="eq in vm.equipes track by $index">
+            <tr ng-repeat="eq in vm.equipes track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
               <td><strong>{{eq.nome}}</strong></td>
               <td>{{eq.polo}}</td>
               <td>{{eq.sucursal}}</td>
@@ -888,7 +963,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="eq in vm.equipes2Recurso track by $index">
+            <tr ng-repeat="eq in vm.equipes2Recurso track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
               <td><strong>{{eq.nome}}</strong></td>
               <td>{{eq.polo}}</td>
               <td>{{eq.sucursal}}</td>
@@ -908,6 +983,66 @@
       </div>
     </section>
 
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       POPUP MODAL UNIVERSAL
+       ═══════════════════════════════════════════════════════ -->
+  <div class="popup-overlay" ng-show="vm.popup.visible" ng-click="vm.fecharPopup()">
+    <div class="popup-container" ng-click="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="popup-header">
+        <h3>{{vm.popup.titulo}}</h3>
+        <button class="popup-close" ng-click="vm.fecharPopup()">&times;</button>
+      </div>
+
+      <!-- Info -->
+      <div class="popup-info">
+        Total: <strong>{{vm.popup.dados.length}}</strong> registro(s)
+      </div>
+
+      <!-- Table -->
+      <div class="popup-body">
+        <table class="popup-table">
+          <thead>
+            <tr>
+              <th ng-repeat="col in vm.popup.colunasContexto">{{col.label}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="row in vm.popup.dados track by $index">
+              <td ng-repeat="col in vm.popup.colunasContexto">
+
+                <!-- Coluna especial: lista de clientes críticos -->
+                <span ng-if="col.key === '_clientesCriticos'">
+                  <span ng-if="row.clientesCriticos.length === 0">—</span>
+                  <span ng-repeat="cl in row.clientesCriticos track by $index" class="cliente-critico-badge">
+                    UC: {{cl.uc}} | {{cl.nome}} | {{cl.segmento}}
+                  </span>
+                </span>
+
+                <!-- Booleano -->
+                <span ng-if="col.key !== '_clientesCriticos' && (row[col.key] === true || row[col.key] === false)">
+                  {{row[col.key] ? 'Sim' : 'Não'}}
+                </span>
+
+                <!-- Colunas normais -->
+                <span ng-if="col.key !== '_clientesCriticos' && row[col.key] !== true && row[col.key] !== false">
+                  {{row[col.key]}}
+                </span>
+
+              </td>
+            </tr>
+            <tr ng-if="vm.popup.dados.length === 0">
+              <td colspan="{{vm.popup.colunasContexto.length}}" style="text-align:center;padding:30px;color:var(--text-secondary)">
+                Nenhum registro encontrado.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════

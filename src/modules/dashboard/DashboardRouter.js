@@ -272,6 +272,59 @@ function createDashboardRouter(authProvider) {
     }
   });
 
+  // ── Proxy: clientes críticos (eletrodependentes) ──
+
+  router.get('/api/dash/clientes-criticos', async (req, res) => {
+    try {
+      const token = authProvider?.getToken();
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          error: 'Token não disponível. Aguarde a autenticação.',
+          items: [],
+        });
+      }
+
+      const baseUrl = config.operview.domainApi;
+      if (!baseUrl) {
+        return res.status(500).json({
+          success: false,
+          error: 'OPERVIEW_DOMAIN_API não configurado no .env',
+          items: [],
+        });
+      }
+
+      const polos = req.query.polos || 'ATLANTICO';
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+      const url =
+        `${baseUrl}/dashboards/clientes-criticos/consultar` +
+        `?incidencias=` +
+        `&polos=${encodeURIComponent(polos)}` +
+        `&estados=ACTIVO` +
+        `&colNumOrder=0&orderAsc=true&skip=0&take=5000` +
+        `&dataInicio=${encodeURIComponent(proxy.formatDate(weekAgo) + ' 00:00:00')}` +
+        `&dataFim=${encodeURIComponent(proxy.formatDate(now) + ' 23:59:59')}`;
+
+      logger.info(`📡 Buscando clientes críticos para polo=${polos}...`);
+      const data = await proxy.get(url, token);
+
+      const items = proxy.normalizeItems(data);
+      const total = data.total ?? data.totalCount ?? data.recordsTotal ?? items.length;
+
+      logger.info(`✅ ${items.length} clientes críticos recebidos (total: ${total})`);
+      if (items.length > 0) {
+        logger.info(`  Campos do 1º item: ${Object.keys(items[0]).slice(0, 10).join(', ')}...`);
+      }
+
+      res.json({ success: true, items, total, polo: polos, timestamp: new Date().toISOString() });
+    } catch (err) {
+      logger.error(`Erro proxy clientes-criticos: ${err.message}`);
+      res.status(500).json({ success: false, error: err.message, items: [] });
+    }
+  });
+
   return router;
 }
 

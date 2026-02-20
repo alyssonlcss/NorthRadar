@@ -16,6 +16,7 @@
       getStatus: getStatus,
       getIncidencias: getIncidencias,
       getEquipes: getEquipes,
+      getClientesCriticos: getClientesCriticos,
       getDebug: getDebug
     };
 
@@ -92,6 +93,38 @@
           }
 
           return list;
+        });
+    }
+
+    /**
+     * Busca clientes críticos (eletrodependentes / essenciais) do polo.
+     * @param {string} polo
+     * @returns {Promise<Array>}
+     */
+    function getClientesCriticos(polo) {
+      return $http.get('/api/dash/clientes-criticos', { params: { polos: polo } })
+        .then(function (res) {
+          var data = res.data;
+
+          if (data.success === false) {
+            throw { data: data, statusText: data.error };
+          }
+
+          var items = data.items || [];
+
+          if (items.length === 0 && typeof data === 'object') {
+            var dataKeys = Object.keys(data);
+            for (var ki = 0; ki < dataKeys.length; ki++) {
+              if (Array.isArray(data[dataKeys[ki]]) && data[dataKeys[ki]].length > 0) {
+                console.log('[DashApi] Clientes críticos encontrados na chave: ' + dataKeys[ki]);
+                items = data[dataKeys[ki]];
+                break;
+              }
+            }
+          }
+
+          console.log('[DashApi] Recebidos ' + items.length + ' clientes críticos');
+          return items;
         });
     }
 

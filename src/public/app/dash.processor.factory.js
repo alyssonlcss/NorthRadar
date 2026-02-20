@@ -5,6 +5,8 @@
  * - Separar incidências ativas × encerradas
  * - Montar panorama agrupado por conjunto
  * - Calcular KPIs, totais e rankings TOP 10
+ * - Cruzar clientes críticos com incidências
+ * - Filtrar incidências por contexto de clique (popup universal)
  * - Mapear equipes com campos robustos
  */
 (function () {
@@ -20,8 +22,287 @@
 
     return {
       processIncidencias: processIncidencias,
-      processEquipes: processEquipes
+      processEquipes: processEquipes,
+      cruzarClientesCriticos: cruzarClientesCriticos,
+      filtrarIncidenciasPorContexto: filtrarIncidenciasPorContexto
     };
+
+    // ═══════════════════════════════════════════════════════
+    // CLIENTES CRÍTICOS – CRUZAMENTO
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Cruza clientes críticos com incidências:
+     *   clienteCritico.incidencia === incidencia.numero
+     *
+     * @param {Array} clientesCriticos - resposta de /clientes-criticos/consultar
+     * @param {Array} incidencias      - incidências brutas
+     * @returns {{ clientesPorIncidencia, eletrodepPorConjunto, totalEletrodep }}
+     */
+    function cruzarClientesCriticos(clientesCriticos, incidencias) {
+      var clientesPorIncidencia = {};
+      var eletrodepPorConjunto = {};
+      var totalEletrodep = 0;
+
+      // Indexar incidências por numero
+      var incMap = {};
+      incidencias.forEach(function (inc) {
+        if (inc.numero) incMap[inc.numero] = inc;
+      });
+
+      (clientesCriticos || []).forEach(function (cl) {
+        var incNum = cl.incidencia || '';
+        if (!incNum) return;
+
+        if (!clientesPorIncidencia[incNum]) {
+          clientesPorIncidencia[incNum] = [];
+        }
+        clientesPorIncidencia[incNum].push(cl);
+
+        // Contar eletrodependentes por conjunto
+        if (cl.segmento === 'Vital' || cl.eletrodependente === true) {
+          totalEletrodep++;
+          var inc = incMap[incNum];
+          var conj = inc ? (inc.conjunto || 'N/A') : 'N/A';
+          eletrodepPorConjunto[conj] = (eletrodepPorConjunto[conj] || 0) + 1;
+        }
+      });
+
+      console.log('[Processor] Clientes críticos cruzados: ' + (clientesCriticos || []).length +
+                  ' clientes, ' + totalEletrodep + ' eletrodep.');
+
+      return {
+        clientesPorIncidencia: clientesPorIncidencia,
+        eletrodepPorConjunto: eletrodepPorConjunto,
+        totalEletrodep: totalEletrodep
+      };
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // FILTRO POR CONTEXTO (para popup universal)
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Filtra incidências pelo contexto de clique e cruza com clientes.
+     *
+     * @param {Object} contexto
+     *   - tipo:  'card' | 'panorama' | 'top10' | 'equipe'
+     *   - campo: nome do campo clicado
+     *   - valor: filtro adicional (conjunto, numero, equipe)
+     * @param {Array}  incidencias           - todas as incidências brutas
+     * @param {Object} clientesPorIncidencia - mapa do cruzamento
+     * @returns {Array}
+     */
+    function filtrarIncidenciasPorContexto(contexto, incidencias, clientesPorIncidencia) {
+      var filtered = [];
+
+      switch (contexto.tipo) {
+
+        case 'card':
+          filtered = incidencias.filter(function (inc) {
+            if (!H.isActive(inc)) return false;
+            if (contexto.campo === 'urgente') return inc.urgente === true || inc.urgente === 'true';
+            if (contexto.campo === 'eletrodependente') {
+              var cls = clientesPorIncidencia[inc.numero] || [];
+              return cls.some(function (c) { return c.segmento === 'Vital' || c.eletrodependente === true; });
+            }
+            if (contexto.campo === 'totalIncidencias') return true;
+            if (contexto.campo === 'totalClientes') return (inc.clientesAfetadosAtual || 0) > 0;
+            if (contexto.campo === 'naoDespachados') {
+              var eq = _getEquipe(inc);
+              return !eq || eq === '-';
+            }
+            return true;
+          });
+          break;
+
+        case 'panorama':
+          filtered = incidencias.filter(function (inc) {
+            if (!H.isActive(inc)) return false;
+            var conj = inc.conjunto || ('N/A - REGIÃO: ' + (inc.regiao || '—'));
+            if (contexto.valor && conj !== contexto.valor) return false;
+            if (contexto.campo === 'eletrodependente') {
+              var cls = clientesPorIncidencia[inc.numero] || [];
+              return cls.some(function (c) { return c.segmento === 'Vital' || c.eletrodependente === true; });
+            }
+            if (contexto.campo === 'naoDespachados') {
+              var eq = _getEquipe(inc);
+              return !eq || eq === '-';
+            }
+            if (contexto.campo === 'equipes') {
+              var eqE = _getEquipe(inc);
+              return eqE && eqE !== '-';
+            }
+            if (contexto.campo === 'qtt2Rec') {
+              var eq2 = _getEquipe(inc);
+              if (!eq2 || eq2 === '-') return false;
+              var eq2Upper = eq2.toUpperCase();
+              return TAGS_2REC.some(function (tag) { return eq2Upper.indexOf(tag) >= 0; });
+            }
+            if (contexto.campo === 'lt8h' || contexto.campo === 'h8_16' ||
+                contexto.campo === 'h16_24' || contexto.campo === 'h24_48' ||
+                contexto.campo === 'gt48h') {
+              var horas = H.parseDuracao(inc.duracao);
+              if (contexto.campo === 'lt8h')   return horas < 8;
+              if (contexto.campo === 'h8_16')  return horas >= 8  && horas < 16;
+              if (contexto.campo === 'h16_24') return horas >= 16 && horas < 24;
+              if (contexto.campo === 'h24_48') return horas >= 24 && horas < 48;
+              if (contexto.campo === 'gt48h')  return horas >= 48;
+            }
+            return true;
+          });
+          break;
+
+        case 'top10':
+          filtered = incidencias.filter(function (inc) {
+            return inc.numero === contexto.valor;
+          });
+          break;
+
+        case 'equipe':
+          filtered = incidencias.filter(function (inc) {
+            if (!H.isActive(inc)) return false;
+            var eqDesl = inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null;
+            var eqAtrib = inc.equipeAtribuida && inc.equipeAtribuida !== '-' ? inc.equipeAtribuida : null;
+            return eqDesl === contexto.valor || eqAtrib === contexto.valor;
+          });
+          break;
+
+        default:
+          filtered = incidencias;
+      }
+
+      // Enriquecer com TODOS os campos da incidência + clientes críticos + CHI calculado
+      return filtered.map(function (inc) {
+        var clientes = clientesPorIncidencia[inc.numero] || [];
+        var duracaoHours = H.parseDuracao(inc.duracao);
+        var chi = Math.round((inc.clientesAfetadosAtual || 0) * duracaoHours * 10) / 10;
+
+        return {
+          // Identificação
+          numero: inc.numero || '',
+          chi: chi,
+          nivelTensao: inc.nivelTensao || '',
+          nivelTensaoComTipo: inc.nivelTensaoComTipo || '',
+          estado: inc.estado || '',
+          tipo: inc.tipo || '',
+          tipoAgrupamento: inc.tipoAgrupamento || '',
+
+          // Datas
+          dataInicio: inc.dataInicio || '',
+          dataAtribuicao: inc.dataAtribuicao || '-',
+          dataInicioDeslocamento: inc.dataInicioDeslocamento || '-',
+          dataChegada: inc.dataChegada || '-',
+          dataFim: inc.dataFim || '-',
+          duracao: inc.duracao || '00:00',
+          dataPrevisaoAtendimento: inc.dataPrevisaoAtendimento || '-',
+          dataEscalonamento: inc.dataEscalonamento || '-',
+
+          // Localização
+          polo: inc.polo || '',
+          sucursal: inc.sucursal || '',
+          conjunto: inc.conjunto || '',
+          regiao: inc.regiao || '',
+          municipio: inc.municipio || '',
+          cd: inc.cd || '',
+          alimentador: inc.alimentador || '',
+          pontoEletrico: inc.pontoEletrico || '',
+          latitude: inc.latitude || '',
+          longitude: inc.longitude || '',
+
+          // Clientes
+          clientesAfetadosAtual: inc.clientesAfetadosAtual || 0,
+          normalizadosAbaixo3Min: inc.normalizadosAbaixo3Min || 0,
+          clientesAfetadosAcima3Min: inc.clientesAfetadosAcima3Min || 0,
+          afetacaoMaxima: inc.afetacaoMaxima || 0,
+          conh: inc.conh || '0.00',
+          clienteEssencial: inc.clienteEssencial || 0,
+          totalAvisos: inc.totalAvisos || 0,
+          numeroCliente: inc.numeroCliente || '',
+          tipoReclamacao: inc.tipoReclamacao || '',
+
+          // Flags
+          eletrodependente: inc.eletrodependente || false,
+          urgente: inc.urgente || false,
+          condominio: inc.condominio || false,
+          improdutiva: inc.improdutiva || false,
+          reincidente: inc.reincidente || false,
+          amplaChip: inc.amplaChip || false,
+          energiaSolar: inc.energiaSolar || false,
+          iluminacaoPublica: inc.iluminacaoPublica || false,
+          areaRisco: inc.areaRisco || 'Não',
+
+          // Causa
+          causa: inc.causa || '',
+
+          // Equipes
+          equipeAtribuida: inc.equipeAtribuida || '',
+          equipeDeslocada: inc.equipeDeslocada || '-',
+          atribuicao: _getEquipe(inc),
+
+          // Tempos
+          tmp: inc.tmp || 0,
+          tmd: inc.tmd || 0,
+          tme: inc.tme || 0,
+          tma: inc.tma || 0,
+          tempoParaManobra: inc.tempoParaManobra || 0,
+          tempoPreparacao: inc.tempoPreparacao || '00:00:00',
+          tempoDeslocamento: inc.tempoDeslocamento || '00:00:00',
+          tempoExecucao: inc.tempoExecucao || '00:00:00',
+          tempoAtendimento: inc.tempoAtendimento || '00:00:00',
+          tempoAgrupado: inc.tempoAgrupado || '',
+
+          // Compensação
+          compensacao: inc.compensacao || 0,
+          nivelCompensasao: inc.nivelCompensasao || '',
+          valorCompensacao: inc.valorCompensacao || 0,
+
+          // Callback / URA / BOT
+          callback: inc.callback || '',
+          retornoCallback: inc.retornoCallback || '-',
+          resultadoLigacaoCallback: inc.resultadoLigacaoCallback || '-',
+          motivoCallback: inc.motivoCallback || '-',
+          statusURA: inc.statusURA || '-',
+          resultadoURA: inc.resultadoURA || '',
+          resultadoBOT: inc.resultadoBOT || '',
+          motivoBOT: inc.motivoBOT || '-',
+
+          // Monitor Ramal
+          monitorRamal: inc.monitorRamal || '',
+          alarmeMR: inc.alarmeMR || false,
+          statusMonitorRamal: inc.statusMonitorRamal || '',
+          inicioMR: inc.inicioMR || null,
+
+          // Outros
+          osm: inc.osm || 'Não',
+          ordem2: inc.ordem2 || 'Não',
+          cumpreRegrasOuro: inc.cumpreRegrasOuro || 'Não',
+          convergencia: inc.convergencia || null,
+          pontoAtencao: inc.pontoAtencao || '-',
+          periodo: inc.periodo || '',
+          operador: inc.operador || '',
+          numerosAvisos: inc.numerosAvisos || '',
+          numerosProtocolos: inc.numerosProtocolos || '',
+          observacao: inc.observacao || '',
+
+          // Dados cruzados de clientes críticos
+          clientesCriticos: clientes.map(function (c) {
+            return {
+              uc: c.uc || '',
+              nome: c.nome || '',
+              segmento: c.segmento || '',
+              criticidade: c.criticidade || 0,
+              aviso: c.aviso || null
+            };
+          })
+        };
+      });
+    }
+
+    /** Helper: obter equipe prioridade deslocada > atribuída */
+    function _getEquipe(inc) {
+      return (inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null) || inc.equipeAtribuida || '-';
+    }
 
     // ═══════════════════════════════════════════════════════
     // INCIDÊNCIAS
@@ -31,10 +312,12 @@
      * Processa array bruto de incidências e retorna objeto com
      * panorama, totals, kpis, top10Chi, top10Tma, top10Cli e debugInfo.
      *
-     * @param {Array} items - Incidências brutas da API
+     * @param {Array}  items                  - Incidências brutas da API
+     * @param {Object} [eletrodepPorConjunto] - contagem eletrodep por conjunto (do cruzamento)
+     * @param {number} [totalEletrodep]       - total geral de eletrodependentes
      * @returns {Object}
      */
-    function processIncidencias(items) {
+    function processIncidencias(items, eletrodepPorConjunto, totalEletrodep) {
       console.log('[Processor] processIncidencias() chamada com ' + items.length + ' itens');
 
       if (items.length > 0) {
@@ -46,6 +329,9 @@
         console.warn('[Processor] ⚠️ rawIncidencias está vazio!');
         return emptyResult();
       }
+
+      eletrodepPorConjunto = eletrodepPorConjunto || {};
+      totalEletrodep = totalEletrodep || 0;
 
       // ── Separar ativas / encerradas ──
       var active = [];
@@ -66,13 +352,13 @@
       console.log('[Processor] ' + active.length + ' ativas, ' + closed.length + ' encerradas');
 
       // ── Panorama ──
-      var panorama = buildPanorama(active);
+      var panorama = buildPanorama(active, eletrodepPorConjunto);
 
       // ── Totals ──
       var totals = buildTotals(panorama);
 
       // ── KPIs ──
-      var kpis = buildKpis(active, totals);
+      var kpis = buildKpis(active, totals, totalEletrodep);
 
       // ── TOP 10 ──
       var top10Chi = buildTop10(active, 'chi');
@@ -92,7 +378,7 @@
 
     // ── Panorama: agrupar por conjunto ────────────────────
 
-    function buildPanorama(active) {
+    function buildPanorama(active, eletrodepPorConjunto) {
       var groups = {};
 
       active.forEach(function (inc) {
@@ -115,7 +401,7 @@
         g.clientesAfetados += incCli;
         g.incidenciasAtivas++;
 
-        var eq = (inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null) || inc.equipeAtribuida || '-';
+        var eq = _getEquipe(inc);
         if (eq === '-') {
           g.naoDespachados++;
         } else {
@@ -138,13 +424,17 @@
         else g.gt48h++;
       });
 
-      // Converter para array
+      // Converter para array e injetar eletrodep do cruzamento
       var list = [];
       var keys = Object.keys(groups);
       for (var k = 0; k < keys.length; k++) {
         var g = groups[keys[k]];
         var eqCount = Object.keys(g.equipesObj).length;
         var eq2Count = Object.keys(g.equipes2RecObj).length;
+
+        // Usar contagem de clientes críticos se disponível; senão, fallback p/ campo da incidência
+        var eletrodepCount = eletrodepPorConjunto[g.conjunto] || g.eletrodependente;
+
         list.push({
           conjunto: g.conjunto,
           chi: Math.round(g.chi),
@@ -156,7 +446,7 @@
           qtt2Rec: eq2Count,
           qttAvisos: g.qttAvisos,
           clEssencial: g.clEssencial,
-          eletrodependente: g.eletrodependente,
+          eletrodependente: eletrodepCount,
           lt8h: g.lt8h, h8_16: g.h8_16, h16_24: g.h16_24, h24_48: g.h24_48, gt48h: g.gt48h
         });
       }
@@ -197,14 +487,12 @@
 
     // ── KPIs ─────────────────────────────────────────────
 
-    function buildKpis(active, totals) {
+    function buildKpis(active, totals, totalEletrodep) {
       var urgCount = 0;
-      var eleCount = 0;
       var chiTotal = 0;
 
       active.forEach(function (inc) {
         if (inc.urgente === true || inc.urgente === 'true') urgCount++;
-        if (inc.eletrodependente === true || inc.eletrodependente === 'true') eleCount++;
         chiTotal += (inc.clientesAfetadosAtual || 0) * H.parseDuracao(inc.duracao);
       });
 
@@ -214,7 +502,7 @@
         totalEquipes: 0, // será atualizado pelas equipes
         naoDespachados: totals.naoDespachados,
         urgentes: urgCount,
-        eletrodependentes: eleCount,
+        eletrodependentes: totalEletrodep || totals.eletrodependente,
         totalChi: Math.round(chiTotal)
       };
     }
@@ -234,9 +522,6 @@
 
     /**
      * Mapeia equipes brutas da API e separa 2º recurso.
-     *
-     * @param {Array} rawList - Equipes brutas
-     * @returns {{ equipes: Array, equipes2Recurso: Array, totalEquipes: number, totalEquipes2: number }}
      */
     function processEquipes(rawList) {
       var equipes = rawList.map(function (eq) {

@@ -6,18 +6,19 @@
  * - Ligar métodos públicos ao template
  * - Delegar para DashApi (HTTP) e DashProcessor (lógica)
  * - Orquestrar o ciclo de vida (init, refresh, retry)
+ * - Popup universal (abrir/fechar com contexto dinâmico)
  */
 (function () {
   'use strict';
 
   angular.module('dashApp')
     .controller('DashCtrl', [
-      '$interval', '$timeout',
+      '$interval', '$timeout', '$q',
       'DashApi', 'DashProcessor', 'DashHelpers',
       DashCtrl
     ]);
 
-  function DashCtrl($interval, $timeout, Api, Proc, Helpers) {
+  function DashCtrl($interval, $timeout, $q, Api, Proc, Helpers) {
     var vm = this;
 
     // ── View-model state ─────────────────────────────────
@@ -34,33 +35,45 @@
     vm.authStatus     = 'Verificando autenticação...';
 
     // ── View-model data ──────────────────────────────────
-    vm.rawIncidencias   = [];
-    vm.panorama         = [];
-    vm.totals           = {};
-    vm.kpis             = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, urgentes: 0, eletrodependentes: 0, totalChi: 0 };
-    vm.top10Chi         = [];
-    vm.top10Tma         = [];
-    vm.top10Cli         = [];
-    vm.equipes          = [];
-    vm.equipes2Recurso  = [];
-    vm.totalEquipes     = 0;
-    vm.totalEquipes2    = 0;
-    vm.debugInfo        = {};
-    vm.showDebug        = false;
-    vm.debugResult      = null;
+    vm.rawIncidencias        = [];
+    vm.clientesPorIncidencia = {};
+    vm.panorama              = [];
+    vm.totals                = {};
+    vm.kpis                  = { totalIncidencias: 0, totalClientes: 0, totalEquipes: 0, naoDespachados: 0, urgentes: 0, eletrodependentes: 0, totalChi: 0 };
+    vm.top10Chi              = [];
+    vm.top10Tma              = [];
+    vm.top10Cli              = [];
+    vm.equipes               = [];
+    vm.equipes2Recurso       = [];
+    vm.totalEquipes          = 0;
+    vm.totalEquipes2         = 0;
+    vm.debugInfo             = {};
+    vm.showDebug             = false;
+    vm.debugResult           = null;
+
+    // ── Popup state ──────────────────────────────────────
+    vm.popup = {
+      visible: false,
+      titulo: '',
+      contextoCampo: '',
+      dados: [],
+      colunasContexto: []
+    };
 
     // ── Public bindings ──────────────────────────────────
-    vm.changePolo    = changePolo;
+    vm.changePolo     = changePolo;
     vm.formatDateTime = Helpers.formatDateTime;
-    vm.toggleDebug   = function () { vm.showDebug = !vm.showDebug; };
-    vm.testDebug     = testDebug;
+    vm.toggleDebug    = function () { vm.showDebug = !vm.showDebug; };
+    vm.testDebug      = testDebug;
+    vm.abrirPopup     = abrirPopup;
+    vm.fecharPopup    = fecharPopup;
 
     // ── Bootstrap ────────────────────────────────────────
     checkAuthAndLoad();
     $interval(loadAll, 900000); // 15 min
 
     // ═══════════════════════════════════════════════════════
-    // ORCHESTRATION (o controller só orquestra, não processa)
+    // ORCHESTRATION
     // ═══════════════════════════════════════════════════════
 
     function changePolo(polo) {
@@ -95,51 +108,68 @@
       if (!vm.authReady) return;
       vm.refreshing = true;
       vm.hasError = false;
-      loadIncidencias();
+      loadIncidenciasEClientesCriticos();
       loadEquipes();
     }
 
-    // ── Incidências ──────────────────────────────────────
+    // ── Incidências + Clientes Críticos (paralelo) ──────
 
-    function loadIncidencias() {
+    function loadIncidenciasEClientesCriticos() {
       vm.loadingInc = true;
       vm.errorInc = null;
 
-      console.log('[Ctrl] Buscando incidências para polo=' + vm.selectedPolo + '...');
+      console.log('[Ctrl] Buscando incidências + clientes críticos para polo=' + vm.selectedPolo + '...');
 
-      Api.getIncidencias(vm.selectedPolo)
-        .then(function (items) {
-          vm.rawIncidencias = items;
+      $q.all({
+        incidencias: Api.getIncidencias(vm.selectedPolo),
+        clientesCriticos: Api.getClientesCriticos(vm.selectedPolo)
+      }).then(function (results) {
+        var items = results.incidencias || [];
+        var clCriticos = results.clientesCriticos || [];
 
-          // Delega todo o processamento
-          var result     = Proc.processIncidencias(items);
-          vm.panorama    = result.panorama;
-          vm.totals      = result.totals;
-          vm.kpis        = result.kpis;
-          vm.top10Chi    = result.top10Chi;
-          vm.top10Tma    = result.top10Tma;
-          vm.top10Cli    = result.top10Cli;
-          vm.debugInfo   = result.debugInfo;
+        vm.rawIncidencias = items;
 
-          // Mantém totalEquipes vindo de equipes (se já carregou)
-          vm.kpis.totalEquipes = vm.totalEquipes;
+        // Cruzar clientes críticos com incidências
+        var cruzamento = Proc.cruzarClientesCriticos(clCriticos, items);
+        vm.clientesPorIncidencia = cruzamento.clientesPorIncidencia;
 
-          vm.loadingInc = false;
-          vm.lastUpdate = new Date();
-          vm.refreshing = false;
-        })
-        .catch(function (err) {
-          console.error('[Ctrl] Erro incidências:', err);
-          vm.errorInc = extractErrorMsg(err);
-          vm.loadingInc = false;
-          vm.hasError = true;
-          vm.refreshing = false;
+        // Processar incidências com dados de eletrodep do cruzamento
+        var result = Proc.processIncidencias(
+          items,
+          cruzamento.eletrodepPorConjunto,
+          cruzamento.totalEletrodep
+        );
 
-          if (err.status === 401) {
-            console.warn('[Ctrl] 401 — token expirado, retry em 10 s...');
-            $timeout(loadIncidencias, 10000);
-          }
-        });
+        vm.panorama    = result.panorama;
+        vm.totals      = result.totals;
+        vm.kpis        = result.kpis;
+        vm.top10Chi    = result.top10Chi;
+        vm.top10Tma    = result.top10Tma;
+        vm.top10Cli    = result.top10Cli;
+        vm.debugInfo   = result.debugInfo;
+
+        // Mantém totalEquipes vindo de equipes (se já carregou)
+        vm.kpis.totalEquipes = vm.totalEquipes;
+
+        vm.loadingInc = false;
+        vm.lastUpdate = new Date();
+        vm.refreshing = false;
+
+        console.log('[Ctrl] Dados carregados. Eletrodep: ' + cruzamento.totalEletrodep +
+                    ', Clientes críticos: ' + clCriticos.length);
+      })
+      .catch(function (err) {
+        console.error('[Ctrl] Erro incidências/clientes:', err);
+        vm.errorInc = extractErrorMsg(err);
+        vm.loadingInc = false;
+        vm.hasError = true;
+        vm.refreshing = false;
+
+        if (err.status === 401) {
+          console.warn('[Ctrl] 401 — token expirado, retry em 10 s...');
+          $timeout(loadIncidenciasEClientesCriticos, 10000);
+        }
+      });
     }
 
     // ── Equipes ──────────────────────────────────────────
@@ -152,7 +182,6 @@
 
       Api.getEquipes(vm.selectedPolo)
         .then(function (rawList) {
-          // Delega mapeamento + filtro 2º recurso
           var result         = Proc.processEquipes(rawList);
           vm.equipes         = result.equipes;
           vm.equipes2Recurso = result.equipes2Recurso;
@@ -171,6 +200,237 @@
             $timeout(loadEquipes, 10000);
           }
         });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // POPUP UNIVERSAL
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Abre popup com dados filtrados pelo contexto de clique.
+     *
+     * @param {string} tipo   - 'card' | 'panorama' | 'top10' | 'equipe'
+     * @param {string} campo  - campo clicado (ex: 'urgente', 'eletrodependente', 'chi', etc)
+     * @param {string} [valor] - filtro adicional (conjunto, numero, equipe)
+     */
+    function abrirPopup(tipo, campo, valor) {
+      var contexto = { tipo: tipo, campo: campo, valor: valor || null };
+
+      var dados = Proc.filtrarIncidenciasPorContexto(
+        contexto,
+        vm.rawIncidencias,
+        vm.clientesPorIncidencia
+      );
+
+      var colunasContexto = _getColunasContexto(tipo, campo);
+
+      vm.popup = {
+        visible: true,
+        titulo: _getTituloPopup(tipo, campo, valor),
+        contextoCampo: campo,
+        dados: dados,
+        colunasContexto: colunasContexto
+      };
+
+      console.log('[Ctrl] Popup aberto: ' + tipo + '/' + campo + ' → ' + dados.length + ' registros');
+    }
+
+    function fecharPopup() {
+      vm.popup.visible = false;
+      vm.popup.dados = [];
+    }
+
+    /**
+     * Define TODAS as colunas da tabela do popup.
+     * A ordem muda conforme o contexto do clique:
+     * colunas contextuais vêm primeiro, depois as demais na ordem padrão.
+     */
+    function _getColunasContexto(tipo, campo) {
+
+      // ── Todas as colunas disponíveis (ordem padrão) ──
+      var todas = [
+        { key: 'numero',                  label: 'Incidência' },
+        { key: 'chi',                     label: 'CHI' },
+        { key: 'nivelTensao',             label: 'NT' },
+        { key: 'nivelTensaoComTipo',      label: 'NT c/ Tipo' },
+        { key: 'estado',                  label: 'Estado' },
+        { key: 'tipo',                    label: 'Tipo' },
+        { key: 'dataInicio',              label: 'Data Início' },
+        { key: 'dataAtribuicao',          label: 'Data Atribuição' },
+        { key: 'dataInicioDeslocamento',  label: 'Início Desloc.' },
+        { key: 'dataChegada',             label: 'Data Chegada' },
+        { key: 'dataFim',                 label: 'Data Fim' },
+        { key: 'duracao',                 label: 'Duração' },
+        { key: 'dataPrevisaoAtendimento', label: 'Previsão Atend.' },
+        { key: 'dataEscalonamento',       label: 'Escalonamento' },
+        { key: 'polo',                    label: 'Polo' },
+        { key: 'sucursal',                label: 'Sucursal' },
+        { key: 'conjunto',                label: 'Conjunto' },
+        { key: 'regiao',                  label: 'Região' },
+        { key: 'municipio',               label: 'Município' },
+        { key: 'causa',                   label: 'Causa' },
+        { key: 'clientesAfetadosAtual',   label: 'Cli. Afetados' },
+        { key: 'normalizadosAbaixo3Min',  label: 'Norm. <3min' },
+        { key: 'clientesAfetadosAcima3Min', label: 'Cli. >3min' },
+        { key: 'afetacaoMaxima',          label: 'Afet. Máxima' },
+        { key: 'conh',                    label: 'CONH' },
+        { key: 'cd',                      label: 'CD' },
+        { key: 'alimentador',             label: 'Alimentador' },
+        { key: 'pontoEletrico',           label: 'Ponto Elétrico' },
+        { key: 'eletrodependente',        label: 'Eletrodep.' },
+        { key: 'urgente',                 label: 'Urgente' },
+        { key: 'condominio',              label: 'Condomínio' },
+        { key: 'improdutiva',             label: 'Improdutiva' },
+        { key: 'reincidente',             label: 'Reincidente' },
+        { key: 'amplaChip',               label: 'Ampla Chip' },
+        { key: 'energiaSolar',            label: 'Energia Solar' },
+        { key: 'iluminacaoPublica',       label: 'Ilum. Pública' },
+        { key: 'totalAvisos',             label: 'Total Avisos' },
+        { key: 'numeroCliente',           label: 'Nº Cliente' },
+        { key: 'tipoReclamacao',          label: 'Tipo Reclamação' },
+        { key: 'callback',                label: 'Callback' },
+        { key: 'retornoCallback',         label: 'Retorno Callback' },
+        { key: 'resultadoLigacaoCallback', label: 'Resultado Lig. CB' },
+        { key: 'motivoCallback',          label: 'Motivo Callback' },
+        { key: 'monitorRamal',            label: 'Monitor Ramal' },
+        { key: 'alarmeMR',                label: 'Alarme MR' },
+        { key: 'statusMonitorRamal',      label: 'Status MR' },
+        { key: 'inicioMR',                label: 'Início MR' },
+        { key: 'atribuicao',              label: 'Atribuição' },
+        { key: 'equipeAtribuida',         label: 'Eq. Atribuída' },
+        { key: 'equipeDeslocada',         label: 'Eq. Deslocada' },
+        { key: 'tmp',                     label: 'TMP' },
+        { key: 'tmd',                     label: 'TMD' },
+        { key: 'tme',                     label: 'TME' },
+        { key: 'tma',                     label: 'TMA' },
+        { key: 'tempoPreparacao',         label: 'Tempo Preparação' },
+        { key: 'tempoDeslocamento',       label: 'Tempo Desloc.' },
+        { key: 'tempoExecucao',           label: 'Tempo Execução' },
+        { key: 'tempoAtendimento',        label: 'Tempo Atend.' },
+        { key: 'tempoParaManobra',        label: 'Tempo Manobra' },
+        { key: 'tempoAgrupado',           label: 'Tempo Agrupado' },
+        { key: 'latitude',                label: 'Latitude' },
+        { key: 'longitude',               label: 'Longitude' },
+        { key: 'compensacao',             label: 'Compensação' },
+        { key: 'nivelCompensasao',        label: 'Nível Compens.' },
+        { key: 'valorCompensacao',        label: 'Valor Compens.' },
+        { key: 'statusURA',               label: 'Status URA' },
+        { key: 'resultadoURA',            label: 'Resultado URA' },
+        { key: 'resultadoBOT',            label: 'Resultado BOT' },
+        { key: 'motivoBOT',               label: 'Motivo BOT' },
+        { key: 'tipoAgrupamento',         label: 'Tipo Agrupam.' },
+        { key: 'clienteEssencial',        label: 'Cl. Essencial' },
+        { key: 'osm',                     label: 'OSM' },
+        { key: 'ordem2',                  label: 'Ordem 2' },
+        { key: 'cumpreRegrasOuro',        label: 'Regras Ouro' },
+        { key: 'areaRisco',               label: 'Área Risco' },
+        { key: 'convergencia',            label: 'Convergência' },
+        { key: 'pontoAtencao',            label: 'Ponto Atenção' },
+        { key: 'periodo',                 label: 'Período' },
+        { key: 'operador',                label: 'Operador' },
+        { key: 'numerosAvisos',           label: 'Nº Avisos' },
+        { key: 'numerosProtocolos',       label: 'Nº Protocolos' },
+        { key: 'observacao',              label: 'Observação' }
+      ];
+
+      // ── Colunas extras (contextuais, inseridas no início) ──
+      var extras = [];
+
+      // ── Definir quais keys devem ir para o início conforme o clique ──
+      var prioridade = [];
+
+      if (campo === 'eletrodependente') {
+        extras = [{ key: '_clientesCriticos', label: 'Clientes Críticos', tipo: 'lista' }];
+        prioridade = ['eletrodependente'];
+      } else if (campo === 'urgente') {
+        prioridade = ['urgente'];
+      } else if (campo === 'chi') {
+        prioridade = ['chi', 'clientesAfetadosAtual', 'duracao'];
+      } else if (campo === 'cli' || campo === 'totalClientes' || campo === 'clientesAfetados') {
+        prioridade = ['clientesAfetadosAtual', 'chi', 'afetacaoMaxima'];
+      } else if (campo === 'tma') {
+        prioridade = ['duracao', 'tma', 'tme', 'tmd', 'tmp'];
+      } else if (campo === 'naoDespachados') {
+        prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
+      } else if (campo === 'clEssencial') {
+        prioridade = ['clienteEssencial'];
+      } else if (campo === 'qttAvisos') {
+        prioridade = ['totalAvisos', 'numerosAvisos'];
+      } else if (campo === 'incidenciasAtivas') {
+        prioridade = ['estado', 'dataInicio', 'duracao'];
+      } else if (campo === 'lt8h' || campo === 'h8_16' || campo === 'h16_24' || campo === 'h24_48' || campo === 'gt48h') {
+        prioridade = ['duracao', 'tma', 'dataInicio'];
+      } else if (campo === 'conjunto') {
+        prioridade = ['conjunto', 'estado', 'dataInicio', 'duracao'];
+      } else if (campo === 'equipes') {
+        prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
+      } else if (campo === 'qtt2Rec') {
+        prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
+      } else if (tipo === 'equipe') {
+        prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
+      }
+
+      // Reordenar: prioridade primeiro, depois o resto na ordem original
+      var result = extras.slice();
+      var usedKeys = {};
+      for (var e = 0; e < extras.length; e++) usedKeys[extras[e].key] = true;
+
+      // Adicionar colunas prioritárias
+      for (var p = 0; p < prioridade.length; p++) {
+        for (var t = 0; t < todas.length; t++) {
+          if (todas[t].key === prioridade[p] && !usedKeys[todas[t].key]) {
+            result.push(todas[t]);
+            usedKeys[todas[t].key] = true;
+            break;
+          }
+        }
+      }
+
+      // Adicionar as demais colunas na ordem original
+      for (var i = 0; i < todas.length; i++) {
+        if (!usedKeys[todas[i].key]) {
+          result.push(todas[i]);
+        }
+      }
+
+      return result;
+    }
+
+    function _getTituloPopup(tipo, campo, valor) {
+      var labels = {
+        urgente: 'Incidências Urgentes',
+        eletrodependente: 'Incidências com Eletrodependentes',
+        totalIncidencias: 'Todas as Incidências Ativas',
+        totalClientes: 'Incidências com Clientes Afetados',
+        clientesAfetados: 'Incidências com Clientes Afetados',
+        naoDespachados: 'Incidências Não Despachadas',
+        chi: 'Incidências por CHI',
+        cli: 'Incidências por Clientes',
+        tma: 'Incidências por TMA',
+        incidenciasAtivas: 'Incidências Ativas',
+        clEssencial: 'Incidências com Clientes Essenciais',
+        qttAvisos: 'Incidências com Avisos',
+        lt8h: 'Incidências < 08h',
+        h8_16: 'Incidências 08h–16h',
+        h16_24: 'Incidências 16h–24h',
+        h24_48: 'Incidências 24h–48h',
+        gt48h: 'Incidências > 48h',
+        conjunto: 'Incidências do Conjunto',
+        equipes: 'Incidências com Equipe',
+        qtt2Rec: 'Incidências 2º Recurso'
+      };
+
+      var label = labels[campo] || ('Incidências — ' + campo);
+
+      if (tipo === 'panorama' && valor) {
+        label += ' — ' + valor;
+      } else if (tipo === 'equipe' && valor) {
+        label = 'Incidências da Equipe ' + valor;
+      } else if (tipo === 'top10' && valor) {
+        label = 'Detalhes Incidência ' + valor;
+      }
+
+      return label;
     }
 
     // ── Debug ────────────────────────────────────────────
