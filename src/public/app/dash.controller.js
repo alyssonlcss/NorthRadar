@@ -34,6 +34,17 @@
     vm.authReady      = false;
     vm.authStatus     = 'Verificando autenticação...';
 
+    // ── Sort state per table ─────────────────────────────
+    vm.sort = {
+      panorama:  { field: '', reverse: false },
+      top10Chi:  { field: '', reverse: false },
+      top10Tma:  { field: '', reverse: false },
+      top10Cli:  { field: '', reverse: false },
+      equipes:   { field: '', reverse: false },
+      equipes2:  { field: '', reverse: false },
+      popup:     { field: '', reverse: false }
+    };
+
     // ── View-model data ──────────────────────────────────
     vm.rawIncidencias        = [];
     vm.clientesPorIncidencia = {};
@@ -67,6 +78,7 @@
     vm.testDebug      = testDebug;
     vm.abrirPopup     = abrirPopup;
     vm.fecharPopup    = fecharPopup;
+    vm.sortBy         = sortBy;
 
     // ── Bootstrap ────────────────────────────────────────
     checkAuthAndLoad();
@@ -204,6 +216,26 @@
     }
 
     // ═══════════════════════════════════════════════════════
+    // TABLE SORTING
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Toggle sort on a given table by field.
+     * @param {string} table - key in vm.sort (e.g. 'panorama', 'top10Chi')
+     * @param {string} field - property name to sort by
+     */
+    function sortBy(table, field) {
+      var s = vm.sort[table];
+      if (!s) return;
+      if (s.field === field) {
+        s.reverse = !s.reverse;
+      } else {
+        s.field = field;
+        s.reverse = false;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
     // POPUP UNIVERSAL
     // ═══════════════════════════════════════════════════════
 
@@ -232,6 +264,9 @@
         dados: dados,
         colunasContexto: colunasContexto
       };
+
+      // Reset popup sort on each open
+      vm.sort.popup = { field: '', reverse: false };
 
       console.log('[Ctrl] Popup aberto: ' + tipo + '/' + campo + ' → ' + dados.length + ' registros');
     }

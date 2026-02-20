@@ -602,6 +602,37 @@
     /* Clickable cells */
     .clickable { cursor: pointer; }
     .clickable:hover { text-decoration: underline; opacity: 0.85; }
+
+    /* ══════════════════════════════════════════════════════════
+       SORTABLE TABLE HEADERS
+       ══════════════════════════════════════════════════════════ */
+    .sortable {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      padding-right: 16px !important;
+      transition: background 0.15s;
+    }
+    .sortable:hover {
+      filter: brightness(1.25);
+    }
+    .sort-indicator {
+      font-size: 9px;
+      margin-left: 3px;
+      opacity: 0.9;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .sort-hint {
+      font-size: 8px;
+      margin-left: 3px;
+      opacity: 0.35;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .popup-table thead th.sortable:hover {
+      filter: brightness(1.25);
+    }
   </style>
 </head>
 
@@ -692,26 +723,26 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>CONJUNTO</th>
-              <th>CHI</th>
-              <th>Cli. Afetados</th>
-              <th>Inc. Ativas</th>
-              <th>Não Desp.</th>
-              <th>Equipes</th>
-              <th>Inc/Equipe</th>
-              <th>Qtt 2º Rec.</th>
-              <th>Qtt Avisos</th>
-              <th>Cl. Essencial</th>
-              <th>Eletrodep.</th>
-              <th>&lt; 08h</th>
-              <th>08h &lt; 16h</th>
-              <th>16h &lt; 24h</th>
-              <th>24h &lt; 48h</th>
-              <th>&gt; 48h</th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','conjunto')">CONJUNTO<span class="sort-indicator" ng-if="vm.sort.panorama.field==='conjunto'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='conjunto'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.panorama.field==='chi'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='chi'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','clientesAfetados')">Cli. Afetados<span class="sort-indicator" ng-if="vm.sort.panorama.field==='clientesAfetados'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='clientesAfetados'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','incidenciasAtivas')">Inc. Ativas<span class="sort-indicator" ng-if="vm.sort.panorama.field==='incidenciasAtivas'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='incidenciasAtivas'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','naoDespachados')">Não Desp.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='naoDespachados'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='naoDespachados'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','equipes')">Equipes<span class="sort-indicator" ng-if="vm.sort.panorama.field==='equipes'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='equipes'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','incPorEquipe')">Inc/Equipe<span class="sort-indicator" ng-if="vm.sort.panorama.field==='incPorEquipe'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='incPorEquipe'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','qtt2Rec')">Qtt 2º Rec.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qtt2Rec'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qtt2Rec'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','qttAvisos')">Qtt Avisos<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qttAvisos'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qttAvisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','clEssencial')">Cl. Essencial<span class="sort-indicator" ng-if="vm.sort.panorama.field==='clEssencial'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='clEssencial'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','eletrodependente')">Eletrodep.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='eletrodependente'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='eletrodependente'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','lt8h')">&lt; 08h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='lt8h'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='lt8h'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','h8_16')">08h &lt; 16h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='h8_16'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='h8_16'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','h16_24')">16h &lt; 24h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='h16_24'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='h16_24'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','h24_48')">24h &lt; 48h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='h24_48'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='h24_48'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','gt48h')">&gt; 48h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='gt48h'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='gt48h'">⇅</span></th>
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="r in vm.panorama track by r.conjunto">
+            <tr ng-repeat="r in vm.panorama | orderBy:vm.sort.panorama.field:vm.sort.panorama.reverse track by r.conjunto">
               <td class="clickable" ng-click="vm.abrirPopup('panorama', 'conjunto', r.conjunto)"><strong>{{r.conjunto}}</strong></td>
               <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'chi', r.conjunto)">{{r.chi | number}}</td>
               <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'clientesAfetados', r.conjunto)">{{r.clientesAfetados | number}}</td>
@@ -772,19 +803,19 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Incidência</th>
-                <th>NT</th>
-                <th>CLI. AF.</th>
-                <th>CHI</th>
-                <th>TMA</th>
-                <th>Avisos</th>
-                <th>Atribuição</th>
-                <th>Alimentador</th>
-                <th>CD</th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='incidencia'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='incidencia'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='nt'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='nt'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cli'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cli'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='chi'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='chi'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='tma'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='tma'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='avisos'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='avisos'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='atribuicao'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='atribuicao'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='alimentador'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='alimentador'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Chi','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cd'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cd'">⇅</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="r in vm.top10Chi track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
+              <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
                 <td>{{r.incidencia}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
@@ -813,19 +844,19 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Incidência</th>
-                <th>NT</th>
-                <th>CLI. AF.</th>
-                <th>CHI</th>
-                <th>TMA</th>
-                <th>Avisos</th>
-                <th>Atribuição</th>
-                <th>Alimentador</th>
-                <th>CD</th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='incidencia'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='incidencia'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='nt'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='nt'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cli'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cli'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='chi'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='chi'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='tma'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='tma'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='avisos'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='avisos'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='atribuicao'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='atribuicao'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='alimentador'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='alimentador'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Tma','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cd'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cd'">⇅</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="r in vm.top10Tma track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
+              <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
                 <td>{{r.incidencia}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
@@ -854,19 +885,19 @@
           <table class="data-table">
             <thead>
               <tr>
-                <th>Incidência</th>
-                <th>NT</th>
-                <th>CLI. AF.</th>
-                <th>CHI</th>
-                <th>TMA</th>
-                <th>Avisos</th>
-                <th>Atribuição</th>
-                <th>Alimentador</th>
-                <th>CD</th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='incidencia'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='incidencia'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='nt'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='nt'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cli'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cli'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='chi'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='chi'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='tma'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='tma'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='avisos'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='avisos'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='atribuicao'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='atribuicao'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='alimentador'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='alimentador'">⇅</span></th>
+                <th class="sortable" ng-click="vm.sortBy('top10Cli','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cd'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cd'">⇅</span></th>
               </tr>
             </thead>
             <tbody>
-              <tr ng-repeat="r in vm.top10Cli track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
+              <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
                 <td>{{r.incidencia}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
@@ -906,22 +937,22 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Nome</th>
-              <th>Polo</th>
-              <th>Sucursal</th>
-              <th>Nível Tensão</th>
-              <th>Nível Tensão Atual</th>
-              <th>Atribuídas</th>
-              <th>Improdutivas</th>
-              <th>Emergenciais</th>
-              <th>Comerciais</th>
-              <th>Tempo Serviço</th>
-              <th>Data/Hora Início</th>
-              <th>Produtividade/Hora</th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','nome')">Nome<span class="sort-indicator" ng-if="vm.sort.equipes.field==='nome'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='nome'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','polo')">Polo<span class="sort-indicator" ng-if="vm.sort.equipes.field==='polo'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='polo'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','sucursal')">Sucursal<span class="sort-indicator" ng-if="vm.sort.equipes.field==='sucursal'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='sucursal'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','nivelTensao')">Nível Tensão<span class="sort-indicator" ng-if="vm.sort.equipes.field==='nivelTensao'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='nivelTensao'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','nivelTensaoAtual')">Nível Tensão Atual<span class="sort-indicator" ng-if="vm.sort.equipes.field==='nivelTensaoAtual'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='nivelTensaoAtual'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','atribuidas')">Atribuídas<span class="sort-indicator" ng-if="vm.sort.equipes.field==='atribuidas'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='atribuidas'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','improdutivas')">Improdutivas<span class="sort-indicator" ng-if="vm.sort.equipes.field==='improdutivas'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='improdutivas'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','emergenciais')">Emergenciais<span class="sort-indicator" ng-if="vm.sort.equipes.field==='emergenciais'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='emergenciais'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','comerciais')">Comerciais<span class="sort-indicator" ng-if="vm.sort.equipes.field==='comerciais'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='comerciais'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','tempoServico')">Tempo Serviço<span class="sort-indicator" ng-if="vm.sort.equipes.field==='tempoServico'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='tempoServico'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','dataHoraInicio')">Data/Hora Início<span class="sort-indicator" ng-if="vm.sort.equipes.field==='dataHoraInicio'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='dataHoraInicio'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes','produtividadeHora')">Produtividade/Hora<span class="sort-indicator" ng-if="vm.sort.equipes.field==='produtividadeHora'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='produtividadeHora'">⇅</span></th>
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="eq in vm.equipes track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
+            <tr ng-repeat="eq in vm.equipes | orderBy:vm.sort.equipes.field:vm.sort.equipes.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
               <td><strong>{{eq.nome}}</strong></td>
               <td>{{eq.polo}}</td>
               <td>{{eq.sucursal}}</td>
@@ -958,22 +989,22 @@
         <table class="data-table">
           <thead>
             <tr>
-              <th>Nome</th>
-              <th>Polo</th>
-              <th>Sucursal</th>
-              <th>Nível Tensão</th>
-              <th>Nível Tensão Atual</th>
-              <th>Atribuídas</th>
-              <th>Improdutivas</th>
-              <th>Emergenciais</th>
-              <th>Comerciais</th>
-              <th>Tempo Serviço</th>
-              <th>Data/Hora Início</th>
-              <th>Produtividade/Hora</th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','nome')">Nome<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='nome'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='nome'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','polo')">Polo<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='polo'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='polo'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','sucursal')">Sucursal<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='sucursal'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='sucursal'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','nivelTensao')">Nível Tensão<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='nivelTensao'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='nivelTensao'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','nivelTensaoAtual')">Nível Tensão Atual<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='nivelTensaoAtual'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='nivelTensaoAtual'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','atribuidas')">Atribuídas<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='atribuidas'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='atribuidas'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','improdutivas')">Improdutivas<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='improdutivas'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='improdutivas'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','emergenciais')">Emergenciais<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='emergenciais'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='emergenciais'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','comerciais')">Comerciais<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='comerciais'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='comerciais'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','tempoServico')">Tempo Serviço<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='tempoServico'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='tempoServico'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','dataHoraInicio')">Data/Hora Início<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='dataHoraInicio'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='dataHoraInicio'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('equipes2','produtividadeHora')">Produtividade/Hora<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='produtividadeHora'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='produtividadeHora'">⇅</span></th>
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="eq in vm.equipes2Recurso track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
+            <tr ng-repeat="eq in vm.equipes2Recurso | orderBy:vm.sort.equipes2.field:vm.sort.equipes2.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
               <td><strong>{{eq.nome}}</strong></td>
               <td>{{eq.polo}}</td>
               <td>{{eq.sucursal}}</td>
@@ -1017,11 +1048,11 @@
         <table class="popup-table">
           <thead>
             <tr>
-              <th ng-repeat="col in vm.popup.colunasContexto">{{col.label}}</th>
+              <th class="sortable" ng-repeat="col in vm.popup.colunasContexto" ng-click="vm.sortBy('popup', col.key)">{{col.label}}<span class="sort-indicator" ng-if="vm.sort.popup.field===col.key">{{vm.sort.popup.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.popup.field!==col.key">⇅</span></th>
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="row in vm.popup.dados track by $index">
+            <tr ng-repeat="row in vm.popup.dados | orderBy:vm.sort.popup.field:vm.sort.popup.reverse track by $index">
               <td ng-repeat="col in vm.popup.colunasContexto">
 
                 <!-- Booleano -->
