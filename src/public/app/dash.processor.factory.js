@@ -41,7 +41,8 @@
      */
     function cruzarClientesCriticos(clientesCriticos, incidencias) {
       var clientesPorIncidencia = {};
-      var eletrodepPorConjunto = {};
+      var eletrodepPorConjunto = {};   // contagem de clientes Vital por conjunto
+      var avisoPorConjunto = {};       // true se algum cliente tem aviso ativo
       var totalEletrodep = 0;
 
       // Indexar incidências por numero
@@ -59,21 +60,28 @@
         }
         clientesPorIncidencia[incNum].push(cl);
 
-        // Contar eletrodependentes por conjunto
-        if (cl.segmento === 'Vital' || cl.eletrodependente === true) {
+        var inc = incMap[incNum];
+        var conj = inc ? (inc.conjunto || 'N/A') : 'N/A';
+
+        // Contar apenas clientes com segmento "Vital"
+        if (cl.segmento === 'Vital') {
           totalEletrodep++;
-          var inc = incMap[incNum];
-          var conj = inc ? (inc.conjunto || 'N/A') : 'N/A';
           eletrodepPorConjunto[conj] = (eletrodepPorConjunto[conj] || 0) + 1;
+        }
+
+        // Verificar se tem aviso ativo (não nulo, não vazio, não "-")
+        if (cl.aviso && cl.aviso !== '' && cl.aviso !== '-') {
+          avisoPorConjunto[conj] = true;
         }
       });
 
       console.log('[Processor] Clientes críticos cruzados: ' + (clientesCriticos || []).length +
-                  ' clientes, ' + totalEletrodep + ' eletrodep.');
+                  ' clientes, ' + totalEletrodep + ' eletrodep (Vital).');
 
       return {
         clientesPorIncidencia: clientesPorIncidencia,
         eletrodepPorConjunto: eletrodepPorConjunto,
+        avisoPorConjunto: avisoPorConjunto,
         totalEletrodep: totalEletrodep
       };
     }
@@ -103,8 +111,9 @@
             if (!H.isActive(inc)) return false;
             if (contexto.campo === 'urgente') return inc.urgente === true || inc.urgente === 'true';
             if (contexto.campo === 'eletrodependente') {
+              if (inc.eletrodependente === true) return true;
               var cls = clientesPorIncidencia[inc.numero] || [];
-              return cls.some(function (c) { return c.segmento === 'Vital' || c.eletrodependente === true; });
+              return cls.some(function (c) { return c.segmento === 'Vital'; });
             }
             if (contexto.campo === 'totalIncidencias') return true;
             if (contexto.campo === 'totalClientes') return (inc.clientesAfetadosAtual || 0) > 0;
@@ -122,8 +131,9 @@
             var conj = inc.conjunto || ('N/A - REGIÃO: ' + (inc.regiao || '—'));
             if (contexto.valor && conj !== contexto.valor) return false;
             if (contexto.campo === 'eletrodependente') {
+              if (inc.eletrodependente === true) return true;
               var cls = clientesPorIncidencia[inc.numero] || [];
-              return cls.some(function (c) { return c.segmento === 'Vital' || c.eletrodependente === true; });
+              return cls.some(function (c) { return c.segmento === 'Vital'; });
             }
             if (contexto.campo === 'naoDespachados') {
               var eq = _getEquipe(inc);
@@ -173,12 +183,15 @@
       }
 
       // Enriquecer com TODOS os campos da incidência + clientes críticos + CHI calculado
-      return filtered.map(function (inc) {
+      // Se a incidência tem N clientes críticos, gera N linhas (uma por cliente).
+      // Se não tem nenhum, gera 1 linha com ccUc/ccNome/etc = '—'.
+      var result = [];
+      filtered.forEach(function (inc) {
         var clientes = clientesPorIncidencia[inc.numero] || [];
         var duracaoHours = H.parseDuracao(inc.duracao);
         var chi = Math.round((inc.clientesAfetadosAtual || 0) * duracaoHours * 10) / 10;
 
-        return {
+        var baseRow = {
           // Identificação
           numero: inc.numero || '',
           chi: chi,
@@ -283,20 +296,31 @@
           operador: inc.operador || '',
           numerosAvisos: inc.numerosAvisos || '',
           numerosProtocolos: inc.numerosProtocolos || '',
-          observacao: inc.observacao || '',
-
-          // Dados cruzados de clientes críticos
-          clientesCriticos: clientes.map(function (c) {
-            return {
-              uc: c.uc || '',
-              nome: c.nome || '',
-              segmento: c.segmento || '',
-              criticidade: c.criticidade || 0,
-              aviso: c.aviso || null
-            };
-          })
+          observacao: inc.observacao || ''
         };
+
+        if (clientes.length === 0) {
+          // Sem clientes críticos: 1 linha com campos CC vazios
+          baseRow.ccUc = '—';
+          baseRow.ccNome = '—';
+          baseRow.ccSegmento = '—';
+          baseRow.ccCriticidade = '—';
+          baseRow.ccAviso = '—';
+          result.push(baseRow);
+        } else {
+          // 1 linha por cliente crítico, repetindo os dados da incidência
+          clientes.forEach(function (c) {
+            var row = angular.copy(baseRow);
+            row.ccUc = c.uc || '—';
+            row.ccNome = c.nome || '—';
+            row.ccSegmento = c.segmento || '—';
+            row.ccCriticidade = c.criticidade != null ? c.criticidade : '—';
+            row.ccAviso = c.aviso || '—';
+            result.push(row);
+          });
+        }
       });
+      return result;
     }
 
     /** Helper: obter equipe prioridade deslocada > atribuída */
@@ -315,9 +339,10 @@
      * @param {Array}  items                  - Incidências brutas da API
      * @param {Object} [eletrodepPorConjunto] - contagem eletrodep por conjunto (do cruzamento)
      * @param {number} [totalEletrodep]       - total geral de eletrodependentes
+     * @param {Object} [avisoPorConjunto]     - conjuntos com aviso ativo
      * @returns {Object}
      */
-    function processIncidencias(items, eletrodepPorConjunto, totalEletrodep) {
+    function processIncidencias(items, eletrodepPorConjunto, totalEletrodep, avisoPorConjunto) {
       console.log('[Processor] processIncidencias() chamada com ' + items.length + ' itens');
 
       if (items.length > 0) {
@@ -332,6 +357,7 @@
 
       eletrodepPorConjunto = eletrodepPorConjunto || {};
       totalEletrodep = totalEletrodep || 0;
+      avisoPorConjunto = avisoPorConjunto || {};
 
       // ── Separar ativas / encerradas ──
       var active = [];
@@ -352,7 +378,7 @@
       console.log('[Processor] ' + active.length + ' ativas, ' + closed.length + ' encerradas');
 
       // ── Panorama ──
-      var panorama = buildPanorama(active, eletrodepPorConjunto);
+      var panorama = buildPanorama(active, eletrodepPorConjunto, avisoPorConjunto);
 
       // ── Totals ──
       var totals = buildTotals(panorama);
@@ -378,7 +404,7 @@
 
     // ── Panorama: agrupar por conjunto ────────────────────
 
-    function buildPanorama(active, eletrodepPorConjunto) {
+    function buildPanorama(active, eletrodepPorConjunto, avisoPorConjunto) {
       var groups = {};
 
       active.forEach(function (inc) {
@@ -432,8 +458,9 @@
         var eqCount = Object.keys(g.equipesObj).length;
         var eq2Count = Object.keys(g.equipes2RecObj).length;
 
-        // Usar contagem de clientes críticos se disponível; senão, fallback p/ campo da incidência
-        var eletrodepCount = eletrodepPorConjunto[g.conjunto] || g.eletrodependente;
+        // Eletrodep = incidências c/ flag true + clientes Vital do cruzamento
+        var eletrodepCount = g.eletrodependente + (eletrodepPorConjunto[g.conjunto] || 0);
+        var temAviso = !!avisoPorConjunto[g.conjunto];
 
         list.push({
           conjunto: g.conjunto,
@@ -447,6 +474,7 @@
           qttAvisos: g.qttAvisos,
           clEssencial: g.clEssencial,
           eletrodependente: eletrodepCount,
+          temAviso: temAviso,
           lt8h: g.lt8h, h8_16: g.h8_16, h16_24: g.h16_24, h24_48: g.h24_48, gt48h: g.gt48h
         });
       }
@@ -461,6 +489,7 @@
       var t = {
         chi: 0, clientesAfetados: 0, incidenciasAtivas: 0, naoDespachados: 0,
         equipes: 0, qtt2Rec: 0, qttAvisos: 0, clEssencial: 0, eletrodependente: 0,
+        temAviso: false,
         lt8h: 0, h8_16: 0, h16_24: 0, h24_48: 0, gt48h: 0
       };
 
@@ -474,6 +503,7 @@
         t.qttAvisos += r.qttAvisos;
         t.clEssencial += r.clEssencial;
         t.eletrodependente += r.eletrodependente;
+        if (r.temAviso) t.temAviso = true;
         t.lt8h += r.lt8h;
         t.h8_16 += r.h8_16;
         t.h16_24 += r.h16_24;
@@ -502,7 +532,7 @@
         totalEquipes: 0, // será atualizado pelas equipes
         naoDespachados: totals.naoDespachados,
         urgentes: urgCount,
-        eletrodependentes: totalEletrodep || totals.eletrodependente,
+        eletrodependentes: totals.eletrodependente,
         totalChi: Math.round(chiTotal)
       };
     }

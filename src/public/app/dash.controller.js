@@ -137,7 +137,8 @@
         var result = Proc.processIncidencias(
           items,
           cruzamento.eletrodepPorConjunto,
-          cruzamento.totalEletrodep
+          cruzamento.totalEletrodep,
+          cruzamento.avisoPorConjunto
         );
 
         vm.panorama    = result.panorama;
@@ -330,7 +331,12 @@
         { key: 'operador',                label: 'Operador' },
         { key: 'numerosAvisos',           label: 'Nº Avisos' },
         { key: 'numerosProtocolos',       label: 'Nº Protocolos' },
-        { key: 'observacao',              label: 'Observação' }
+        { key: 'observacao',              label: 'Observação' },
+        { key: 'ccUc',                    label: 'CC - UC' },
+        { key: 'ccNome',                  label: 'CC - Nome' },
+        { key: 'ccSegmento',              label: 'CC - Segmento' },
+        { key: 'ccCriticidade',           label: 'CC - Criticidade' },
+        { key: 'ccAviso',                 label: 'CC - Aviso' }
       ];
 
       // ── Colunas extras (contextuais, inseridas no início) ──
@@ -340,8 +346,7 @@
       var prioridade = [];
 
       if (campo === 'eletrodependente') {
-        extras = [{ key: '_clientesCriticos', label: 'Clientes Críticos', tipo: 'lista' }];
-        prioridade = ['eletrodependente'];
+        prioridade = ['eletrodependente', 'ccUc', 'ccNome', 'ccSegmento', 'ccCriticidade', 'ccAviso'];
       } else if (campo === 'urgente') {
         prioridade = ['urgente'];
       } else if (campo === 'chi') {
