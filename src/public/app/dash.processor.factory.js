@@ -69,14 +69,15 @@
         var inc = incMap[incNum];
         var conj = inc ? (inc.conjunto || 'N/A') : 'N/A';
 
-        // Contar apenas clientes com segmento "Vital"
-        if (cl.segmento === 'Vital') {
+        // Contar apenas clientes com segmento "Vital" de incidências ATIVAS
+        // (para manter consistência com o popup que filtra por isActive)
+        if (cl.segmento === 'Vital' && inc && H.isActive(inc)) {
           totalEletrodep++;
           eletrodepPorConjunto[conj] = (eletrodepPorConjunto[conj] || 0) + 1;
         }
 
-        // Verificar se tem aviso ativo (não nulo, não vazio, não "-")
-        if (cl.aviso && cl.aviso !== '' && cl.aviso !== '-') {
+        // Verificar se tem aviso ativo (não nulo, não vazio, não "-") em incidências ativas
+        if (cl.aviso && cl.aviso !== '' && cl.aviso !== '-' && inc && H.isActive(inc)) {
           avisoPorConjunto[conj] = true;
         }
       });
