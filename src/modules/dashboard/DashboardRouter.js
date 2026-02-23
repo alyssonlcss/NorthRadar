@@ -48,6 +48,7 @@ function createDashboardRouter(authProvider) {
       config: {
         domainApi: config.operview.domainApi || '(NÃO CONFIGURADO)',
         port: req.socket.localPort,
+        tagsEquipesExtras: config.tagsEquipesExtras || [],
       },
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),

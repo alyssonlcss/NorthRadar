@@ -117,29 +117,38 @@
       margin-right: 4px;
     }
 
-    .filter-btn {
+    .filter-select {
       background: rgba(255,255,255,0.12);
       color: #fff;
       border: 1px solid rgba(255,255,255,0.25);
-      padding: 5px 16px;
+      padding: 5px 28px 5px 12px;
       border-radius: 4px;
       font-size: 12px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
       letter-spacing: 0.3px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fff'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 10px 6px;
     }
 
-    .filter-btn:hover {
-      background: rgba(255,255,255,0.22);
+    .filter-select:hover {
+      background-color: rgba(255,255,255,0.22);
       border-color: rgba(255,255,255,0.5);
     }
 
-    .filter-btn.active {
-      background: #FFFFFF;
-      color: var(--enel-blue);
-      border-color: #FFFFFF;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    .filter-select:focus {
+      outline: none;
+      border-color: #fff;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+    }
+
+    .filter-select option {
+      background: var(--enel-dark);
+      color: #fff;
     }
 
     /* ── Status ── */
@@ -603,6 +612,18 @@
     .clickable { cursor: pointer; }
     .clickable:hover { text-decoration: underline; opacity: 0.85; }
 
+    /* Incidence hyperlink */
+    .inc-link {
+      color: var(--enel-accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .inc-link:hover {
+      text-decoration: underline;
+      color: var(--enel-blue);
+    }
+    .popup-table .inc-link { color: var(--enel-accent); }
+
     /* ══════════════════════════════════════════════════════════
        SORTABLE TABLE HEADERS
        ══════════════════════════════════════════════════════════ */
@@ -651,12 +672,9 @@
     <div class="header-right">
       <div class="filter-group">
         <label>POLO:</label>
-        <button class="filter-btn"
-                ng-repeat="p in vm.polos"
-                ng-class="{'active': vm.selectedPolo === p}"
-                ng-click="vm.changePolo(p)">
-          {{p}}
-        </button>
+        <select class="filter-select" ng-model="vm.selectedPolo" ng-change="vm.changePolo(vm.selectedPolo)">
+          <option ng-repeat="p in vm.polos" ng-value="p">{{p}}</option>
+        </select>
       </div>
 
       <div class="status-indicator">
@@ -686,7 +704,7 @@
       </div>
       <div class="kpi-item kpi-success">
         <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
-        <div class="kpi-label">Equipes em Turno | 2º Recurso</div>
+        <div class="kpi-label">Equipes em Turno | Extras</div>
       </div>
       <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
         <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
@@ -730,7 +748,7 @@
               <th class="sortable" ng-click="vm.sortBy('panorama','naoDespachados')">Não Desp.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='naoDespachados'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='naoDespachados'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','equipes')">Equipes<span class="sort-indicator" ng-if="vm.sort.panorama.field==='equipes'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='equipes'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','incPorEquipe')">Inc/Equipe<span class="sort-indicator" ng-if="vm.sort.panorama.field==='incPorEquipe'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='incPorEquipe'">⇅</span></th>
-              <th class="sortable" ng-click="vm.sortBy('panorama','qtt2Rec')">Qtt 2º Rec.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qtt2Rec'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qtt2Rec'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','qtt2Rec')">Qtt Extras<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qtt2Rec'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qtt2Rec'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','qttAvisos')">Qtt Avisos<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qttAvisos'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qttAvisos'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','clEssencial')">Cl. Essencial<span class="sort-indicator" ng-if="vm.sort.panorama.field==='clEssencial'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='clEssencial'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','eletrodependente')">Eletrodep.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='eletrodependente'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='eletrodependente'">⇅</span></th>
@@ -816,7 +834,7 @@
             </thead>
             <tbody>
               <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
-                <td>{{r.incidencia}}</td>
+                <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
                 <td class="num" ng-class="{'cell-red': r.chi > 0}">{{r.chi | number:1}}</td>
@@ -857,7 +875,7 @@
             </thead>
             <tbody>
               <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
-                <td>{{r.incidencia}}</td>
+                <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
                 <td class="num">{{r.chi | number:1}}</td>
@@ -898,7 +916,7 @@
             </thead>
             <tbody>
               <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
-                <td>{{r.incidencia}}</td>
+                <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
                 <td>{{r.nt}}</td>
                 <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
                 <td class="num">{{r.chi | number:1}}</td>
@@ -973,11 +991,11 @@
     </section>
 
     <!-- ═══════════════════════════════════════════════════════
-         EQUIPES EM TURNO 2º RECURSO
+         EQUIPES EXTRAS
          ═══════════════════════════════════════════════════════ -->
     <section class="panel equipes2-panel">
       <div class="panel-header">
-        <h2>EQUIPES EM TURNO 2º RECURSO – TOTAL: {{vm.totalEquipes2}}</h2>
+        <h2>EQUIPES EXTRAS – TOTAL: {{vm.totalEquipes2}}</h2>
         <span class="badge-count">{{vm.totalEquipes2}} equipes</span>
       </div>
 
@@ -1020,7 +1038,7 @@
             </tr>
           </tbody>
         </table>
-        <div class="empty-state" ng-if="!vm.equipes2Recurso.length">Nenhuma equipe 2º recurso encontrada.</div>
+        <div class="empty-state" ng-if="!vm.equipes2Recurso.length">Nenhuma equipe extra encontrada.</div>
       </div>
     </section>
 
@@ -1055,13 +1073,16 @@
             <tr ng-repeat="row in vm.popup.dados | orderBy:vm.sort.popup.field:vm.sort.popup.reverse track by $index">
               <td ng-repeat="col in vm.popup.colunasContexto">
 
+                <!-- Incidência (hiperlink) -->
+                <a ng-if="col.key === 'numero'" ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{row[col.key]}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{row[col.key]}}</a>
+
                 <!-- Booleano -->
-                <span ng-if="row[col.key] === true || row[col.key] === false">
+                <span ng-if="col.key !== 'numero' && (row[col.key] === true || row[col.key] === false)">
                   {{row[col.key] ? 'Sim' : 'Não'}}
                 </span>
 
                 <!-- Colunas normais -->
-                <span ng-if="row[col.key] !== true && row[col.key] !== false">
+                <span ng-if="col.key !== 'numero' && row[col.key] !== true && row[col.key] !== false">
                   {{row[col.key]}}
                 </span>
 
@@ -1104,7 +1125,7 @@
         Top10 TMA rows: <span style="color:#ffd700">{{vm.top10Tma.length}}</span><br>
         Top10 CLI rows: <span style="color:#ffd700">{{vm.top10Cli.length}}</span><br>
         Equipes: <span style="color:#ffd700">{{vm.equipes.length}}</span><br>
-        Equipes 2º Recurso: <span style="color:#ffd700">{{vm.equipes2Recurso.length}}</span>
+        Equipes Extras: <span style="color:#ffd700">{{vm.equipes2Recurso.length}}</span>
       </div>
       <div ng-if="vm.rawIncidencias.length > 0">
         <strong style="color:#fff">Amostra item[0]:</strong><br>

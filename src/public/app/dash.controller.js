@@ -22,8 +22,8 @@
     var vm = this;
 
     // ── View-model state ─────────────────────────────────
-    vm.polos          = ['ATLANTICO', 'DECEN', 'DNORT'];
-    vm.selectedPolo   = 'ATLANTICO';
+    vm.polos          = ['TODOS', 'ATLANTICO', 'DECEN', 'DNORT'];
+    vm.selectedPolo   = 'TODOS';
     vm.loadingInc     = true;
     vm.loadingEq      = true;
     vm.errorInc       = null;
@@ -93,6 +93,14 @@
       loadAll();
     }
 
+    /** Retorna o parâmetro 'polos' para a API: junta todos quando TODOS */
+    function _getPoloParam() {
+      if (vm.selectedPolo === 'TODOS') {
+        return vm.polos.filter(function (p) { return p !== 'TODOS'; }).join(',');
+      }
+      return vm.selectedPolo;
+    }
+
     function checkAuthAndLoad() {
       Api.getStatus()
         .then(function (s) {
@@ -101,6 +109,12 @@
             vm.authStatus = 'Autenticado';
             console.log('[Ctrl] Auth OK — Token:', s.auth.tokenPreview);
             console.log('[Ctrl] API Base:', s.config.domainApi);
+
+            // Configurar tags de equipes extras vindas do .env
+            if (s.config && s.config.tagsEquipesExtras) {
+              Proc.setTagsEquipesExtras(s.config.tagsEquipesExtras);
+            }
+
             loadAll();
           } else {
             vm.authStatus = 'Aguardando token — o servidor está autenticando...';
@@ -132,9 +146,11 @@
 
       console.log('[Ctrl] Buscando incidências + clientes críticos para polo=' + vm.selectedPolo + '...');
 
+      var poloParam = _getPoloParam();
+
       $q.all({
-        incidencias: Api.getIncidencias(vm.selectedPolo),
-        clientesCriticos: Api.getClientesCriticos(vm.selectedPolo)
+        incidencias: Api.getIncidencias(poloParam),
+        clientesCriticos: Api.getClientesCriticos(poloParam)
       }).then(function (results) {
         var items = results.incidencias || [];
         var clCriticos = results.clientesCriticos || [];
@@ -193,7 +209,7 @@
 
       console.log('[Ctrl] Buscando equipes para polo=' + vm.selectedPolo + '...');
 
-      Api.getEquipes(vm.selectedPolo)
+      Api.getEquipes(_getPoloParam())
         .then(function (rawList) {
           var result         = Proc.processEquipes(rawList);
           vm.equipes         = result.equipes;
@@ -457,7 +473,7 @@
         gt48h: 'Incidências > 48h',
         conjunto: 'Incidências do Conjunto',
         equipes: 'Incidências com Equipe',
-        qtt2Rec: 'Incidências 2º Recurso'
+        qtt2Rec: 'Incidências Equipes Extras'
       };
 
       var label = labels[campo] || ('Incidências — ' + campo);

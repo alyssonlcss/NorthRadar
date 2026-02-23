@@ -17,14 +17,20 @@
 
   function DashProcessor(H) {
 
-    /** Tags que identificam equipes 2º recurso */
-    var TAGS_2REC = ['PD', 'ML', 'EP', 'LC', 'LL', 'CO', 'MP', 'IN', 'EN', 'MO', 'LV'];
+    /** Tags que identificam equipes extras (configurável via .env) */
+    var _tagsExtras = ['PD', 'ML', 'EP', 'LC', 'LL', 'CO', 'MP', 'IN', 'EN', 'MO', 'LV'];
 
     return {
       processIncidencias: processIncidencias,
       processEquipes: processEquipes,
       cruzarClientesCriticos: cruzarClientesCriticos,
-      filtrarIncidenciasPorContexto: filtrarIncidenciasPorContexto
+      filtrarIncidenciasPorContexto: filtrarIncidenciasPorContexto,
+      setTagsEquipesExtras: function (tags) {
+        if (Array.isArray(tags) && tags.length > 0) {
+          _tagsExtras = tags.map(function (t) { return t.trim().toUpperCase(); }).filter(Boolean);
+          console.log('[Processor] Tags equipes extras atualizadas:', _tagsExtras.join(', '));
+        }
+      }
     };
 
     // ═══════════════════════════════════════════════════════
@@ -147,7 +153,7 @@
               var eq2 = _getEquipe(inc);
               if (!eq2 || eq2 === '-') return false;
               var eq2Upper = eq2.toUpperCase();
-              return TAGS_2REC.some(function (tag) { return eq2Upper.indexOf(tag) >= 0; });
+              return _tagsExtras.some(function (tag) { return eq2Upper.indexOf(tag) >= 0; });
             }
             if (contexto.campo === 'lt8h' || contexto.campo === 'h8_16' ||
                 contexto.campo === 'h16_24' || contexto.campo === 'h24_48' ||
@@ -433,7 +439,7 @@
         } else {
           g.equipesObj[eq] = true;
           var eqUpper = eq.toUpperCase();
-          if (TAGS_2REC.some(function (tag) { return eqUpper.indexOf(tag) >= 0; })) {
+          if (_tagsExtras.some(function (tag) { return eqUpper.indexOf(tag) >= 0; })) {
             g.equipes2RecObj[eq] = true;
           }
         }
@@ -574,7 +580,7 @@
 
       var equipes2Recurso = equipes.filter(function (eq) {
         var nome = (eq.nome || '').toUpperCase();
-        return TAGS_2REC.some(function (tag) { return nome.indexOf(tag) >= 0; });
+        return _tagsExtras.some(function (tag) { return nome.indexOf(tag) >= 0; });
       });
 
       return {

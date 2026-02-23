@@ -30,6 +30,12 @@ const config = {
       'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
   },
 
+  // ── Tags de equipes extras (siglas) ──
+  tagsEquipesExtras: (process.env.TAGS_EQUIPES_EXTRAS || 'PD,ML,EP,LC,LL,CO,MP,IN,EN,MO,LV')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean),
+
   // ── Token de acesso (lido do .env ou preenchido em runtime) ──
   tokenAccess: process.env.TOKEN_ACCESS || '',
 
