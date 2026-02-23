@@ -329,7 +329,7 @@
         { key: 'cd',                      label: 'CD' },
         { key: 'alimentador',             label: 'Alimentador' },
         { key: 'pontoEletrico',           label: 'Ponto Elétrico' },
-        { key: 'eletrodependente',        label: 'Eletrodep.' },
+        { key: 'eletrodependente',        label: 'Cl. Críticos' },
         { key: 'urgente',                 label: 'Urgente' },
         { key: 'condominio',              label: 'Condomínio' },
         { key: 'improdutiva',             label: 'Improdutiva' },
@@ -455,7 +455,7 @@
     function _getTituloPopup(tipo, campo, valor) {
       var labels = {
         urgente: 'Incidências Urgentes',
-        eletrodependente: 'Incidências com Eletrodependentes',
+        eletrodependente: 'Incidências com Clientes Críticos',
         totalIncidencias: 'Todas as Incidências Ativas',
         totalClientes: 'Incidências com Clientes Afetados',
         clientesAfetados: 'Incidências com Clientes Afetados',

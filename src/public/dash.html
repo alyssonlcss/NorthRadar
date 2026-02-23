@@ -708,7 +708,7 @@
       </div>
       <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
         <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
-        <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Eletrodep.</span></div>
+        <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
       </div>
       <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
         <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
@@ -751,7 +751,7 @@
               <th class="sortable" ng-click="vm.sortBy('panorama','qtt2Rec')">Qtt Extras<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qtt2Rec'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qtt2Rec'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','qttAvisos')">Qtt Avisos<span class="sort-indicator" ng-if="vm.sort.panorama.field==='qttAvisos'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='qttAvisos'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','clEssencial')">Cl. Essencial<span class="sort-indicator" ng-if="vm.sort.panorama.field==='clEssencial'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='clEssencial'">⇅</span></th>
-              <th class="sortable" ng-click="vm.sortBy('panorama','eletrodependente')">Eletrodep.<span class="sort-indicator" ng-if="vm.sort.panorama.field==='eletrodependente'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='eletrodependente'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('panorama','eletrodependente')">Cl. Críticos<span class="sort-indicator" ng-if="vm.sort.panorama.field==='eletrodependente'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='eletrodependente'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','lt8h')">&lt; 08h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='lt8h'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='lt8h'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','h8_16')">08h &lt; 16h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='h8_16'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='h8_16'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','h16_24')">16h &lt; 24h<span class="sort-indicator" ng-if="vm.sort.panorama.field==='h16_24'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='h16_24'">⇅</span></th>

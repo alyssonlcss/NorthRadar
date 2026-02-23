@@ -69,21 +69,21 @@
         var inc = incMap[incNum];
         var conj = inc ? (inc.conjunto || 'N/A') : 'N/A';
 
-        // Contar apenas clientes com segmento "Vital" de incidências ATIVAS
-        // (para manter consistência com o popup que filtra por isActive)
-        if (cl.segmento === 'Vital' && inc && H.isActive(inc)) {
+        // Contar TODOS os clientes críticos de incidências ATIVAS
+        // (qualquer segmento: Vital, Saneamento, Educação, Hospitais, etc.)
+        if (inc && H.isActive(inc)) {
           totalEletrodep++;
           eletrodepPorConjunto[conj] = (eletrodepPorConjunto[conj] || 0) + 1;
         }
 
-        // Verificar se tem aviso ativo (não nulo, não vazio, não "-") em incidências ativas
-        if (cl.aviso && cl.aviso !== '' && cl.aviso !== '-' && inc && H.isActive(inc)) {
+        // Piscar card somente para clientes VITAIS com aviso ativo em incidências ativas
+        if (cl.segmento === 'Vital' && cl.aviso && cl.aviso !== '' && cl.aviso !== '-' && inc && H.isActive(inc)) {
           avisoPorConjunto[conj] = true;
         }
       });
 
       console.log('[Processor] Clientes críticos cruzados: ' + (clientesCriticos || []).length +
-                  ' clientes, ' + totalEletrodep + ' eletrodep (Vital).');
+                  ' clientes, ' + totalEletrodep + ' clientes críticos (todos os segmentos) em incidências ativas.');
 
       return {
         clientesPorIncidencia: clientesPorIncidencia,
@@ -120,7 +120,7 @@
             if (contexto.campo === 'eletrodependente') {
               if (inc.eletrodependente === true) return true;
               var cls = clientesPorIncidencia[inc.numero] || [];
-              return cls.some(function (c) { return c.segmento === 'Vital'; });
+              return cls.length > 0;
             }
             if (contexto.campo === 'totalIncidencias') return true;
             if (contexto.campo === 'totalClientes') return (inc.clientesAfetadosAtual || 0) > 0;
@@ -140,7 +140,7 @@
             if (contexto.campo === 'eletrodependente') {
               if (inc.eletrodependente === true) return true;
               var cls = clientesPorIncidencia[inc.numero] || [];
-              return cls.some(function (c) { return c.segmento === 'Vital'; });
+              return cls.length > 0;
             }
             if (contexto.campo === 'naoDespachados') {
               var eq = _getEquipe(inc);
