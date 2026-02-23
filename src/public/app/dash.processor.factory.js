@@ -17,8 +17,8 @@
 
   function DashProcessor(H) {
 
-    /** Tags que identificam equipes extras (configurável via .env) */
-    var _tagsExtras = ['PD', 'ML', 'EP', 'LC', 'LL', 'CO', 'MP', 'IN', 'EN', 'MO', 'LV'];
+    /** Tags que identificam equipes extras (carregadas exclusivamente via .env) */
+    var _tagsExtras = [];
 
     return {
       processIncidencias: processIncidencias,

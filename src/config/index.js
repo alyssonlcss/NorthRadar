@@ -31,9 +31,9 @@ const config = {
   },
 
   // ── Tags de equipes extras (siglas) ──
-  tagsEquipesExtras: (process.env.TAGS_EQUIPES_EXTRAS || 'PD,ML,EP,LC,LL,CO,MP,IN,EN,MO,LV')
+  tagsEquipesExtras: (process.env.TAGS_EQUIPES_EXTRAS || '')
     .split(',')
-    .map(s => s.trim())
+    .map(s => s.replace(/-/g, '').trim())
     .filter(Boolean),
 
   // ── Token de acesso (lido do .env ou preenchido em runtime) ──
