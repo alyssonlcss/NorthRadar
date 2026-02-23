@@ -74,6 +74,12 @@
     // ── Expanded cell state ──────────────────────────────
     vm.expandedCell = { visible: false, label: '', value: '', top: 0, left: 0 };
 
+    // ── Drag-and-drop section ordering ───────────────────
+    var STORAGE_KEY = 'northradar_section_order';
+    var defaultOrder = ['top10', 'panorama', 'equipes', 'equipes2'];
+    vm.sectionOrder  = loadSectionOrder();
+    vm.draggingSection = null;
+
     // ── Public bindings ──────────────────────────────────
     vm.changePolo     = changePolo;
     vm.formatDateTime = Helpers.formatDateTime;
@@ -84,10 +90,104 @@
     vm.sortBy         = sortBy;
     vm.expandCell     = expandCell;
     vm.closeExpandedCell = closeExpandedCell;
+    vm.onDragStart    = onDragStart;
+    vm.onDragOver     = onDragOver;
+    vm.onDragLeave    = onDragLeave;
+    vm.onDrop         = onDrop;
+    vm.onDragEnd      = onDragEnd;
+    vm.getSectionOrder = getSectionOrder;
 
     // ── Bootstrap ────────────────────────────────────────
     checkAuthAndLoad();
     $interval(loadAll, 900000); // 15 min
+
+    // ═══════════════════════════════════════════════════════
+    // DRAG-AND-DROP SECTION REORDERING
+    // ═══════════════════════════════════════════════════════
+
+    function loadSectionOrder() {
+      try {
+        var saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          var parsed = JSON.parse(saved);
+          // Validate that it's a valid array with the expected keys
+          if (Array.isArray(parsed) && parsed.length === defaultOrder.length) {
+            return parsed;
+          }
+        }
+      } catch (e) { /* ignore */ }
+      return defaultOrder.slice();
+    }
+
+    function saveSectionOrder() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(vm.sectionOrder)); }
+      catch (e) { /* ignore */ }
+    }
+
+    function getSectionOrder(sectionId) {
+      var idx = vm.sectionOrder.indexOf(sectionId);
+      return { order: idx >= 0 ? idx + 1 : 99 };
+    }
+
+    function onDragStart($event, sectionId) {
+      vm.draggingSection = sectionId;
+      $event.dataTransfer.effectAllowed = 'move';
+      $event.dataTransfer.setData('text/plain', sectionId);
+      // Add dragging class
+      var target = findDragSection($event.target);
+      if (target) target.classList.add('dragging');
+    }
+
+    function onDragOver($event) {
+      $event.preventDefault();
+      $event.dataTransfer.dropEffect = 'move';
+      var target = findDragSection($event.target);
+      if (target && target.dataset.sectionId !== vm.draggingSection) {
+        target.classList.add('drag-over');
+      }
+    }
+
+    function onDragLeave($event) {
+      var target = findDragSection($event.target);
+      if (target) target.classList.remove('drag-over');
+    }
+
+    function onDrop($event, targetId) {
+      $event.preventDefault();
+      var sourceId = vm.draggingSection;
+      // Remove visual states
+      var allSections = document.querySelectorAll('.drag-section');
+      for (var i = 0; i < allSections.length; i++) {
+        allSections[i].classList.remove('drag-over', 'dragging');
+      }
+
+      if (sourceId && sourceId !== targetId) {
+        var srcIdx = vm.sectionOrder.indexOf(sourceId);
+        var tgtIdx = vm.sectionOrder.indexOf(targetId);
+        if (srcIdx >= 0 && tgtIdx >= 0) {
+          // Remove source from array and insert at target position
+          vm.sectionOrder.splice(srcIdx, 1);
+          vm.sectionOrder.splice(tgtIdx, 0, sourceId);
+          saveSectionOrder();
+        }
+      }
+      vm.draggingSection = null;
+    }
+
+    function onDragEnd($event) {
+      vm.draggingSection = null;
+      var allSections = document.querySelectorAll('.drag-section');
+      for (var i = 0; i < allSections.length; i++) {
+        allSections[i].classList.remove('drag-over', 'dragging');
+      }
+    }
+
+    function findDragSection(el) {
+      while (el && !el.classList.contains('drag-section')) {
+        el = el.parentElement;
+      }
+      return el;
+    }
 
     // ═══════════════════════════════════════════════════════
     // ORCHESTRATION
