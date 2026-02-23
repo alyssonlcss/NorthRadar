@@ -58,6 +58,7 @@
 
       return {
         incidencia: inc.numero || '',
+        polo: inc.polo || '',
         nt: inc.nivelTensao || '',
         cli: cli,
         chi: Math.round(chiVal * 10) / 10,

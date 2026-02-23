@@ -821,6 +821,7 @@
             <thead>
               <tr>
                 <th class="sortable" ng-click="vm.sortBy('top10Chi','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='incidencia'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='incidencia'">⇅</span></th>
+                <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Chi','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='polo'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='polo'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Chi','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='nt'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='nt'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Chi','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cli'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cli'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Chi','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='chi'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='chi'">⇅</span></th>
@@ -834,6 +835,7 @@
             <tbody>
               <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
                 <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
+                <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
                 <td class="num" ng-class="{'cell-red': r.chi > 0}">{{r.chi | number:1}}</td>
@@ -862,6 +864,7 @@
             <thead>
               <tr>
                 <th class="sortable" ng-click="vm.sortBy('top10Tma','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='incidencia'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='incidencia'">⇅</span></th>
+                <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Tma','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='polo'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='polo'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Tma','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='nt'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='nt'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Tma','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cli'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cli'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Tma','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='chi'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='chi'">⇅</span></th>
@@ -875,6 +878,7 @@
             <tbody>
               <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
                 <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
+                <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num">{{r.cli | number}}</td>
                 <td class="num">{{r.chi | number:1}}</td>
@@ -903,6 +907,7 @@
             <thead>
               <tr>
                 <th class="sortable" ng-click="vm.sortBy('top10Cli','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='incidencia'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='incidencia'">⇅</span></th>
+                <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Cli','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='polo'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='polo'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Cli','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='nt'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='nt'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Cli','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cli'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cli'">⇅</span></th>
                 <th class="sortable" ng-click="vm.sortBy('top10Cli','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='chi'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='chi'">⇅</span></th>
@@ -916,6 +921,7 @@
             <tbody>
               <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
                 <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
+                <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
                 <td>{{r.nt}}</td>
                 <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
                 <td class="num">{{r.chi | number:1}}</td>
@@ -967,6 +973,7 @@
           <thead>
             <tr>
               <th class="sortable" ng-click="vm.sortBy('panorama','conjunto')">CONJUNTO<span class="sort-indicator" ng-if="vm.sort.panorama.field==='conjunto'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='conjunto'">⇅</span></th>
+              <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('panorama','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.panorama.field==='polo'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='polo'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.panorama.field==='chi'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='chi'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','clientesAfetados')">Cli. Afetados<span class="sort-indicator" ng-if="vm.sort.panorama.field==='clientesAfetados'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='clientesAfetados'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('panorama','incidenciasAtivas')">Inc. Ativas<span class="sort-indicator" ng-if="vm.sort.panorama.field==='incidenciasAtivas'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='incidenciasAtivas'">⇅</span></th>
@@ -987,6 +994,7 @@
           <tbody>
             <tr ng-repeat="r in vm.panorama | orderBy:vm.sort.panorama.field:vm.sort.panorama.reverse track by r.conjunto">
               <td class="clickable" ng-click="vm.abrirPopup('panorama', 'conjunto', r.conjunto)"><strong>{{r.conjunto}}</strong></td>
+              <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
               <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'chi', r.conjunto)">{{r.chi | number}}</td>
               <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'clientesAfetados', r.conjunto)">{{r.clientesAfetados | number}}</td>
               <td class="num clickable" ng-click="vm.abrirPopup('panorama', 'incidenciasAtivas', r.conjunto)">{{r.incidenciasAtivas}}</td>
@@ -1007,6 +1015,7 @@
           <tfoot ng-if="vm.panorama.length">
             <tr>
               <td><strong>TOTAL</strong></td>
+              <td ng-if="vm.selectedPolo==='TODOS'"></td>
               <td class="num">{{vm.totals.chi | number}}</td>
               <td class="num">{{vm.totals.clientesAfetados | number}}</td>
               <td class="num">{{vm.totals.incidenciasAtivas}}</td>

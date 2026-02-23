@@ -419,7 +419,7 @@
 
         if (!groups[conj]) {
           groups[conj] = {
-            conjunto: conj, chi: 0, clientesAfetados: 0, incidenciasAtivas: 0,
+            conjunto: conj, polo: inc.polo || '', chi: 0, clientesAfetados: 0, incidenciasAtivas: 0,
             naoDespachados: 0, equipesObj: {}, equipes2RecObj: {},
             qttAvisos: 0, clEssencial: 0, eletrodependente: 0,
             lt8h: 0, h8_16: 0, h16_24: 0, h24_48: 0, gt48h: 0
@@ -471,6 +471,7 @@
 
         list.push({
           conjunto: g.conjunto,
+          polo: g.polo,
           chi: Math.round(g.chi),
           clientesAfetados: g.clientesAfetados,
           incidenciasAtivas: g.incidenciasAtivas,
