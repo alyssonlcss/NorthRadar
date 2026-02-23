@@ -587,9 +587,47 @@
       max-width: 280px;
       overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap;
+      position: relative;
     }
+    .popup-table tbody td.cell-expandable { cursor: pointer; }
+    .popup-table tbody td.cell-expandable:hover { background: #EDF0F4; }
     .popup-table tbody tr:nth-child(even) { background: #F7F8FA; }
     .popup-table tbody tr:hover { background: var(--enel-light); }
+
+    /* Expanded cell overlay */
+    .cell-expanded-box {
+      position: fixed;
+      z-index: 10001;
+      background: #fff;
+      border: 2px solid var(--enel-blue);
+      border-radius: 6px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      max-width: 520px;
+      min-width: 200px;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    .cell-expanded-box .cell-expanded-header {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--enel-blue);
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cell-expanded-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 10000;
+      background: transparent;
+    }
 
     /* Blink animation for eletrodependentes with aviso */
     @keyframes blink-eletrodep {
@@ -707,7 +745,7 @@
         <div class="kpi-label">Equipes em Turno | Extras</div>
       </div>
       <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer;text-decoration:underline" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
+        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
         <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
       </div>
       <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
@@ -1071,7 +1109,9 @@
           </thead>
           <tbody>
             <tr ng-repeat="row in vm.popup.dados | orderBy:vm.sort.popup.field:vm.sort.popup.reverse track by $index">
-              <td ng-repeat="col in vm.popup.colunasContexto">
+              <td ng-repeat="col in vm.popup.colunasContexto"
+                  ng-class="{'cell-expandable': ('' + (row[col.key] || '')).length > 35}"
+                  ng-click="('' + (row[col.key] || '')).length > 35 && vm.expandCell($event, col.label, row[col.key])">
 
                 <!-- Incidência (hiperlink) -->
                 <a ng-if="col.key === 'numero'" ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{row[col.key]}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{row[col.key]}}</a>
@@ -1097,6 +1137,14 @@
         </table>
       </div>
     </div>
+  </div>
+
+  <!-- Expanded cell detail box -->
+  <div class="cell-expanded-backdrop" ng-if="vm.expandedCell.visible" ng-click="vm.closeExpandedCell()"></div>
+  <div class="cell-expanded-box" ng-if="vm.expandedCell.visible"
+       ng-style="{top: vm.expandedCell.top + 'px', left: vm.expandedCell.left + 'px'}">
+    <div class="cell-expanded-header">{{vm.expandedCell.label}}</div>
+    <div>{{vm.expandedCell.value}}</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════

@@ -71,6 +71,9 @@
       colunasContexto: []
     };
 
+    // ── Expanded cell state ──────────────────────────────
+    vm.expandedCell = { visible: false, label: '', value: '', top: 0, left: 0 };
+
     // ── Public bindings ──────────────────────────────────
     vm.changePolo     = changePolo;
     vm.formatDateTime = Helpers.formatDateTime;
@@ -79,6 +82,8 @@
     vm.abrirPopup     = abrirPopup;
     vm.fecharPopup    = fecharPopup;
     vm.sortBy         = sortBy;
+    vm.expandCell     = expandCell;
+    vm.closeExpandedCell = closeExpandedCell;
 
     // ── Bootstrap ────────────────────────────────────────
     checkAuthAndLoad();
@@ -290,6 +295,30 @@
     function fecharPopup() {
       vm.popup.visible = false;
       vm.popup.dados = [];
+      vm.expandedCell.visible = false;
+    }
+
+    function expandCell($event, label, value) {
+      $event.stopPropagation();
+      var rect = $event.currentTarget.getBoundingClientRect();
+      var top = rect.bottom + 4;
+      var left = rect.left;
+
+      // Keep box within viewport
+      if (top + 330 > window.innerHeight) { top = rect.top - 330; if (top < 8) top = 8; }
+      if (left + 520 > window.innerWidth) { left = window.innerWidth - 530; if (left < 8) left = 8; }
+
+      vm.expandedCell = {
+        visible: true,
+        label: label || '',
+        value: (value == null ? '' : '' + value),
+        top: top,
+        left: left
+      };
+    }
+
+    function closeExpandedCell() {
+      vm.expandedCell.visible = false;
     }
 
     /**
