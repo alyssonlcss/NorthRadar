@@ -563,6 +563,7 @@
     .table-wrapper {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
+      min-width: 0;
     }
 
     .data-table {
@@ -678,51 +679,56 @@
     /* ═══════════════════════════════════════════════════════════
        SECTION-SPECIFIC LED GLOW — Panorama (blue)
        ═══════════════════════════════════════════════════════════ */
-    .drag-section[data-section-id="panorama"] .panel {
+    .panorama-panel {
       border-left: 3px solid var(--section-panorama);
       box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);
     }
-    .drag-section[data-section-id="panorama"] .panel:hover {
+    .panorama-panel:hover {
       box-shadow: var(--shadow-md), 0 0 40px var(--section-panorama-glow-hover), 0 0 80px var(--section-panorama-glow);
       border-color: var(--section-panorama);
     }
-    .drag-section[data-section-id="panorama"] .panel-header h2 {
+    .panorama-panel .panel-header h2 {
       color: var(--section-panorama);
     }
-    .drag-section[data-section-id="panorama"] .panel-header .badge-count {
+    .panorama-panel .panel-header .badge-count {
       background: var(--section-panorama-light);
       color: var(--section-panorama);
     }
-    .drag-section[data-section-id="panorama"] .data-table thead th {
+    .panorama-panel .data-table thead th {
       background: var(--section-panorama-light);
       color: var(--section-panorama);
     }
-    .drag-section[data-section-id="panorama"] .data-table tfoot td {
+    .panorama-panel .data-table tfoot td {
       background: var(--section-panorama-light);
     }
 
     /* ── Top 10 (Enel Red #E4002B) ── */
-    .drag-section[data-section-id="top10"] .top10-grid .panel {
+    .top10-panel {
       border-left: 3px solid var(--section-top10);
       box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);
     }
-    .drag-section[data-section-id="top10"] .top10-grid .panel:hover {
+    .top10-panel:hover {
       box-shadow: var(--shadow-md), 0 0 40px var(--section-top10-glow-hover), 0 0 80px var(--section-top10-glow);
       border-color: var(--section-top10);
     }
-    .drag-section[data-section-id="top10"] .panel-header h2 {
+    .top10-panel .panel-header h2 {
       color: var(--section-top10);
     }
-    [data-theme="dark"] .drag-section[data-section-id="top10"] .panel-header h2 {
+    [data-theme="dark"] .top10-panel .panel-header h2 {
       color: var(--section-top10);
     }
-    .drag-section[data-section-id="top10"] .top10-grid .data-table thead th {
+    .top10-panel .data-table thead th {
       background: var(--section-top10-light);
       color: var(--section-top10);
     }
-    [data-theme="dark"] .drag-section[data-section-id="top10"] .top10-grid .data-table thead th {
+    [data-theme="dark"] .top10-panel .data-table thead th {
       color: var(--section-top10);
     }
+    .top10-panel .data-table { font-size: 12px; }
+    .top10-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
+    .top10-panel .data-table tbody td { padding: 7px 10px; }
+    .top10-panel .panel-header { background: transparent; padding: 14px 16px 10px; }
+    .top10-panel .panel-header h2 { font-size: 14px; }
 
     /* ── Equipes em Turno (green) ── */
     .equipes-panel {
@@ -772,42 +778,6 @@
     .equipes2-panel .data-table thead th {
       background: var(--section-equipes2-light);
       color: var(--section-equipes2);
-    }
-
-    /* ═══════════════════════════════════════════════════════════
-       TOP 10 GRID
-       ═══════════════════════════════════════════════════════════ */
-    .top10-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .top10-grid .panel {
-      margin-bottom: 0;
-    }
-
-    .top10-grid .panel-header {
-      background: transparent;
-      padding: 14px 16px 10px;
-    }
-
-    .top10-grid .panel-header h2 {
-      font-size: 14px;
-    }
-
-    .top10-grid .data-table {
-      font-size: 12px;
-    }
-
-    .top10-grid .data-table thead th {
-      font-size: 11px;
-      padding: 8px 10px;
-    }
-
-    .top10-grid .data-table tbody td {
-      padding: 7px 10px;
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -962,9 +932,6 @@
        RESPONSIVE
        ═══════════════════════════════════════════════════════════ */
     @media (max-width: 1400px) {
-      .top10-grid {
-        grid-template-columns: 1fr 1fr;
-      }
     }
 
     @media (max-width: 900px) {
@@ -980,9 +947,6 @@
       }
       .main-content {
         padding: 16px;
-      }
-      .top10-grid {
-        grid-template-columns: 1fr;
       }
       .kpi-bar {
         grid-template-columns: repeat(2, 1fr);
@@ -1151,18 +1115,33 @@
     }
 
     /* ═══════════════════════════════════════════════════════════
-       DRAGGABLE SECTIONS
+       DRAGGABLE COMPONENT GRID
        ═══════════════════════════════════════════════════════════ */
-    .drag-section {
+    .comp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .drag-item {
       position: relative;
-      transition: transform var(--transition), opacity var(--transition);
+      min-width: 0;
+      transition: transform var(--transition), opacity var(--transition), box-shadow 0.2s;
+      cursor: grab;
     }
-    .drag-section.dragging {
+    .drag-item:active { cursor: grabbing; }
+    .drag-item.dragging {
       opacity: 0.4;
-      transform: scale(0.98);
+      transform: scale(0.97);
     }
-    .drag-section.drag-over {
-      border-top: 3px solid var(--enel-accent);
+    .drag-item.drag-over {
+      box-shadow: 0 0 0 2px var(--enel-accent), 0 4px 20px rgba(0,61,165,0.18);
+      border-radius: var(--radius);
+    }
+    .drag-item-full {
+      grid-column: 1 / -1;
+    }
+    .drag-item .panel {
+      margin-bottom: 0;
     }
     .drag-handle {
       display: inline-flex;
@@ -1307,16 +1286,6 @@
     /* ═══════════════════════════════════════════════════════════
        ANALYTICS VIEW
        ═══════════════════════════════════════════════════════════ */
-    .analytics-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .analytics-grid .panel {
-      margin-bottom: 0;
-    }
 
     .chart-container {
       position: relative;
@@ -1339,37 +1308,77 @@
       max-height: 380px;
     }
 
-    .chart-container[style*="cursor"], .chart-container {
-      cursor: pointer;
-    }
-
-    .analytics-grid-3 {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      margin-bottom: 20px;
-    }
-
-    .analytics-grid-3 .panel {
-      margin-bottom: 0;
-    }
-
-    .analytics-full {
-      margin-bottom: 20px;
-    }
-
-    .analytics-full .chart-container {
+    .chart-container-full {
       min-height: 340px;
       max-height: 400px;
     }
 
-    .analytics-full .chart-container canvas {
+    .chart-container-full canvas {
       max-height: 360px;
     }
 
+    .chart-container[style*="cursor"], .chart-container {
+      cursor: pointer;
+    }
+
     @media (max-width: 1100px) {
-      .analytics-grid { grid-template-columns: 1fr; }
-      .analytics-grid-3 { grid-template-columns: 1fr; }
+      .comp-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 1101px) and (max-width: 1600px) {
+      .comp-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ═══════════════════════════════════════════════════════════
+       DARK MODE — GLOBAL TEXT FIX
+       ═══════════════════════════════════════════════════════════ */
+    [data-theme="dark"] body,
+    [data-theme="dark"] .main-content {
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .data-table tbody td,
+    [data-theme="dark"] .popup-table tbody td {
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .data-table thead th,
+    [data-theme="dark"] .popup-table thead th {
+      color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .data-table tfoot td {
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .panel-header h2,
+    [data-theme="dark"] .chart-title {
+      color: var(--text-primary);
+    }
+
+    [data-theme="dark"] .panel-header .badge-count {
+      color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .inc-link {
+      color: var(--enel-accent);
+    }
+
+    [data-theme="dark"] .sortable {
+      color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .sort-indicator,
+    [data-theme="dark"] .sort-hint {
+      color: var(--text-muted);
+    }
+
+    [data-theme="dark"] .popup-info {
+      color: var(--text-secondary);
+    }
+
+    [data-theme="dark"] .popup-info strong {
+      color: var(--text-primary);
     }
   </style>
 </head>
@@ -1431,190 +1440,222 @@
        ═══════════════════════════════════════════════════════ -->
   <div class="main-content" ng-if="vm.currentView==='operational'">
 
+    <!-- Drag hint -->
+    <div ng-if="!vm.loadingInc" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+      <span style="font-size:16px;color:var(--text-secondary);cursor:default;">&#x2630;</span>
+      <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Arraste qualquer painel para reposicionar livremente</span>
+    </div>
+
+    <div class="comp-grid">
+
     <!-- ── KPI Summary ── -->
-    <div class="kpi-bar" ng-if="!vm.loadingInc">
-      <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
-        <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
-        <div class="kpi-label">Inc. Ativas | Não Despach.</div>
-      </div>
-      <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
-        <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
-        <div class="kpi-label">Clientes Afetados</div>
-      </div>
-      <div class="kpi-item kpi-success">
-        <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
-        <div class="kpi-label">Equipes em Turno | Extras</div>
-      </div>
-      <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-        <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
-        <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
-      </div>
-      <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
-        <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
-        <div class="kpi-label">CHI Total</div>
+    <div class="drag-item drag-item-full" data-comp-id="op-kpi"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'op-kpi')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-kpi')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-kpi')"
+         ng-if="!vm.loadingInc">
+      <div class="kpi-bar">
+        <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
+          <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
+          <div class="kpi-label">Inc. Ativas | Não Despach.</div>
+        </div>
+        <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
+          <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
+          <div class="kpi-label">Clientes Afetados</div>
+        </div>
+        <div class="kpi-item kpi-success">
+          <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
+          <div class="kpi-label">Equipes em Turno | Extras</div>
+        </div>
+        <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
+          <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
+          <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
+        </div>
+        <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
+          <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
+          <div class="kpi-label">CHI Total</div>
+        </div>
       </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         TOP 10 TABLES
+         TOP 10 CHI
          ═══════════════════════════════════════════════════════ -->
-    <div class="drag-section" data-section-id="top10"
+    <div class="drag-item" data-comp-id="op-top10chi"
          draggable="true"
-         ng-drag-start="vm.onDragStart($event, 'top10')"
-         ng-drag-over="vm.onDragOver($event)"
-         ng-drag-leave="vm.onDragLeave($event)"
-         ng-drop="vm.onDrop($event, 'top10')"
-         ng-drag-end="vm.onDragEnd($event)"
-         ng-style="vm.getSectionOrder('top10')">
-    <div style="display:flex;align-items:center;margin-bottom:8px;">
-      <span class="drag-handle" title="Arrastar para reordenar" style="font-size:16px;color:var(--text-secondary);cursor:grab;">&#x2630;</span>
-      <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Top 10 (arraste para reordenar)</span>
+         ng-drag-start="vm.onCompDragStart($event, 'op-top10chi')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-top10chi')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-top10chi')">
+    <section class="panel top10-panel">
+      <div class="panel-header">
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CHI</h2>
+      </div>
+      <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
+        <div class="spinner"></div>
+      </div>
+      <div class="table-wrapper" ng-if="!vm.loadingInc">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='incidencia'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='incidencia'">⇅</span></th>
+              <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Chi','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='polo'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='polo'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='nt'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='nt'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cli'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cli'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='chi'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='chi'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='tma'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='tma'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='avisos'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='avisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='atribuicao'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='atribuicao'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='alimentador'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='alimentador'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cd'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cd'">⇅</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
+              <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
+              <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
+              <td>{{r.nt}}</td>
+              <td class="num">{{r.cli | number}}</td>
+              <td class="num" ng-class="{'cell-red': r.chi > 0}">{{r.chi | number:1}}</td>
+              <td class="num">{{r.tmaFormatted}}</td>
+              <td class="num">{{r.avisos}}</td>
+              <td>{{r.atribuicao}}</td>
+              <td>{{r.alimentador}}</td>
+              <td>{{r.cd}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" ng-if="!vm.top10Chi.length">Sem dados</div>
+      </div>
+    </section>
     </div>
-    <div class="top10-grid">
 
-      <!-- TOP 10 CHI -->
-      <section class="panel">
-        <div class="panel-header">
-          <h2>TOP 10 – CHI</h2>
-        </div>
-        <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
-          <div class="spinner"></div>
-        </div>
-        <div class="table-wrapper" ng-if="!vm.loadingInc">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='incidencia'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='incidencia'">⇅</span></th>
-                <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Chi','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='polo'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='polo'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='nt'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='nt'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cli'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cli'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='chi'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='chi'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='tma'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='tma'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='avisos'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='avisos'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='atribuicao'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='atribuicao'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='alimentador'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='alimentador'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Chi','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cd'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cd'">⇅</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
-                <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
-                <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
-                <td>{{r.nt}}</td>
-                <td class="num">{{r.cli | number}}</td>
-                <td class="num" ng-class="{'cell-red': r.chi > 0}">{{r.chi | number:1}}</td>
-                <td class="num">{{r.tmaFormatted}}</td>
-                <td class="num">{{r.avisos}}</td>
-                <td>{{r.atribuicao}}</td>
-                <td>{{r.alimentador}}</td>
-                <td>{{r.cd}}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="empty-state" ng-if="!vm.top10Chi.length">Sem dados</div>
-        </div>
-      </section>
-
-      <!-- TOP 10 TMA -->
-      <section class="panel">
-        <div class="panel-header">
-          <h2>TOP 10 – TMA</h2>
-        </div>
-        <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
-          <div class="spinner"></div>
-        </div>
-        <div class="table-wrapper" ng-if="!vm.loadingInc">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='incidencia'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='incidencia'">⇅</span></th>
-                <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Tma','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='polo'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='polo'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='nt'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='nt'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cli'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cli'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='chi'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='chi'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='tma'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='tma'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='avisos'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='avisos'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='atribuicao'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='atribuicao'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='alimentador'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='alimentador'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Tma','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cd'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cd'">⇅</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
-                <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
-                <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
-                <td>{{r.nt}}</td>
-                <td class="num">{{r.cli | number}}</td>
-                <td class="num">{{r.chi | number:1}}</td>
-                <td class="num" ng-class="{'cell-orange': r.tma > 0}">{{r.tmaFormatted}}</td>
-                <td class="num">{{r.avisos}}</td>
-                <td>{{r.atribuicao}}</td>
-                <td>{{r.alimentador}}</td>
-                <td>{{r.cd}}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="empty-state" ng-if="!vm.top10Tma.length">Sem dados</div>
-        </div>
-      </section>
-
-      <!-- TOP 10 CLI -->
-      <section class="panel">
-        <div class="panel-header">
-          <h2>TOP 10 – CLI. AFETADOS</h2>
-        </div>
-        <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
-          <div class="spinner"></div>
-        </div>
-        <div class="table-wrapper" ng-if="!vm.loadingInc">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='incidencia'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='incidencia'">⇅</span></th>
-                <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Cli','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='polo'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='polo'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='nt'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='nt'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cli'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cli'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='chi'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='chi'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='tma'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='tma'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='avisos'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='avisos'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='atribuicao'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='atribuicao'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='alimentador'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='alimentador'">⇅</span></th>
-                <th class="sortable" ng-click="vm.sortBy('top10Cli','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cd'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cd'">⇅</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
-                <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
-                <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
-                <td>{{r.nt}}</td>
-                <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
-                <td class="num">{{r.chi | number:1}}</td>
-                <td class="num">{{r.tmaFormatted}}</td>
-                <td class="num">{{r.avisos}}</td>
-                <td>{{r.atribuicao}}</td>
-                <td>{{r.alimentador}}</td>
-                <td>{{r.cd}}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="empty-state" ng-if="!vm.top10Cli.length">Sem dados</div>
-        </div>
-      </section>
+    <!-- ═══════════════════════════════════════════════════════
+         TOP 10 TMA
+         ═══════════════════════════════════════════════════════ -->
+    <div class="drag-item" data-comp-id="op-top10tma"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'op-top10tma')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-top10tma')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-top10tma')">
+    <section class="panel top10-panel">
+      <div class="panel-header">
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – TMA</h2>
+      </div>
+      <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
+        <div class="spinner"></div>
+      </div>
+      <div class="table-wrapper" ng-if="!vm.loadingInc">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='incidencia'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='incidencia'">⇅</span></th>
+              <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Tma','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='polo'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='polo'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='nt'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='nt'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cli'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cli'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='chi'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='chi'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='tma'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='tma'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='avisos'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='avisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='atribuicao'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='atribuicao'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='alimentador'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='alimentador'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cd'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cd'">⇅</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
+              <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
+              <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
+              <td>{{r.nt}}</td>
+              <td class="num">{{r.cli | number}}</td>
+              <td class="num">{{r.chi | number:1}}</td>
+              <td class="num" ng-class="{'cell-orange': r.tma > 0}">{{r.tmaFormatted}}</td>
+              <td class="num">{{r.avisos}}</td>
+              <td>{{r.atribuicao}}</td>
+              <td>{{r.alimentador}}</td>
+              <td>{{r.cd}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" ng-if="!vm.top10Tma.length">Sem dados</div>
+      </div>
+    </section>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TOP 10 CLI. AFETADOS
+         ═══════════════════════════════════════════════════════ -->
+    <div class="drag-item" data-comp-id="op-top10cli"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'op-top10cli')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-top10cli')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-top10cli')">
+    <section class="panel top10-panel">
+      <div class="panel-header">
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CLI. AFETADOS</h2>
+      </div>
+      <div class="loading-overlay" ng-if="vm.loadingInc" style="padding:20px">
+        <div class="spinner"></div>
+      </div>
+      <div class="table-wrapper" ng-if="!vm.loadingInc">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','incidencia')">Incidência<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='incidencia'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='incidencia'">⇅</span></th>
+              <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('top10Cli','polo')">POLO<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='polo'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='polo'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','nt')">NT<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='nt'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='nt'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','cli')">CLI. AF.<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cli'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cli'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='chi'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='chi'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='tma'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='tma'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='avisos'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='avisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','atribuicao')">Atribuição<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='atribuicao'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='atribuicao'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='alimentador'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='alimentador'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cd'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cd'">⇅</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
+              <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
+              <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
+              <td>{{r.nt}}</td>
+              <td class="num" ng-class="{'cell-red': r.cli > 0}">{{r.cli | number}}</td>
+              <td class="num">{{r.chi | number:1}}</td>
+              <td class="num">{{r.tmaFormatted}}</td>
+              <td class="num">{{r.avisos}}</td>
+              <td>{{r.atribuicao}}</td>
+              <td>{{r.alimentador}}</td>
+              <td>{{r.cd}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" ng-if="!vm.top10Cli.length">Sem dados</div>
+      </div>
+    </section>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
          TABELA PANORAMA DE INCIDÊNCIAS
          ═══════════════════════════════════════════════════════ -->
-    <div class="drag-section" data-section-id="panorama"
+    <div class="drag-item drag-item-full" data-comp-id="op-panorama"
          draggable="true"
-         ng-drag-start="vm.onDragStart($event, 'panorama')"
-         ng-drag-over="vm.onDragOver($event)"
-         ng-drag-leave="vm.onDragLeave($event)"
-         ng-drop="vm.onDrop($event, 'panorama')"
-         ng-drag-end="vm.onDragEnd($event)"
-         ng-style="vm.getSectionOrder('panorama')">
-    <section class="panel">
+         ng-drag-start="vm.onCompDragStart($event, 'op-panorama')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-panorama')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-panorama')">
+    <section class="panel panorama-panel">
       <div class="panel-header">
         <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>Panorama de Incidências – {{vm.selectedPolo}}</h2>
         <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} conjuntos</span>
@@ -1706,14 +1747,14 @@
     <!-- ═══════════════════════════════════════════════════════
          EQUIPES EM TURNO
          ═══════════════════════════════════════════════════════ -->
-    <div class="drag-section" data-section-id="equipes"
+    <div class="drag-item drag-item-full" data-comp-id="op-equipes"
          draggable="true"
-         ng-drag-start="vm.onDragStart($event, 'equipes')"
-         ng-drag-over="vm.onDragOver($event)"
-         ng-drag-leave="vm.onDragLeave($event)"
-         ng-drop="vm.onDrop($event, 'equipes')"
-         ng-drag-end="vm.onDragEnd($event)"
-         ng-style="vm.getSectionOrder('equipes')">
+         ng-drag-start="vm.onCompDragStart($event, 'op-equipes')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-equipes')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-equipes')">
     <section class="panel equipes-panel">
       <div class="panel-header">
         <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}</h2>
@@ -1772,14 +1813,14 @@
     <!-- ═══════════════════════════════════════════════════════
          EQUIPES EXTRAS
          ═══════════════════════════════════════════════════════ -->
-    <div class="drag-section" data-section-id="equipes2"
+    <div class="drag-item drag-item-full" data-comp-id="op-equipes2"
          draggable="true"
-         ng-drag-start="vm.onDragStart($event, 'equipes2')"
-         ng-drag-over="vm.onDragOver($event)"
-         ng-drag-leave="vm.onDragLeave($event)"
-         ng-drop="vm.onDrop($event, 'equipes2')"
-         ng-drag-end="vm.onDragEnd($event)"
-         ng-style="vm.getSectionOrder('equipes2')">
+         ng-drag-start="vm.onCompDragStart($event, 'op-equipes2')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-equipes2')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-equipes2')">
     <section class="panel equipes2-panel">
       <div class="panel-header">
         <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EXTRAS – TOTAL: {{vm.totalEquipes2}}</h2>
@@ -1830,6 +1871,8 @@
     </section>
     </div>
 
+    </div><!-- /comp-grid -->
+
   </div>
 
   <!-- ═══════════════════════════════════════════════════════
@@ -1843,44 +1886,81 @@
       <div class="loading-text">Carregando dados analíticos...</div>
     </div>
 
-    <!-- KPI Summary (shared) -->
-    <div class="kpi-bar" ng-if="!vm.loadingInc">
-      <div class="kpi-item kpi-warning">
-        <div class="kpi-value">{{vm.kpis.totalIncidencias | number}}</div>
-        <div class="kpi-label">Incidências Ativas</div>
-      </div>
-      <div class="kpi-item kpi-danger">
-        <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
-        <div class="kpi-label">Clientes Afetados</div>
-      </div>
-      <div class="kpi-item kpi-success">
-        <div class="kpi-value">{{vm.kpis.totalEquipes | number}}</div>
-        <div class="kpi-label">Equipes em Turno</div>
-      </div>
-      <div class="kpi-item kpi-danger">
-        <div class="kpi-value">{{vm.kpis.urgentes | number}}</div>
-        <div class="kpi-label">Urgentes</div>
-      </div>
-      <div class="kpi-item">
-        <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
-        <div class="kpi-label">CHI Total</div>
+    <!-- Drag hint -->
+    <div ng-if="!vm.loadingInc" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+      <span style="font-size:16px;color:var(--text-secondary);cursor:default;">&#x2630;</span>
+      <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Arraste qualquer painel para reposicionar livremente</span>
+    </div>
+
+    <div class="comp-grid">
+
+    <!-- KPI Summary -->
+    <div class="drag-item drag-item-full" data-comp-id="an-kpi"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-kpi')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-kpi')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-kpi')"
+         ng-if="!vm.loadingInc">
+      <div class="kpi-bar">
+        <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
+          <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
+          <div class="kpi-label">Inc. Ativas | Não Despach.</div>
+        </div>
+        <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
+          <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
+          <div class="kpi-label">Clientes Afetados</div>
+        </div>
+        <div class="kpi-item kpi-success">
+          <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
+          <div class="kpi-label">Equipes em Turno | Extras</div>
+        </div>
+        <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
+          <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
+          <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
+        </div>
+        <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
+          <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
+          <div class="kpi-label">CHI Total</div>
+        </div>
       </div>
     </div>
 
-    <!-- Row 1: Duration distribution + Dispatch status -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc">
+    <!-- Distribuição por Tempo de Duração -->
+    <div class="drag-item" data-comp-id="an-duracao"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-duracao')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-duracao')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-duracao')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-panorama)">Distribuição por Tempo de Duração</h2>
+          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Distribuição por Tempo de Duração</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartDuracao"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Despacho de Incidências -->
+    <div class="drag-item" data-comp-id="an-despacho"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-despacho')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-despacho')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-despacho')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-top10)">Despacho de Incidências</h2>
+          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Despacho de Incidências</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartDespacho"></canvas>
@@ -1888,20 +1968,39 @@
       </section>
     </div>
 
-    <!-- Row 2: Top 10 CHI bar + Clientes por Conjunto -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc">
+    <!-- Top 10 — CHI por Incidência -->
+    <div class="drag-item" data-comp-id="an-top10chi"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-top10chi')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-top10chi')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-top10chi')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-top10)">Top 10 — CHI por Incidência</h2>
+          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Chi"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Clientes Afetados por Conjunto -->
+    <div class="drag-item" data-comp-id="an-clientesConj"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-clientesConj')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-clientesConj')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-clientesConj')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-panorama)">Clientes Afetados por Conjunto (Top 8)</h2>
+          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 8)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartClientesConj"></canvas>
@@ -1909,20 +2008,39 @@
       </section>
     </div>
 
-    <!-- Row 3: Top 10 Clientes Afetados + Top 10 TMA -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc">
+    <!-- Top 10 — Clientes Afetados por Incidência -->
+    <div class="drag-item" data-comp-id="an-top10cli"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-top10cli')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-top10cli')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-top10cli')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-top10)">Top 10 — Clientes Afetados por Incidência</h2>
+          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Cli"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Top 10 — TMA -->
+    <div class="drag-item" data-comp-id="an-top10tma"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-top10tma')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-top10tma')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-top10tma')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-top10)">Top 10 — TMA</h2>
+          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Top 10 — TMA</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Tma"></canvas>
@@ -1930,20 +2048,39 @@
       </section>
     </div>
 
-    <!-- Row 4: Equipes vs Equipes Extras por Conjunto + Ocupação -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc">
+    <!-- Equipes por Conjunto — Turno vs Extras -->
+    <div class="drag-item" data-comp-id="an-equipesConj"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-equipesConj')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-equipesConj')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-equipesConj')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-equipes)">Equipes por Conjunto — Turno vs Extras</h2>
+          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Equipes por Conjunto — Turno vs Extras</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartEquipesConj"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Ocupação das Equipes -->
+    <div class="drag-item" data-comp-id="an-ocupacao"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-ocupacao')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-ocupacao')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-ocupacao')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-equipes)">Ocupação das Equipes (Inc. / Equipe por Conjunto)</h2>
+          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Ocupação das Equipes (Inc. / Equipe por Conjunto)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartOcupacao"></canvas>
@@ -1951,20 +2088,39 @@
       </section>
     </div>
 
-    <!-- Row 5: Equipes Extras detail + Polo distribution -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc">
+    <!-- Equipes Extras por Conjunto -->
+    <div class="drag-item" data-comp-id="an-extrasConj"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-extrasConj')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-extrasConj')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-extrasConj')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-equipes2)">Equipes Extras por Conjunto</h2>
+          <h2 class="chart-title" style="color:var(--section-equipes2)"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartExtrasConj"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Distribuição por Polo -->
+    <div class="drag-item" data-comp-id="an-polo"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-polo')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-polo')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-polo')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-panorama)">Distribuição por Polo</h2>
+          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Distribuição por Polo</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartPolo"></canvas>
@@ -1972,32 +2128,59 @@
       </section>
     </div>
 
-    <!-- Row 6: Full-width equipe activity breakdown -->
-    <div class="analytics-full" ng-if="!vm.loadingEq">
+    <!-- Atividade das Equipes (full width) -->
+    <div class="drag-item drag-item-full" data-comp-id="an-atividade"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-atividade')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-atividade')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-atividade')"
+         ng-if="!vm.loadingEq">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-equipes)">Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
+          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-full">
           <canvas id="chartAtividade"></canvas>
         </div>
       </section>
     </div>
 
-    <!-- Row 7: Indicadores críticos + Não Despachados/Essenciais/Eletrodep por Conjunto -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc">
+    <!-- Indicadores Críticos -->
+    <div class="drag-item" data-comp-id="an-criticos"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-criticos')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-criticos')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-criticos')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-equipes2)">Indicadores Críticos</h2>
+          <h2 class="chart-title" style="color:var(--section-equipes2)"><span class="drag-handle">&#x2630;</span>Indicadores Críticos</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartCriticos"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Não Despachados / Essenciais / Críticos por Conjunto -->
+    <div class="drag-item" data-comp-id="an-riskConj"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-riskConj')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-riskConj')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-riskConj')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-top10)">Não Despachados / Essenciais / Críticos por Conjunto</h2>
+          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Não Despachados / Essenciais / Críticos por Conjunto</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartRiskConj"></canvas>
@@ -2005,20 +2188,39 @@
       </section>
     </div>
 
-    <!-- Row 8: Avisos por Conjunto + Produtividade Equipes -->
-    <div class="analytics-grid" ng-if="!vm.loadingInc && !vm.loadingEq">
+    <!-- Avisos por Conjunto -->
+    <div class="drag-item" data-comp-id="an-avisos"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-avisos')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-avisos')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-avisos')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-panorama)">Avisos por Conjunto (Top 10)</h2>
+          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Avisos por Conjunto (Top 10)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartAvisos"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Produtividade por Equipe -->
+    <div class="drag-item" data-comp-id="an-produtividade"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-produtividade')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-produtividade')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-produtividade')"
+         ng-if="!vm.loadingInc && !vm.loadingEq">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-equipes)">Produtividade por Equipe (Top 15)</h2>
+          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartProdutividade"></canvas>
@@ -2026,17 +2228,27 @@
       </section>
     </div>
 
-    <!-- Row 9: Full-width panorama overview -->
-    <div class="analytics-full" ng-if="!vm.loadingInc">
+    <!-- Panorama Geral (full width) -->
+    <div class="drag-item drag-item-full" data-comp-id="an-panorama"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'an-panorama')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'an-panorama')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('an-panorama')"
+         ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-panorama)">Panorama Geral — Incidências por Conjunto</h2>
+          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Panorama Geral — Incidências por Conjunto</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-full">
           <canvas id="chartPanorama"></canvas>
         </div>
       </section>
     </div>
+
+    </div><!-- /comp-grid -->
 
   </div>
 

@@ -23,7 +23,7 @@
 
     // ── View-model state ─────────────────────────────────
     vm.polos          = ['TODOS', 'ATLANTICO', 'DECEN', 'DNORT'];
-    vm.selectedPolo   = 'TODOS';
+    vm.selectedPolo   = loadPolo();
     vm.loadingInc     = true;
     vm.loadingEq      = true;
     vm.errorInc       = null;
@@ -75,16 +75,37 @@
     vm.expandedCell = { visible: false, label: '', value: '', top: 0, left: 0 };
 
     // ── Analytics view state ─────────────────────────────
-    vm.currentView = 'operational';
+    var VIEW_KEY = 'northradar_view';
+    vm.currentView = loadView();
     vm.switchView  = switchView;
     var _chartInstances = {};
 
-    // ── Drag-and-drop section ordering ───────────────────
-    var STORAGE_KEY = 'northradar_section_order';
+    // ── Unified component drag-and-drop ─────────────────
     var THEME_KEY   = 'northradar_theme';
-    var defaultOrder = ['top10', 'panorama', 'equipes', 'equipes2'];
-    vm.sectionOrder  = loadSectionOrder();
-    vm.draggingSection = null;
+    var POLO_KEY    = 'northradar_polo';
+    var OP_ORDER_KEY = 'northradar_op_order';
+    var AN_ORDER_KEY = 'northradar_an_order';
+
+    var defaultOpOrder = [
+      'op-kpi', 'op-top10chi', 'op-top10tma', 'op-top10cli',
+      'op-panorama', 'op-equipes', 'op-equipes2'
+    ];
+    var defaultAnOrder = [
+      'an-kpi',
+      'an-duracao', 'an-despacho',
+      'an-top10chi', 'an-clientesConj',
+      'an-top10cli', 'an-top10tma',
+      'an-equipesConj', 'an-ocupacao',
+      'an-extrasConj', 'an-polo',
+      'an-atividade',
+      'an-criticos', 'an-riskConj',
+      'an-avisos', 'an-produtividade',
+      'an-panorama'
+    ];
+
+    vm.opOrder = _loadOrder(OP_ORDER_KEY, defaultOpOrder);
+    vm.anOrder = _loadOrder(AN_ORDER_KEY, defaultAnOrder);
+    vm.draggingComp = null;
 
     // ── Dark mode ────────────────────────────────────────
     vm.darkMode = loadTheme();
@@ -105,38 +126,110 @@
     vm.sortBy         = sortBy;
     vm.expandCell     = expandCell;
     vm.closeExpandedCell = closeExpandedCell;
-    vm.onDragStart    = onDragStart;
-    vm.onDragOver     = onDragOver;
-    vm.onDragLeave    = onDragLeave;
-    vm.onDrop         = onDrop;
-    vm.onDragEnd      = onDragEnd;
-    vm.getSectionOrder = getSectionOrder;
+    vm.onCompDragStart = onCompDragStart;
+    vm.onCompDragOver  = onCompDragOver;
+    vm.onCompDragLeave = onCompDragLeave;
+    vm.onCompDrop      = onCompDrop;
+    vm.onCompDragEnd   = onCompDragEnd;
+    vm.getCompOrder    = getCompOrder;
 
     // ── Bootstrap ────────────────────────────────────────
     checkAuthAndLoad();
     $interval(loadAll, 900000); // 15 min
 
+    // If persisted view was analytics, build charts after data loads
+    if (vm.currentView === 'analytics') {
+      $timeout(buildAllCharts, 500);
+    }
+
     // ═══════════════════════════════════════════════════════
-    // DRAG-AND-DROP SECTION REORDERING
+    // UNIFIED COMPONENT DRAG-AND-DROP
     // ═══════════════════════════════════════════════════════
 
-    function loadSectionOrder() {
+    function _loadOrder(key, defaults) {
       try {
-        var saved = localStorage.getItem(STORAGE_KEY);
+        var saved = localStorage.getItem(key);
         if (saved) {
           var parsed = JSON.parse(saved);
-          // Validate that it's a valid array with the expected keys
-          if (Array.isArray(parsed) && parsed.length === defaultOrder.length) {
-            return parsed;
+          if (Array.isArray(parsed) && parsed.length === defaults.length) {
+            // Validate all expected IDs are present
+            var valid = defaults.every(function (id) { return parsed.indexOf(id) >= 0; });
+            if (valid) return parsed;
           }
         }
       } catch (e) { /* ignore */ }
-      return defaultOrder.slice();
+      return defaults.slice();
     }
 
-    function saveSectionOrder() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(vm.sectionOrder)); }
+    function _saveOrder(key, order) {
+      try { localStorage.setItem(key, JSON.stringify(order)); }
       catch (e) { /* ignore */ }
+    }
+
+    function getCompOrder(compId) {
+      var arr = compId.indexOf('op-') === 0 ? vm.opOrder : vm.anOrder;
+      var idx = arr.indexOf(compId);
+      return { order: idx >= 0 ? idx + 1 : 99 };
+    }
+
+    function _findDragItem(el) {
+      while (el && !el.classList.contains('drag-item')) {
+        el = el.parentElement;
+      }
+      return el;
+    }
+
+    function onCompDragStart($event, compId) {
+      vm.draggingComp = compId;
+      $event.dataTransfer.effectAllowed = 'move';
+      $event.dataTransfer.setData('text/plain', compId);
+      var target = _findDragItem($event.target);
+      if (target) target.classList.add('dragging');
+    }
+
+    function onCompDragOver($event) {
+      $event.preventDefault();
+      $event.dataTransfer.dropEffect = 'move';
+      var target = _findDragItem($event.target);
+      if (target && target.dataset.compId !== vm.draggingComp) {
+        target.classList.add('drag-over');
+      }
+    }
+
+    function onCompDragLeave($event) {
+      var target = _findDragItem($event.target);
+      if (target) target.classList.remove('drag-over');
+    }
+
+    function onCompDrop($event, targetId) {
+      $event.preventDefault();
+      var sourceId = vm.draggingComp;
+      // Remove visual states
+      var allItems = document.querySelectorAll('.drag-item');
+      for (var i = 0; i < allItems.length; i++) {
+        allItems[i].classList.remove('drag-over', 'dragging');
+      }
+      if (sourceId && sourceId !== targetId) {
+        var isOp = sourceId.indexOf('op-') === 0;
+        var arr = isOp ? vm.opOrder : vm.anOrder;
+        var key = isOp ? OP_ORDER_KEY : AN_ORDER_KEY;
+        var srcIdx = arr.indexOf(sourceId);
+        var tgtIdx = arr.indexOf(targetId);
+        if (srcIdx >= 0 && tgtIdx >= 0) {
+          arr.splice(srcIdx, 1);
+          arr.splice(tgtIdx, 0, sourceId);
+          _saveOrder(key, arr);
+        }
+      }
+      vm.draggingComp = null;
+    }
+
+    function onCompDragEnd() {
+      vm.draggingComp = null;
+      var allItems = document.querySelectorAll('.drag-item');
+      for (var i = 0; i < allItems.length; i++) {
+        allItems[i].classList.remove('drag-over', 'dragging');
+      }
     }
 
     // ── Theme persistence ────────────────────────────────
@@ -170,72 +263,8 @@
     function selectPolo(polo) {
       vm.selectedPolo = polo;
       vm.dropdownOpen = false;
+      savePolo(polo);
       changePolo(polo);
-    }
-
-    function getSectionOrder(sectionId) {
-      var idx = vm.sectionOrder.indexOf(sectionId);
-      return { order: idx >= 0 ? idx + 1 : 99 };
-    }
-
-    function onDragStart($event, sectionId) {
-      vm.draggingSection = sectionId;
-      $event.dataTransfer.effectAllowed = 'move';
-      $event.dataTransfer.setData('text/plain', sectionId);
-      // Add dragging class
-      var target = findDragSection($event.target);
-      if (target) target.classList.add('dragging');
-    }
-
-    function onDragOver($event) {
-      $event.preventDefault();
-      $event.dataTransfer.dropEffect = 'move';
-      var target = findDragSection($event.target);
-      if (target && target.dataset.sectionId !== vm.draggingSection) {
-        target.classList.add('drag-over');
-      }
-    }
-
-    function onDragLeave($event) {
-      var target = findDragSection($event.target);
-      if (target) target.classList.remove('drag-over');
-    }
-
-    function onDrop($event, targetId) {
-      $event.preventDefault();
-      var sourceId = vm.draggingSection;
-      // Remove visual states
-      var allSections = document.querySelectorAll('.drag-section');
-      for (var i = 0; i < allSections.length; i++) {
-        allSections[i].classList.remove('drag-over', 'dragging');
-      }
-
-      if (sourceId && sourceId !== targetId) {
-        var srcIdx = vm.sectionOrder.indexOf(sourceId);
-        var tgtIdx = vm.sectionOrder.indexOf(targetId);
-        if (srcIdx >= 0 && tgtIdx >= 0) {
-          // Remove source from array and insert at target position
-          vm.sectionOrder.splice(srcIdx, 1);
-          vm.sectionOrder.splice(tgtIdx, 0, sourceId);
-          saveSectionOrder();
-        }
-      }
-      vm.draggingSection = null;
-    }
-
-    function onDragEnd($event) {
-      vm.draggingSection = null;
-      var allSections = document.querySelectorAll('.drag-section');
-      for (var i = 0; i < allSections.length; i++) {
-        allSections[i].classList.remove('drag-over', 'dragging');
-      }
-    }
-
-    function findDragSection(el) {
-      while (el && !el.classList.contains('drag-section')) {
-        el = el.parentElement;
-      }
-      return el;
     }
 
     // ═══════════════════════════════════════════════════════
@@ -244,9 +273,23 @@
 
     function switchView(view) {
       vm.currentView = view;
+      saveView(view);
       if (view === 'analytics') {
         $timeout(buildAllCharts, 150);
       }
+    }
+
+    function loadView() {
+      try {
+        var v = localStorage.getItem(VIEW_KEY);
+        if (v === 'analytics' || v === 'operational') return v;
+      } catch (e) { /* ignore */ }
+      return 'operational';
+    }
+
+    function saveView(v) {
+      try { localStorage.setItem(VIEW_KEY, v); }
+      catch (e) { /* ignore */ }
     }
 
     /** Destroy an existing Chart.js instance by key */
@@ -795,7 +838,21 @@
 
     function changePolo(polo) {
       vm.selectedPolo = polo;
+      savePolo(polo);
       loadAll();
+    }
+
+    function loadPolo() {
+      try {
+        var saved = localStorage.getItem(POLO_KEY);
+        if (saved && ['TODOS','ATLANTICO','DECEN','DNORT'].indexOf(saved) >= 0) return saved;
+      } catch (e) { /* ignore */ }
+      return 'TODOS';
+    }
+
+    function savePolo(polo) {
+      try { localStorage.setItem(POLO_KEY, polo); }
+      catch (e) { /* ignore */ }
     }
 
     /** Retorna o parâmetro 'polos' para a API: junta todos quando TODOS */
