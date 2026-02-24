@@ -76,9 +76,14 @@
 
     // ── Drag-and-drop section ordering ───────────────────
     var STORAGE_KEY = 'northradar_section_order';
+    var THEME_KEY   = 'northradar_theme';
     var defaultOrder = ['top10', 'panorama', 'equipes', 'equipes2'];
     vm.sectionOrder  = loadSectionOrder();
     vm.draggingSection = null;
+
+    // ── Dark mode ────────────────────────────────────────
+    vm.darkMode = loadTheme();
+    vm.toggleTheme = toggleTheme;
 
     // ── Public bindings ──────────────────────────────────
     vm.changePolo     = changePolo;
@@ -121,6 +126,19 @@
 
     function saveSectionOrder() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(vm.sectionOrder)); }
+      catch (e) { /* ignore */ }
+    }
+
+    // ── Theme persistence ────────────────────────────────
+    function loadTheme() {
+      try {
+        return localStorage.getItem(THEME_KEY) === 'dark';
+      } catch (e) { return false; }
+    }
+
+    function toggleTheme() {
+      vm.darkMode = !vm.darkMode;
+      try { localStorage.setItem(THEME_KEY, vm.darkMode ? 'dark' : 'light'); }
       catch (e) { /* ignore */ }
     }
 
