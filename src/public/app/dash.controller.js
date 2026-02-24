@@ -129,6 +129,7 @@
     vm.testDebug      = testDebug;
     vm.abrirPopup     = abrirPopup;
     vm.fecharPopup    = fecharPopup;
+    vm.scrollToComp   = scrollToComp;
     vm.sortBy         = sortBy;
     vm.expandCell     = expandCell;
     vm.closeExpandedCell = closeExpandedCell;
@@ -1072,6 +1073,26 @@
       vm.sort.popup = { field: '', reverse: false };
 
       console.log('[Ctrl] Popup aberto: ' + tipo + '/' + campo + ' → ' + dados.length + ' registros');
+    }
+
+    /**
+     * Scroll to a component panel by data-comp-id.
+     * If currently on analytics view, switches to operational first.
+     */
+    function scrollToComp(compId) {
+      var needSwitch = vm.currentView !== 'operational' && compId.indexOf('op-') === 0;
+      if (needSwitch) {
+        vm.currentView = 'operational';
+        localStorage.setItem('northradar_view', 'operational');
+      }
+      $timeout(function () {
+        var el = document.querySelector('[data-comp-id="' + compId + '"]');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('highlight-flash');
+          setTimeout(function () { el.classList.remove('highlight-flash'); }, 1500);
+        }
+      }, needSwitch ? 300 : 50);
     }
 
     function fecharPopup() {

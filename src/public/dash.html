@@ -1014,6 +1014,26 @@
       opacity: 0.5;
     }
 
+    /* Clickable sides in dual KPI */
+    .kpi-click-zone {
+      cursor: pointer;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .kpi-click-zone:hover {
+      opacity: 0.7;
+      transform: scale(1.08);
+    }
+
+    /* Flash highlight when scrolling to a component */
+    @keyframes highlightFlash {
+      0%   { box-shadow: 0 0 0 0 rgba(0,61,165,0.4); }
+      50%  { box-shadow: 0 0 20px 6px rgba(0,61,165,0.25); }
+      100% { box-shadow: 0 0 0 0 rgba(0,61,165,0); }
+    }
+    .highlight-flash {
+      animation: highlightFlash 1.2s ease-out;
+    }
+
     .kpi-item.kpi-danger {
       box-shadow: var(--shadow), 0 0 16px rgba(228,0,43,0.08);
     }
@@ -1597,10 +1617,10 @@
          ng-style="vm.getCompOrder('op-kpi')"
          ng-if="!vm.loadingInc">
       <div class="kpi-bar">
-        <div class="kpi-item kpi-warning kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
-          <span class="kpi-value kpi-val-left">{{vm.kpis.totalIncidencias | number}}</span>
+        <div class="kpi-item kpi-warning kpi-item-dual">
+          <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'totalIncidencias')">{{vm.kpis.totalIncidencias | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right">{{vm.kpis.naoDespachados | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'naoDespachados')">{{vm.kpis.naoDespachados | number}}</span>
           <span class="kpi-label kpi-lbl-left">Inc. Ativas</span>
           <span class="kpi-label kpi-lbl-right">Não Despach.</span>
         </div>
@@ -1609,16 +1629,16 @@
           <div class="kpi-label">Clientes Afetados</div>
         </div>
         <div class="kpi-item kpi-success kpi-item-dual">
-          <span class="kpi-value kpi-val-left">{{vm.kpis.totalEquipes | number}}</span>
+          <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.scrollToComp('op-equipes')">{{vm.kpis.totalEquipes | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right">{{vm.totalEquipes2 | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.scrollToComp('op-equipes2')">{{vm.totalEquipes2 | number}}</span>
           <span class="kpi-label kpi-lbl-left">Equipes em Turno</span>
           <span class="kpi-label kpi-lbl-right">Extras</span>
         </div>
-        <div class="kpi-item kpi-danger kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-          <span class="kpi-value kpi-val-left">{{vm.kpis.urgentes | number}}</span>
+        <div class="kpi-item kpi-danger kpi-item-dual">
+          <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'urgente')">{{vm.kpis.urgentes | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right" ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'eletrodependente')" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
           <span class="kpi-label kpi-lbl-left">Urgentes</span>
           <span class="kpi-label kpi-lbl-right" ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span>
         </div>
@@ -2052,10 +2072,10 @@
          ng-style="vm.getCompOrder('an-kpi')"
          ng-if="!vm.loadingInc">
       <div class="kpi-bar">
-        <div class="kpi-item kpi-warning kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
-          <span class="kpi-value kpi-val-left">{{vm.kpis.totalIncidencias | number}}</span>
+        <div class="kpi-item kpi-warning kpi-item-dual">
+          <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'totalIncidencias')">{{vm.kpis.totalIncidencias | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right">{{vm.kpis.naoDespachados | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'naoDespachados')">{{vm.kpis.naoDespachados | number}}</span>
           <span class="kpi-label kpi-lbl-left">Inc. Ativas</span>
           <span class="kpi-label kpi-lbl-right">Não Despach.</span>
         </div>
@@ -2064,16 +2084,16 @@
           <div class="kpi-label">Clientes Afetados</div>
         </div>
         <div class="kpi-item kpi-success kpi-item-dual">
-          <span class="kpi-value kpi-val-left">{{vm.kpis.totalEquipes | number}}</span>
+          <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.scrollToComp('op-equipes')">{{vm.kpis.totalEquipes | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right">{{vm.totalEquipes2 | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.scrollToComp('op-equipes2')">{{vm.totalEquipes2 | number}}</span>
           <span class="kpi-label kpi-lbl-left">Equipes em Turno</span>
           <span class="kpi-label kpi-lbl-right">Extras</span>
         </div>
-        <div class="kpi-item kpi-danger kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-          <span class="kpi-value kpi-val-left">{{vm.kpis.urgentes | number}}</span>
+        <div class="kpi-item kpi-danger kpi-item-dual">
+          <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'urgente')">{{vm.kpis.urgentes | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right" ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'eletrodependente')" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
           <span class="kpi-label kpi-lbl-left">Urgentes</span>
           <span class="kpi-label kpi-lbl-right" ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span>
         </div>
