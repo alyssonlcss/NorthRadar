@@ -13,12 +13,12 @@
 
   angular.module('dashApp')
     .controller('DashCtrl', [
-      '$interval', '$timeout', '$q',
+      '$scope', '$interval', '$timeout', '$q',
       'DashApi', 'DashProcessor', 'DashHelpers',
       DashCtrl
     ]);
 
-  function DashCtrl($interval, $timeout, $q, Api, Proc, Helpers) {
+  function DashCtrl($scope, $interval, $timeout, $q, Api, Proc, Helpers) {
     var vm = this;
 
     // ── View-model state ─────────────────────────────────
@@ -139,6 +139,10 @@
     vm.onCompDrop      = onCompDrop;
     vm.onCompDragEnd   = onCompDragEnd;
     vm.getCompOrder    = getCompOrder;
+    vm.startShare      = startShare;
+    vm.cancelShare     = cancelShare;
+    vm.isSharing       = false;
+    vm.shareMode       = false;
 
     // ── Bootstrap ────────────────────────────────────────
     checkAuthAndLoad();
@@ -1093,6 +1097,97 @@
           setTimeout(function () { el.classList.remove('highlight-flash'); }, 1500);
         }
       }, needSwitch ? 300 : 50);
+    }
+
+    /**
+     * Enter share mode: show toast and listen for clicks on [data-comp-id].
+     */
+    function startShare() {
+      if (vm.shareMode) { cancelShare(); return; } // toggle off
+      vm.shareMode = true;
+      document.body.classList.add('share-mode-active');
+
+      // Delegate click on comp panels
+      document.addEventListener('click', _shareClickHandler, true);
+    }
+
+    function cancelShare() {
+      vm.shareMode = false;
+      document.body.classList.remove('share-mode-active');
+      document.removeEventListener('click', _shareClickHandler, true);
+      $scope.$applyAsync();
+    }
+
+    /** @private */
+    function _shareClickHandler(e) {
+      // Walk up from click target to find nearest [data-comp-id]
+      var el = e.target;
+      var comp = null;
+      while (el && el !== document.body) {
+        if (el.getAttribute && el.getAttribute('data-comp-id')) {
+          comp = el; break;
+        }
+        el = el.parentElement;
+      }
+      if (!comp) return; // clicked outside any panel — ignore
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Exit share mode
+      vm.shareMode = false;
+      document.body.classList.remove('share-mode-active');
+      document.removeEventListener('click', _shareClickHandler, true);
+      vm.isSharing = true;
+      $scope.$applyAsync();
+
+      html2canvas(comp, {
+        backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary').trim() || '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      }).then(function (canvas) {
+        canvas.toBlob(function (blob) {
+          if (!blob) { vm.isSharing = false; $scope.$applyAsync(); return; }
+
+          var ts = new Date().toLocaleString('pt-BR').replace(/[\/:]/g, '-');
+          var fileName = 'NorthRadar_' + ts + '.png';
+
+          // Try Web Share API (mobile)
+          if (navigator.share && navigator.canShare) {
+            var file = new File([blob], fileName, { type: 'image/png' });
+            var shareData = { files: [file], title: 'NorthRadar', text: 'Dashboard NorthRadar' };
+            if (navigator.canShare(shareData)) {
+              navigator.share(shareData)
+                .catch(function () {})
+                .finally(function () {
+                  vm.isSharing = false;
+                  $scope.$applyAsync();
+                });
+              return;
+            }
+          }
+
+          // Fallback: download PNG + open wa.me
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          var msg = encodeURIComponent('Dashboard NorthRadar \u2014 ' + new Date().toLocaleString('pt-BR'));
+          window.open('https://wa.me/?text=' + msg, '_blank');
+
+          vm.isSharing = false;
+          $scope.$applyAsync();
+        }, 'image/png');
+      }).catch(function () {
+        vm.isSharing = false;
+        $scope.$applyAsync();
+      });
     }
 
     function fecharPopup() {
