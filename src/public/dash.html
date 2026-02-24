@@ -127,37 +127,37 @@
       --enel-green-light: #14321a;
 
       --success: #9cd54a;
-      --success-bg: rgba(120,190,32,0.15);
+      --success-bg: rgba(156,213,74,0.18);
       --warning: #f5a623;
-      --warning-bg: rgba(237,139,0,0.12);
+      --warning-bg: rgba(245,166,35,0.18);
       --orange: #f5a623;
-      --orange-bg: rgba(237,139,0,0.12);
+      --orange-bg: rgba(245,166,35,0.18);
       --danger: #ff6b6b;
-      --danger-bg: rgba(228,0,43,0.12);
+      --danger-bg: rgba(255,107,107,0.18);
       --danger-dark: #fca5a5;
-      --danger-dark-bg: rgba(163,0,32,0.15);
+      --danger-dark-bg: rgba(252,165,165,0.20);
       --info: #5b9bff;
-      --info-bg: rgba(0,61,165,0.12);
+      --info-bg: rgba(91,155,255,0.18);
 
       --section-panorama: #5b9bff;
-      --section-panorama-light: rgba(0,61,165,0.08);
-      --section-panorama-glow: rgba(91,155,255,0.08);
-      --section-panorama-glow-hover: rgba(91,155,255,0.20);
+      --section-panorama-light: rgba(91,155,255,0.18);
+      --section-panorama-glow: rgba(91,155,255,0.10);
+      --section-panorama-glow-hover: rgba(91,155,255,0.25);
 
       --section-top10: #ff6b6b;
-      --section-top10-light: rgba(228,0,43,0.06);
-      --section-top10-glow: rgba(255,107,107,0.06);
-      --section-top10-glow-hover: rgba(255,107,107,0.16);
+      --section-top10-light: rgba(255,107,107,0.16);
+      --section-top10-glow: rgba(255,107,107,0.08);
+      --section-top10-glow-hover: rgba(255,107,107,0.20);
 
       --section-equipes: #9cd54a;
-      --section-equipes-light: rgba(120,190,32,0.06);
-      --section-equipes-glow: rgba(156,213,74,0.06);
-      --section-equipes-glow-hover: rgba(156,213,74,0.16);
+      --section-equipes-light: rgba(156,213,74,0.16);
+      --section-equipes-glow: rgba(156,213,74,0.08);
+      --section-equipes-glow-hover: rgba(156,213,74,0.20);
 
       --section-equipes2: #f5a623;
-      --section-equipes2-light: rgba(237,139,0,0.06);
-      --section-equipes2-glow: rgba(245,166,35,0.06);
-      --section-equipes2-glow-hover: rgba(245,166,35,0.16);
+      --section-equipes2-light: rgba(245,166,35,0.16);
+      --section-equipes2-glow: rgba(245,166,35,0.08);
+      --section-equipes2-glow-hover: rgba(245,166,35,0.20);
 
       --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
@@ -685,6 +685,7 @@
     }
     [data-theme="dark"] .cell-yellow {
       color: #f5a623;
+      background: rgba(245,166,35,0.18) !important;
     }
     .cell-orange {
       background: var(--orange-bg) !important;
@@ -737,9 +738,20 @@
       background: var(--section-panorama-light);
       color: var(--section-panorama);
     }
+    [data-theme="dark"] .panorama-panel .panel-header h2 {
+      color: var(--section-panorama);
+    }
+    [data-theme="dark"] .panorama-panel .data-table thead th {
+      color: var(--section-panorama);
+    }
     .panorama-panel .data-table tfoot td {
       background: var(--section-panorama-light);
     }
+    .panorama-panel .data-table { font-size: 12px; }
+    .panorama-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
+    .panorama-panel .data-table tbody td { padding: 7px 10px; }
+    .panorama-panel .panel-header { background: transparent; padding: 14px 16px 10px; }
+    .panorama-panel .panel-header h2 { font-size: 14px; }
 
     /* ── Top 10 (Enel Red #E4002B) ── */
     .top10-panel {
@@ -793,6 +805,17 @@
       background: var(--section-equipes-light);
       color: var(--section-equipes);
     }
+    [data-theme="dark"] .equipes-panel .panel-header h2 {
+      color: var(--section-equipes);
+    }
+    [data-theme="dark"] .equipes-panel .data-table thead th {
+      color: var(--section-equipes);
+    }
+    .equipes-panel .data-table { font-size: 12px; }
+    .equipes-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
+    .equipes-panel .data-table tbody td { padding: 7px 10px; }
+    .equipes-panel .panel-header { padding: 14px 16px 10px; }
+    .equipes-panel .panel-header h2 { font-size: 14px; }
 
     /* ── Equipes Extras (orange) ── */
     .equipes2-panel {
@@ -818,6 +841,17 @@
       background: var(--section-equipes2-light);
       color: var(--section-equipes2);
     }
+    [data-theme="dark"] .equipes2-panel .panel-header h2 {
+      color: var(--section-equipes2);
+    }
+    [data-theme="dark"] .equipes2-panel .data-table thead th {
+      color: var(--section-equipes2);
+    }
+    .equipes2-panel .data-table { font-size: 12px; }
+    .equipes2-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
+    .equipes2-panel .data-table tbody td { padding: 7px 10px; }
+    .equipes2-panel .panel-header { padding: 14px 16px 10px; }
+    .equipes2-panel .panel-header h2 { font-size: 14px; }
 
     /* ═══════════════════════════════════════════════════════════
        LOADING & EMPTY STATES
