@@ -1992,7 +1992,7 @@
             </tr>
           </tbody>
           <tfoot ng-if="vm.panorama.length">
-            <tr>
+            <tr style="position:sticky;bottom:0;background:var(--bg-secondary);z-index:2">
               <td><strong>TOTAL</strong></td>
               <td ng-if="vm.selectedPolo==='TODOS'"></td>
               <td class="num">{{vm.totals.chi | number}}</td>
