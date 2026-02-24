@@ -8,6 +8,17 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
+  <script>
+    // Apply saved theme IMMEDIATELY to prevent FOUC (before CSS paints)
+    (function() {
+      try {
+        var t = localStorage.getItem('northradar_theme');
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+      } catch(e) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
   <style>
     /* ═══════════════════════════════════════════════════════════
        NorthRadar Premium Design System — LED Glow + Dark Mode
@@ -244,6 +255,34 @@
       -moz-osx-font-smoothing: grayscale;
       letter-spacing: -0.011em;
       transition: background var(--transition), color var(--transition);
+    }
+
+    /* Smooth color transitions on theme toggle for all elements */
+    .kpi-item, .kpi-value, .kpi-label,
+    .panel, .panel-header, .panel-header h2,
+    .data-table, .data-table thead th, .data-table tbody td, .data-table tfoot td,
+    .chart-title, .badge-count, .inc-link,
+    .drag-hint, .footer, .header {
+      transition: color var(--transition), background var(--transition), border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .drag-hint {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .drag-hint-icon {
+      font-size: 16px;
+      color: var(--text-secondary);
+      cursor: default;
+    }
+    .drag-hint-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
     }
 
     /* ═══════════════════════════════════════════════════════════
@@ -1287,6 +1326,12 @@
        ANALYTICS VIEW
        ═══════════════════════════════════════════════════════════ */
 
+    .chart-title { font-size: 15px; font-weight: 600; padding: 16px 20px 8px; transition: color var(--transition); }
+    .chart-title-panorama { color: var(--section-panorama); }
+    .chart-title-top10    { color: var(--section-top10); }
+    .chart-title-equipes  { color: var(--section-equipes); }
+    .chart-title-equipes2 { color: var(--section-equipes2); }
+
     .chart-container {
       position: relative;
       padding: 16px 20px;
@@ -1351,8 +1396,7 @@
       color: var(--text-primary);
     }
 
-    [data-theme="dark"] .panel-header h2,
-    [data-theme="dark"] .chart-title {
+    [data-theme="dark"] .panel-header h2 {
       color: var(--text-primary);
     }
 
@@ -1383,7 +1427,7 @@
   </style>
 </head>
 
-<body ng-controller="DashCtrl as vm" data-theme="{{vm.darkMode ? 'dark' : 'light'}}">
+<body ng-controller="DashCtrl as vm">
 
   <!-- ═══════════════════════════════════════════════════════
        HEADER + FILTRO MASTER
@@ -1441,9 +1485,9 @@
   <div class="main-content" ng-if="vm.currentView==='operational'">
 
     <!-- Drag hint -->
-    <div ng-if="!vm.loadingInc" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-      <span style="font-size:16px;color:var(--text-secondary);cursor:default;">&#x2630;</span>
-      <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Arraste qualquer painel para reposicionar livremente</span>
+    <div ng-if="!vm.loadingInc" class="drag-hint">
+      <span class="drag-hint-icon">&#x2630;</span>
+      <span class="drag-hint-text">Arraste qualquer painel para reposicionar livremente</span>
     </div>
 
     <div class="comp-grid">
@@ -1887,9 +1931,9 @@
     </div>
 
     <!-- Drag hint -->
-    <div ng-if="!vm.loadingInc" style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
-      <span style="font-size:16px;color:var(--text-secondary);cursor:default;">&#x2630;</span>
-      <span style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Arraste qualquer painel para reposicionar livremente</span>
+    <div ng-if="!vm.loadingInc" class="drag-hint">
+      <span class="drag-hint-icon">&#x2630;</span>
+      <span class="drag-hint-text">Arraste qualquer painel para reposicionar livremente</span>
     </div>
 
     <div class="comp-grid">
@@ -1940,7 +1984,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Distribuição por Tempo de Duração</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Tempo de Duração</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartDuracao"></canvas>
@@ -1960,7 +2004,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Despacho de Incidências</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Despacho de Incidências</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartDespacho"></canvas>
@@ -1980,7 +2024,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Chi"></canvas>
@@ -2000,7 +2044,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 8)</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 8)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartClientesConj"></canvas>
@@ -2020,7 +2064,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Cli"></canvas>
@@ -2040,7 +2084,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Top 10 — TMA</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — TMA</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Tma"></canvas>
@@ -2060,7 +2104,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Equipes por Conjunto — Turno vs Extras</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Equipes por Conjunto — Turno vs Extras</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartEquipesConj"></canvas>
@@ -2080,7 +2124,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Ocupação das Equipes (Inc. / Equipe por Conjunto)</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Ocupação das Equipes (Inc. / Equipe por Conjunto)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartOcupacao"></canvas>
@@ -2100,7 +2144,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-equipes2)"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto</h2>
+          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartExtrasConj"></canvas>
@@ -2120,7 +2164,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Distribuição por Polo</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Polo</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartPolo"></canvas>
@@ -2140,7 +2184,7 @@
          ng-if="!vm.loadingEq">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
         </div>
         <div class="chart-container chart-container-full">
           <canvas id="chartAtividade"></canvas>
@@ -2160,7 +2204,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-equipes2)"><span class="drag-handle">&#x2630;</span>Indicadores Críticos</h2>
+          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Indicadores Críticos</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartCriticos"></canvas>
@@ -2180,7 +2224,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-top10)"><span class="drag-handle">&#x2630;</span>Não Despachados / Essenciais / Críticos por Conjunto</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Não Despachados / Essenciais / Críticos por Conjunto</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartRiskConj"></canvas>
@@ -2200,7 +2244,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Avisos por Conjunto (Top 10)</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Avisos por Conjunto (Top 10)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartAvisos"></canvas>
@@ -2220,7 +2264,7 @@
          ng-if="!vm.loadingInc && !vm.loadingEq">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-equipes)"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartProdutividade"></canvas>
@@ -2240,7 +2284,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title" style="color:var(--section-panorama)"><span class="drag-handle">&#x2630;</span>Panorama Geral — Incidências por Conjunto</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Panorama Geral — Incidências por Conjunto</h2>
         </div>
         <div class="chart-container chart-container-full">
           <canvas id="chartPanorama"></canvas>

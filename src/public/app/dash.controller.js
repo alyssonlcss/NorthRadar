@@ -110,6 +110,12 @@
     // ── Dark mode ────────────────────────────────────────
     vm.darkMode = loadTheme();
     vm.toggleTheme = toggleTheme;
+    // Sync DOM attribute on controller init (ensures both html & body have it)
+    (function() {
+      var t = vm.darkMode ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+      document.body.setAttribute('data-theme', t);
+    })();
 
     // ── Custom dropdown ──────────────────────────────────
     vm.dropdownOpen = false;
@@ -241,8 +247,21 @@
 
     function toggleTheme() {
       vm.darkMode = !vm.darkMode;
-      try { localStorage.setItem(THEME_KEY, vm.darkMode ? 'dark' : 'light'); }
+      var theme = vm.darkMode ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      document.body.setAttribute('data-theme', theme);
+      try { localStorage.setItem(THEME_KEY, theme); }
       catch (e) { /* ignore */ }
+
+      // Force repaint so inline styles using CSS variables get recalculated
+      document.body.style.display = 'none';
+      /* jshint -W030 */ document.body.offsetHeight; /* jshint +W030 */
+      document.body.style.display = '';
+
+      // Rebuild Chart.js charts (canvas colors are baked at render time)
+      if (vm.currentView === 'analytics') {
+        $timeout(buildAllCharts, 80);
+      }
     }
 
     // ── Custom dropdown ──────────────────────────────────
