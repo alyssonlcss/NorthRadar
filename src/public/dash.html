@@ -1947,8 +1947,8 @@
       </div>
 
       <!-- Table -->
-      <div class="table-wrapper" ng-if="!vm.loadingInc && !vm.errorInc">
-        <table class="data-table">
+      <div class="table-wrapper" ng-if="!vm.loadingInc && !vm.errorInc" ng-style="vm.panorama.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
+        <table class="data-table" ng-style="{'max-height': vm.panorama.length > 15 ? '420px' : '', 'overflow-y': vm.panorama.length > 15 ? 'auto' : ''}">
           <thead>
             <tr>
               <th class="sortable" ng-click="vm.sortBy('panorama','conjunto')">CONJUNTO<span class="sort-indicator" ng-if="vm.sort.panorama.field==='conjunto'">{{vm.sort.panorama.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.panorama.field!=='conjunto'">⇅</span></th>
@@ -2044,8 +2044,8 @@
         ⚠ Erro ao carregar equipes: {{vm.errorEq}}
       </div>
 
-      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq">
-        <table class="data-table">
+      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq" ng-style="vm.equipes.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
+        <table class="data-table" ng-style="{'max-height': vm.equipes.length > 15 ? '420px' : '', 'overflow-y': vm.equipes.length > 15 ? 'auto' : ''}">
           <thead>
             <tr>
               <th class="sortable" ng-click="vm.sortBy('equipes','nome')">Nome<span class="sort-indicator" ng-if="vm.sort.equipes.field==='nome'">{{vm.sort.equipes.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes.field!=='nome'">⇅</span></th>
@@ -2105,8 +2105,8 @@
         <div class="spinner"></div>
       </div>
 
-      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq">
-        <table class="data-table">
+      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq" ng-style="vm.equipes2Recurso.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
+        <table class="data-table" ng-style="{'max-height': vm.equipes2Recurso.length > 15 ? '420px' : '', 'overflow-y': vm.equipes2Recurso.length > 15 ? 'auto' : ''}">
           <thead>
             <tr>
               <th class="sortable" ng-click="vm.sortBy('equipes2','nome')">Nome<span class="sort-indicator" ng-if="vm.sort.equipes2.field==='nome'">{{vm.sort.equipes2.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.equipes2.field!=='nome'">⇅</span></th>
