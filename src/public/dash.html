@@ -962,6 +962,58 @@
       color: #b0b0be;
     }
 
+    .kpi-sep {
+      display: inline-block;
+      width: 2px;
+      height: 0.85em;
+      background: var(--text-muted);
+      margin: 0 10px;
+      vertical-align: middle;
+      border-radius: 1px;
+      opacity: 0.7;
+    }
+    [data-theme="dark"] .kpi-sep {
+      background: #b0b0be;
+      opacity: 0.5;
+    }
+    .kpi-label .kpi-sep {
+      height: 0.7em;
+      margin: 0 6px;
+      opacity: 0.5;
+    }
+
+    /* Dual-value KPI: grid aligns both separators vertically */
+    .kpi-item-dual {
+      display: grid !important;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      justify-items: center;
+      row-gap: 6px;
+      text-align: center;
+    }
+    .kpi-item-dual .kpi-value,
+    .kpi-item-dual .kpi-label {
+      margin: 0;
+    }
+    .kpi-item-dual .kpi-val-left  { grid-column: 1; grid-row: 1; text-align: right; justify-self: end; }
+    .kpi-item-dual .kpi-val-right { grid-column: 3; grid-row: 1; text-align: left;  justify-self: start; }
+    .kpi-item-dual .kpi-lbl-left  { grid-column: 1; grid-row: 2; text-align: right; justify-self: end; }
+    .kpi-item-dual .kpi-lbl-right { grid-column: 3; grid-row: 2; text-align: left;  justify-self: start; }
+    .kpi-item-dual .kpi-sep-bar {
+      grid-column: 2;
+      grid-row: 1 / 3;
+      width: 2px;
+      background: var(--text-muted);
+      border-radius: 1px;
+      opacity: 0.7;
+      align-self: stretch;
+      margin: 4px 14px;
+    }
+    [data-theme="dark"] .kpi-item-dual .kpi-sep-bar {
+      background: #b0b0be;
+      opacity: 0.5;
+    }
+
     .kpi-item.kpi-danger {
       box-shadow: var(--shadow), 0 0 16px rgba(228,0,43,0.08);
     }
@@ -1542,21 +1594,30 @@
          ng-style="vm.getCompOrder('op-kpi')"
          ng-if="!vm.loadingInc">
       <div class="kpi-bar">
-        <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
-          <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
-          <div class="kpi-label">Inc. Ativas | Não Despach.</div>
+        <div class="kpi-item kpi-warning kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
+          <span class="kpi-value kpi-val-left">{{vm.kpis.totalIncidencias | number}}</span>
+          <span class="kpi-sep-bar"></span>
+          <span class="kpi-value kpi-val-right">{{vm.kpis.naoDespachados | number}}</span>
+          <span class="kpi-label kpi-lbl-left">Inc. Ativas</span>
+          <span class="kpi-label kpi-lbl-right">Não Despach.</span>
         </div>
         <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
           <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
           <div class="kpi-label">Clientes Afetados</div>
         </div>
-        <div class="kpi-item kpi-success">
-          <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
-          <div class="kpi-label">Equipes em Turno | Extras</div>
+        <div class="kpi-item kpi-success kpi-item-dual">
+          <span class="kpi-value kpi-val-left">{{vm.kpis.totalEquipes | number}}</span>
+          <span class="kpi-sep-bar"></span>
+          <span class="kpi-value kpi-val-right">{{vm.totalEquipes2 | number}}</span>
+          <span class="kpi-label kpi-lbl-left">Equipes em Turno</span>
+          <span class="kpi-label kpi-lbl-right">Extras</span>
         </div>
-        <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-          <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
-          <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
+        <div class="kpi-item kpi-danger kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'urgente')">
+          <span class="kpi-value kpi-val-left">{{vm.kpis.urgentes | number}}</span>
+          <span class="kpi-sep-bar"></span>
+          <span class="kpi-value kpi-val-right" ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
+          <span class="kpi-label kpi-lbl-left">Urgentes</span>
+          <span class="kpi-label kpi-lbl-right" ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span>
         </div>
         <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
           <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
@@ -1988,21 +2049,30 @@
          ng-style="vm.getCompOrder('an-kpi')"
          ng-if="!vm.loadingInc">
       <div class="kpi-bar">
-        <div class="kpi-item kpi-warning clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
-          <div class="kpi-value">{{vm.kpis.totalIncidencias | number}} | {{vm.kpis.naoDespachados | number}}</div>
-          <div class="kpi-label">Inc. Ativas | Não Despach.</div>
+        <div class="kpi-item kpi-warning kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'totalIncidencias')">
+          <span class="kpi-value kpi-val-left">{{vm.kpis.totalIncidencias | number}}</span>
+          <span class="kpi-sep-bar"></span>
+          <span class="kpi-value kpi-val-right">{{vm.kpis.naoDespachados | number}}</span>
+          <span class="kpi-label kpi-lbl-left">Inc. Ativas</span>
+          <span class="kpi-label kpi-lbl-right">Não Despach.</span>
         </div>
         <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'totalClientes')">
           <div class="kpi-value">{{vm.kpis.totalClientes | number}}</div>
           <div class="kpi-label">Clientes Afetados</div>
         </div>
-        <div class="kpi-item kpi-success">
-          <div class="kpi-value">{{vm.kpis.totalEquipes | number}} | {{vm.totalEquipes2 | number}}</div>
-          <div class="kpi-label">Equipes em Turno | Extras</div>
+        <div class="kpi-item kpi-success kpi-item-dual">
+          <span class="kpi-value kpi-val-left">{{vm.kpis.totalEquipes | number}}</span>
+          <span class="kpi-sep-bar"></span>
+          <span class="kpi-value kpi-val-right">{{vm.totalEquipes2 | number}}</span>
+          <span class="kpi-label kpi-lbl-left">Equipes em Turno</span>
+          <span class="kpi-label kpi-lbl-right">Extras</span>
         </div>
-        <div class="kpi-item kpi-danger clickable" ng-click="vm.abrirPopup('card', 'urgente')">
-          <div class="kpi-value">{{vm.kpis.urgentes | number}} | <span ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span></div>
-          <div class="kpi-label">Urgentes | <span ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span></div>
+        <div class="kpi-item kpi-danger kpi-item-dual clickable" ng-click="vm.abrirPopup('card', 'urgente')">
+          <span class="kpi-value kpi-val-left">{{vm.kpis.urgentes | number}}</span>
+          <span class="kpi-sep-bar"></span>
+          <span class="kpi-value kpi-val-right" ng-click="vm.abrirPopup('card', 'eletrodependente'); $event.stopPropagation();" style="cursor:pointer" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
+          <span class="kpi-label kpi-lbl-left">Urgentes</span>
+          <span class="kpi-label kpi-lbl-right" ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span>
         </div>
         <div class="kpi-item clickable" ng-click="vm.abrirPopup('card', 'chi')">
           <div class="kpi-value">{{vm.kpis.totalChi | number}}</div>
