@@ -74,6 +74,11 @@
     // ── Expanded cell state ──────────────────────────────
     vm.expandedCell = { visible: false, label: '', value: '', top: 0, left: 0 };
 
+    // ── Analytics view state ─────────────────────────────
+    vm.currentView = 'operational';
+    vm.switchView  = switchView;
+    var _chartInstances = {};
+
     // ── Drag-and-drop section ordering ───────────────────
     var STORAGE_KEY = 'northradar_section_order';
     var THEME_KEY   = 'northradar_theme';
@@ -234,6 +239,237 @@
     }
 
     // ═══════════════════════════════════════════════════════
+    // ANALYTICS VIEW — ROUTE SWITCHING & CHARTS
+    // ═══════════════════════════════════════════════════════
+
+    function switchView(view) {
+      vm.currentView = view;
+      if (view === 'analytics') {
+        $timeout(buildAllCharts, 150);
+      }
+    }
+
+    /** Destroy an existing Chart.js instance by key */
+    function _destroyChart(key) {
+      if (_chartInstances[key]) {
+        _chartInstances[key].destroy();
+        _chartInstances[key] = null;
+      }
+    }
+
+    /** Create or recreate a chart */
+    function _makeChart(canvasId, key, config) {
+      _destroyChart(key);
+      var el = document.getElementById(canvasId);
+      if (!el) return;
+      _chartInstances[key] = new Chart(el.getContext('2d'), config);
+    }
+
+    /** Enel palette for chart segments */
+    var _palette = [
+      '#003DA5', '#E4002B', '#78BE20', '#ED8B00',
+      '#00A3E0', '#6D2077', '#C4D600', '#FF6F61',
+      '#00B2A9', '#B0B7BC', '#5C068C', '#FF9E1B'
+    ];
+    var _paletteDark = [
+      '#3B7DDB', '#FF5C7A', '#A3E05A', '#FFB347',
+      '#4DC9F6', '#9B59B6', '#D4E157', '#FF8A80',
+      '#4DD0C8', '#CFD8DC', '#AB47BC', '#FFCC80'
+    ];
+
+    function _isDark() { return vm.darkMode; }
+
+    function _chartColors(count) {
+      var pal = _isDark() ? _paletteDark : _palette;
+      var colors = [];
+      for (var i = 0; i < count; i++) colors.push(pal[i % pal.length]);
+      return colors;
+    }
+
+    function _textColor() { return _isDark() ? '#e0e0e0' : '#333'; }
+    function _gridColor() { return _isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'; }
+
+    function _baseOptions(title) {
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: { display: !!title, text: title || '', color: _textColor(), font: { size: 13, weight: '600' } },
+          legend: { labels: { color: _textColor(), font: { size: 11 }, boxWidth: 14, padding: 12 } },
+          tooltip: { cornerRadius: 10, padding: 10 }
+        }
+      };
+    }
+
+    /** Build ALL analytics charts from current vm data */
+    function buildAllCharts() {
+      if (vm.currentView !== 'analytics') return;
+      if (!vm.totals || !vm.panorama) return;
+
+      _buildChartDuracao();
+      _buildChartDespacho();
+      _buildChartTop10Chi();
+      _buildChartClientesConj();
+      _buildChartOcupacao();
+      _buildChartCriticos();
+      _buildChartPanorama();
+    }
+
+    // 1) Doughnut — Time distribution
+    function _buildChartDuracao() {
+      var t = vm.totals || {};
+      var data = [t.lt8h || 0, t.h8_16 || 0, t.h16_24 || 0, t.h24_48 || 0, t.gt48h || 0];
+      var labels = ['< 8h', '8h – 16h', '16h – 24h', '24h – 48h', '> 48h'];
+      var colors = ['#78BE20', '#00A3E0', '#ED8B00', '#E4002B', '#6D2077'];
+
+      _makeChart('chartDuracao', 'duracao', {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
+        options: angular.merge({}, _baseOptions(), {
+          cutout: '60%',
+          plugins: {
+            legend: { position: 'right', labels: { color: _textColor(), padding: 14 } }
+          }
+        })
+      });
+    }
+
+    // 2) Doughnut — Dispatch status
+    function _buildChartDespacho() {
+      var k = vm.kpis || {};
+      var desp = (k.totalIncidencias || 0) - (k.naoDespachados || 0);
+      var data = [desp, k.naoDespachados || 0];
+      var labels = ['Despachadas', 'Não Despachadas'];
+      var colors = ['#78BE20', '#E4002B'];
+
+      _makeChart('chartDespacho', 'despacho', {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
+        options: angular.merge({}, _baseOptions(), {
+          cutout: '60%',
+          plugins: {
+            legend: { position: 'right', labels: { color: _textColor(), padding: 14 } }
+          }
+        })
+      });
+    }
+
+    // 3) Horizontal bar — Top 10 CHI
+    function _buildChartTop10Chi() {
+      var list = (vm.top10Chi || []).slice(0, 10);
+      var labels = list.map(function (r) { return r.numero || r.incidencia || '—'; });
+      var data = list.map(function (r) { return r.chi || 0; });
+      var colors = _chartColors(list.length);
+
+      _makeChart('chartTop10Chi', 'top10Chi', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'CHI', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+          }
+        })
+      });
+    }
+
+    // 4) Bar — Clientes afetados por conjunto (top 8)
+    function _buildChartClientesConj() {
+      var sorted = (vm.panorama || []).slice().sort(function (a, b) { return (b.clientesAfetados || 0) - (a.clientesAfetados || 0); });
+      var top8 = sorted.slice(0, 8);
+      var labels = top8.map(function (r) { return r.conjunto || '—'; });
+      var data = top8.map(function (r) { return r.clientesAfetados || 0; });
+      var colors = _chartColors(top8.length);
+
+      _makeChart('chartClientesConj', 'clientesConj', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Clientes', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
+          }
+        })
+      });
+    }
+
+    // 5) Bar — Ocupação (Inc / Equipe) por conjunto
+    function _buildChartOcupacao() {
+      var filtered = (vm.panorama || []).filter(function (r) { return r.equipes > 0; });
+      filtered.sort(function (a, b) { return (b.incPorEquipe || 0) - (a.incPorEquipe || 0); });
+      var top = filtered.slice(0, 10);
+      var labels = top.map(function (r) { return r.conjunto || '—'; });
+      var dataInc = top.map(function (r) { return r.incidenciasAtivas || 0; });
+      var dataEq = top.map(function (r) { return r.equipes || 0; });
+
+      _makeChart('chartOcupacao', 'ocupacao', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Incidências', data: dataInc, backgroundColor: _isDark() ? '#FF5C7A' : '#E4002B', borderRadius: 6, borderSkipped: false },
+            { label: 'Equipes', data: dataEq, backgroundColor: _isDark() ? '#A3E05A' : '#78BE20', borderRadius: 6, borderSkipped: false }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          scales: {
+            y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
+          }
+        })
+      });
+    }
+
+    // 6) Bar — Indicadores críticos (urgentes, eletrodep, essenciais, não despachados)
+    function _buildChartCriticos() {
+      var k = vm.kpis || {};
+      var labels = ['Urgentes', 'Eletrodep.', 'N/Despachados'];
+      var data = [k.urgentes || 0, k.eletrodependentes || 0, k.naoDespachados || 0];
+      var colors = ['#E4002B', '#6D2077', '#ED8B00'];
+
+      _makeChart('chartCriticos', 'criticos', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Quantidade', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { grid: { display: false }, ticks: { color: _textColor() } }
+          }
+        })
+      });
+    }
+
+    // 7) Stacked bar — Full panorama overview
+    function _buildChartPanorama() {
+      var sorted = (vm.panorama || []).slice().sort(function (a, b) { return (b.clientesAfetados || 0) - (a.clientesAfetados || 0); });
+      var top = sorted.slice(0, 12);
+      var labels = top.map(function (r) { return r.conjunto || '—'; });
+
+      _makeChart('chartPanorama', 'panorama', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Clientes Afetados', data: top.map(function (r) { return r.clientesAfetados || 0; }), backgroundColor: _isDark() ? '#3B7DDB' : '#003DA5', borderRadius: 4, borderSkipped: false },
+            { label: 'CHI', data: top.map(function (r) { return r.chi || 0; }), backgroundColor: _isDark() ? '#FF5C7A' : '#E4002B', borderRadius: 4, borderSkipped: false },
+            { label: 'Incidências', data: top.map(function (r) { return r.incidenciasAtivas || 0; }), backgroundColor: _isDark() ? '#A3E05A' : '#78BE20', borderRadius: 4, borderSkipped: false },
+            { label: 'Equipes', data: top.map(function (r) { return r.equipes || 0; }), backgroundColor: _isDark() ? '#FFB347' : '#ED8B00', borderRadius: 4, borderSkipped: false }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          scales: {
+            y: { stacked: false, grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { stacked: false, grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
+          }
+        })
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
     // ORCHESTRATION
     // ═══════════════════════════════════════════════════════
 
@@ -335,6 +571,9 @@
 
         console.log('[Ctrl] Dados carregados. Eletrodep: ' + cruzamento.totalEletrodep +
                     ', Clientes críticos: ' + clCriticos.length);
+
+        // Refresh analytics charts if view is active
+        $timeout(buildAllCharts, 100);
       })
       .catch(function (err) {
         console.error('[Ctrl] Erro incidências/clientes:', err);
