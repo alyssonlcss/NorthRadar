@@ -85,6 +85,11 @@
     vm.darkMode = loadTheme();
     vm.toggleTheme = toggleTheme;
 
+    // ── Custom dropdown ──────────────────────────────────
+    vm.dropdownOpen = false;
+    vm.toggleDropdown = toggleDropdown;
+    vm.selectPolo = selectPolo;
+
     // ── Public bindings ──────────────────────────────────
     vm.changePolo     = changePolo;
     vm.formatDateTime = Helpers.formatDateTime;
@@ -140,6 +145,27 @@
       vm.darkMode = !vm.darkMode;
       try { localStorage.setItem(THEME_KEY, vm.darkMode ? 'dark' : 'light'); }
       catch (e) { /* ignore */ }
+    }
+
+    // ── Custom dropdown ──────────────────────────────────
+    function toggleDropdown($event) {
+      $event.stopPropagation();
+      vm.dropdownOpen = !vm.dropdownOpen;
+      if (vm.dropdownOpen) {
+        var closeHandler = function () {
+          $timeout(function () { vm.dropdownOpen = false; });
+          document.removeEventListener('click', closeHandler, true);
+        };
+        setTimeout(function () {
+          document.addEventListener('click', closeHandler, true);
+        }, 0);
+      }
+    }
+
+    function selectPolo(polo) {
+      vm.selectedPolo = polo;
+      vm.dropdownOpen = false;
+      changePolo(polo);
     }
 
     function getSectionOrder(sectionId) {
