@@ -1426,31 +1426,34 @@
     .chart-container {
       position: relative;
       padding: 16px 20px;
-      min-height: 300px;
-      max-height: 360px;
+      height: 320px;
+      min-height: 320px;
+      max-height: 320px;
     }
 
     .chart-container canvas {
       width: 100% !important;
-      max-height: 320px;
+      height: 100% !important;
     }
 
     .chart-container-tall {
-      min-height: 360px;
-      max-height: 420px;
-    }
-
-    .chart-container-tall canvas {
-      max-height: 380px;
-    }
-
-    .chart-container-full {
-      min-height: 340px;
+      height: 400px;
+      min-height: 400px;
       max-height: 400px;
     }
 
+    .chart-container-tall canvas {
+      height: 100% !important;
+    }
+
+    .chart-container-full {
+      height: 380px;
+      min-height: 380px;
+      max-height: 380px;
+    }
+
     .chart-container-full canvas {
-      max-height: 360px;
+      height: 100% !important;
     }
 
     .chart-container[style*="cursor"], .chart-container {
@@ -2135,7 +2138,7 @@
         <div class="panel-header">
           <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência</h2>
         </div>
-        <div class="chart-container chart-container-tall">
+        <div class="chart-container">
           <canvas id="chartTop10Chi"></canvas>
         </div>
       </section>
@@ -2153,7 +2156,7 @@
          ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 8)</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 10)</h2>
         </div>
         <div class="chart-container">
           <canvas id="chartClientesConj"></canvas>
@@ -2175,7 +2178,7 @@
         <div class="panel-header">
           <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência</h2>
         </div>
-        <div class="chart-container chart-container-tall">
+        <div class="chart-container">
           <canvas id="chartTop10Cli"></canvas>
         </div>
       </section>
@@ -2195,7 +2198,7 @@
         <div class="panel-header">
           <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — TMA</h2>
         </div>
-        <div class="chart-container chart-container-tall">
+        <div class="chart-container">
           <canvas id="chartTop10Tma"></canvas>
         </div>
       </section>
@@ -2255,7 +2258,7 @@
         <div class="panel-header">
           <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto</h2>
         </div>
-        <div class="chart-container chart-container-tall">
+        <div class="chart-container">
           <canvas id="chartExtrasConj"></canvas>
         </div>
       </section>
@@ -2375,7 +2378,7 @@
         <div class="panel-header">
           <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)</h2>
         </div>
-        <div class="chart-container chart-container-tall">
+        <div class="chart-container">
           <canvas id="chartProdutividade"></canvas>
         </div>
       </section>

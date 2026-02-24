@@ -476,14 +476,14 @@
       });
     }
 
-    // 4) Bar — Clientes afetados por conjunto (top 8)
+    // 4) Bar — Clientes afetados por conjunto (top 10)
     function _buildChartClientesConj() {
       var sorted = (vm.panorama || []).slice().sort(function (a, b) { return (b.clientesAfetados || 0) - (a.clientesAfetados || 0); });
-      var top8 = sorted.slice(0, 8);
-      var labels = top8.map(function (r) { return r.conjunto || '—'; });
-      var data = top8.map(function (r) { return r.clientesAfetados || 0; });
-      var colors = _chartColors(top8.length);
-      var ctxMap = top8.map(function (r) { return { tipo: 'panorama', campo: 'clientesAfetados', valor: r.conjunto }; });
+      var top10 = sorted.slice(0, 10);
+      var labels = top10.map(function (r) { return r.conjunto || '—'; });
+      var data = top10.map(function (r) { return r.clientesAfetados || 0; });
+      var colors = _chartColors(top10.length);
+      var ctxMap = top10.map(function (r) { return { tipo: 'panorama', campo: 'clientesAfetados', valor: r.conjunto }; });
 
       _makeChart('chartClientesConj', 'clientesConj', {
         type: 'bar',
