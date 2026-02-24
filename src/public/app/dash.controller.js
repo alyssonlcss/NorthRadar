@@ -310,8 +310,17 @@
       _buildChartDespacho();
       _buildChartTop10Chi();
       _buildChartClientesConj();
+      _buildChartTop10Cli();
+      _buildChartTop10Tma();
+      _buildChartEquipesConj();
       _buildChartOcupacao();
+      _buildChartExtrasConj();
+      _buildChartPolo();
+      _buildChartAtividade();
       _buildChartCriticos();
+      _buildChartRiskConj();
+      _buildChartAvisos();
+      _buildChartProdutividade();
       _buildChartPanorama();
     }
 
@@ -443,7 +452,254 @@
       });
     }
 
-    // 7) Stacked bar — Full panorama overview
+    // 7) Horizontal bar — Top 10 Clientes Afetados por incidência
+    function _buildChartTop10Cli() {
+      var list = (vm.top10Cli || []).slice(0, 10);
+      var labels = list.map(function (r) { return r.numero || '—'; });
+      var data = list.map(function (r) { return r.clientesAfetadosAtual || r.clientesAfetados || 0; });
+      var colors = _chartColors(list.length);
+
+      _makeChart('chartTop10Cli', 'top10Cli', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Clientes', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+          }
+        })
+      });
+    }
+
+    // 8) Horizontal bar — Top 10 TMA (encerradas)
+    function _buildChartTop10Tma() {
+      var list = (vm.top10Tma || []).slice(0, 10);
+      var labels = list.map(function (r) { return r.numero || '—'; });
+      var data = list.map(function (r) { return r.tma || 0; });
+      var colors = _chartColors(list.length);
+
+      _makeChart('chartTop10Tma', 'top10Tma', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'TMA (min)', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+          }
+        })
+      });
+    }
+
+    // 9) Stacked bar — Equipes Turno vs Extras por Conjunto
+    function _buildChartEquipesConj() {
+      var sorted = (vm.panorama || []).slice()
+        .filter(function (r) { return r.equipes > 0 || r.qtt2Rec > 0; })
+        .sort(function (a, b) { return (b.equipes + b.qtt2Rec) - (a.equipes + a.qtt2Rec); });
+      var top = sorted.slice(0, 12);
+      var labels = top.map(function (r) { return r.conjunto || '—'; });
+      var dataTurno = top.map(function (r) { return Math.max(0, (r.equipes || 0) - (r.qtt2Rec || 0)); });
+      var dataExtras = top.map(function (r) { return r.qtt2Rec || 0; });
+
+      _makeChart('chartEquipesConj', 'equipesConj', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Equipes Turno', data: dataTurno, backgroundColor: _isDark() ? '#A3E05A' : '#78BE20', borderRadius: 4, borderSkipped: false },
+            { label: 'Equipes Extras', data: dataExtras, backgroundColor: _isDark() ? '#FFB347' : '#ED8B00', borderRadius: 4, borderSkipped: false }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          scales: {
+            y: { stacked: true, grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { stacked: true, grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
+          }
+        })
+      });
+    }
+
+    // 10) Horizontal bar — Equipes Extras por Conjunto (somente conjuntos com extras)
+    function _buildChartExtrasConj() {
+      var filtered = (vm.panorama || []).filter(function (r) { return r.qtt2Rec > 0; });
+      filtered.sort(function (a, b) { return (b.qtt2Rec || 0) - (a.qtt2Rec || 0); });
+      var top = filtered.slice(0, 12);
+      var labels = top.map(function (r) { return r.conjunto || '—'; });
+      var data = top.map(function (r) { return r.qtt2Rec || 0; });
+
+      _makeChart('chartExtrasConj', 'extrasConj', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Equipes Extras', data: data, backgroundColor: _isDark() ? '#FFB347' : '#ED8B00', borderRadius: 6, borderSkipped: false },
+            { label: 'Incidências', data: top.map(function (r) { return r.incidenciasAtivas || 0; }), backgroundColor: _isDark() ? '#FF5C7A' : '#E4002B', borderRadius: 6, borderSkipped: false }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          indexAxis: 'y',
+          scales: {
+            x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+          }
+        })
+      });
+    }
+
+    // 11) Doughnut — Distribuição por Polo
+    function _buildChartPolo() {
+      var poloMap = {};
+      (vm.panorama || []).forEach(function (r) {
+        var polo = r.polo || 'N/A';
+        if (!poloMap[polo]) poloMap[polo] = { inc: 0, cli: 0, eq: 0 };
+        poloMap[polo].inc += r.incidenciasAtivas || 0;
+        poloMap[polo].cli += r.clientesAfetados || 0;
+        poloMap[polo].eq += r.equipes || 0;
+      });
+      var keys = Object.keys(poloMap);
+      var labels = keys;
+      var dataInc = keys.map(function (k) { return poloMap[k].inc; });
+      var dataCli = keys.map(function (k) { return poloMap[k].cli; });
+      var dataEq = keys.map(function (k) { return poloMap[k].eq; });
+      var colors = _chartColors(keys.length);
+
+      _makeChart('chartPolo', 'polo', {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Incidências', data: dataInc, backgroundColor: colors, borderWidth: 2, borderColor: _isDark() ? '#1e1e1e' : '#fff', hoverOffset: 8 }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          cutout: '55%',
+          plugins: {
+            legend: { position: 'right', labels: { color: _textColor(), padding: 14 } },
+            tooltip: {
+              callbacks: {
+                afterLabel: function (ctx) {
+                  var i = ctx.dataIndex;
+                  return 'Clientes: ' + dataCli[i] + '\nEquipes: ' + dataEq[i];
+                }
+              }
+            }
+          }
+        })
+      });
+    }
+
+    // 12) Stacked bar — Atividade das equipes (atribuidas, improdutivas, emergenciais, comerciais)
+    function _buildChartAtividade() {
+      var list = (vm.equipes || []).slice();
+      if (list.length === 0) return;
+      // Sort by total activity desc
+      list.sort(function (a, b) {
+        return ((b.atribuidas || 0) + (b.improdutivas || 0) + (b.emergenciais || 0) + (b.comerciais || 0))
+             - ((a.atribuidas || 0) + (a.improdutivas || 0) + (a.emergenciais || 0) + (a.comerciais || 0));
+      });
+      var top = list.slice(0, 20);
+      var labels = top.map(function (eq) { return eq.nome || '—'; });
+
+      _makeChart('chartAtividade', 'atividade', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Atribuídas', data: top.map(function (eq) { return eq.atribuidas || 0; }), backgroundColor: _isDark() ? '#3B7DDB' : '#003DA5', borderRadius: 3, borderSkipped: false },
+            { label: 'Emergenciais', data: top.map(function (eq) { return eq.emergenciais || 0; }), backgroundColor: _isDark() ? '#FF5C7A' : '#E4002B', borderRadius: 3, borderSkipped: false },
+            { label: 'Improdutivas', data: top.map(function (eq) { return eq.improdutivas || 0; }), backgroundColor: _isDark() ? '#FFB347' : '#ED8B00', borderRadius: 3, borderSkipped: false },
+            { label: 'Comerciais', data: top.map(function (eq) { return eq.comerciais || 0; }), backgroundColor: _isDark() ? '#A3E05A' : '#78BE20', borderRadius: 3, borderSkipped: false }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          scales: {
+            y: { stacked: true, grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { stacked: true, grid: { display: false }, ticks: { color: _textColor(), font: { size: 9 }, maxRotation: 60 } }
+          }
+        })
+      });
+    }
+
+    // 13) Grouped bar — Não Desp / Essenciais / Eletrodep por Conjunto
+    function _buildChartRiskConj() {
+      var filtered = (vm.panorama || []).filter(function (r) {
+        return (r.naoDespachados || 0) > 0 || (r.clEssencial || 0) > 0 || (r.eletrodependente || 0) > 0;
+      });
+      filtered.sort(function (a, b) {
+        return ((b.naoDespachados || 0) + (b.eletrodependente || 0)) - ((a.naoDespachados || 0) + (a.eletrodependente || 0));
+      });
+      var top = filtered.slice(0, 10);
+      var labels = top.map(function (r) { return r.conjunto || '—'; });
+
+      _makeChart('chartRiskConj', 'riskConj', {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Não Despachados', data: top.map(function (r) { return r.naoDespachados || 0; }), backgroundColor: _isDark() ? '#FFB347' : '#ED8B00', borderRadius: 4, borderSkipped: false },
+            { label: 'Cl. Essenciais', data: top.map(function (r) { return r.clEssencial || 0; }), backgroundColor: _isDark() ? '#4DC9F6' : '#00A3E0', borderRadius: 4, borderSkipped: false },
+            { label: 'Cl. Críticos', data: top.map(function (r) { return r.eletrodependente || 0; }), backgroundColor: _isDark() ? '#AB47BC' : '#6D2077', borderRadius: 4, borderSkipped: false }
+          ]
+        },
+        options: angular.merge({}, _baseOptions(), {
+          scales: {
+            y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
+          }
+        })
+      });
+    }
+
+    // 14) Bar — Avisos por Conjunto (Top 10)
+    function _buildChartAvisos() {
+      var filtered = (vm.panorama || []).filter(function (r) { return (r.qttAvisos || 0) > 0; });
+      filtered.sort(function (a, b) { return (b.qttAvisos || 0) - (a.qttAvisos || 0); });
+      var top = filtered.slice(0, 10);
+      var labels = top.map(function (r) { return r.conjunto || '—'; });
+      var data = top.map(function (r) { return r.qttAvisos || 0; });
+
+      _makeChart('chartAvisos', 'avisos', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Avisos', data: data, backgroundColor: _isDark() ? '#FF5C7A' : '#E4002B', borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
+            x: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
+          }
+        })
+      });
+    }
+
+    // 15) Horizontal bar — Produtividade por Equipe (Top 15)
+    function _buildChartProdutividade() {
+      var list = (vm.equipes || []).slice()
+        .filter(function (eq) { return (eq.produtividadeHora || 0) > 0; });
+      if (list.length === 0) return;
+      list.sort(function (a, b) { return (b.produtividadeHora || 0) - (a.produtividadeHora || 0); });
+      var top = list.slice(0, 15);
+      var labels = top.map(function (eq) { return eq.nome || '—'; });
+      var data = top.map(function (eq) { return eq.produtividadeHora || 0; });
+      var colors = _chartColors(top.length);
+
+      _makeChart('chartProdutividade', 'produtividade', {
+        type: 'bar',
+        data: { labels: labels, datasets: [{ label: 'Prod./h', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+        options: angular.merge({}, _baseOptions(), {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 9 } } }
+          }
+        })
+      });
+    }
+
+    // 16) Stacked bar — Full panorama overview
     function _buildChartPanorama() {
       var sorted = (vm.panorama || []).slice().sort(function (a, b) { return (b.clientesAfetados || 0) - (a.clientesAfetados || 0); });
       var top = sorted.slice(0, 12);
@@ -607,6 +863,9 @@
 
           vm.kpis.totalEquipes = vm.totalEquipes;
           vm.loadingEq = false;
+
+          // Refresh equipe-dependent charts
+          $timeout(buildAllCharts, 100);
         })
         .catch(function (err) {
           console.error('[Ctrl] Erro equipes:', err);

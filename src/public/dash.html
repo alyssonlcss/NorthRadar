@@ -1894,8 +1894,38 @@
       </section>
     </div>
 
-    <!-- Row 3: Equipes occupancy + Urgentes/Críticos -->
+    <!-- Row 3: Top 10 Clientes Afetados + Top 10 TMA -->
     <div class="analytics-grid" ng-if="!vm.loadingInc">
+      <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-top10)">Top 10 — Clientes Afetados por Incidência</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartTop10Cli"></canvas>
+        </div>
+      </section>
+
+      <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-top10)">Top 10 — TMA (Encerradas)</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartTop10Tma"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 4: Equipes vs Equipes Extras por Conjunto + Ocupação -->
+    <div class="analytics-grid" ng-if="!vm.loadingInc">
+      <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-equipes)">Equipes por Conjunto — Turno vs Extras</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartEquipesConj"></canvas>
+        </div>
+      </section>
+
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
           <h2 style="color:var(--section-equipes)">Ocupação das Equipes (Inc. / Equipe por Conjunto)</h2>
@@ -1904,7 +1934,43 @@
           <canvas id="chartOcupacao"></canvas>
         </div>
       </section>
+    </div>
 
+    <!-- Row 5: Equipes Extras detail + Polo distribution -->
+    <div class="analytics-grid" ng-if="!vm.loadingInc">
+      <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-equipes2)">Equipes Extras por Conjunto</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartExtrasConj"></canvas>
+        </div>
+      </section>
+
+      <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-panorama)">Distribuição por Polo</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartPolo"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 6: Full-width equipe activity breakdown -->
+    <div class="analytics-full" ng-if="!vm.loadingEq">
+      <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-equipes)">Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
+        </div>
+        <div class="chart-container" style="min-height:360px;">
+          <canvas id="chartAtividade" style="max-height:400px;"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 7: Indicadores críticos + Não Despachados/Essenciais/Eletrodep por Conjunto -->
+    <div class="analytics-grid" ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
           <h2 style="color:var(--section-equipes2)">Indicadores Críticos</h2>
@@ -1913,9 +1979,39 @@
           <canvas id="chartCriticos"></canvas>
         </div>
       </section>
+
+      <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-top10)">Não Despachados / Essenciais / Críticos por Conjunto</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartRiskConj"></canvas>
+        </div>
+      </section>
     </div>
 
-    <!-- Row 4: Full-width panorama overview -->
+    <!-- Row 8: Avisos por Conjunto + Produtividade Equipes -->
+    <div class="analytics-grid" ng-if="!vm.loadingInc && !vm.loadingEq">
+      <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-panorama)">Avisos por Conjunto (Top 10)</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartAvisos"></canvas>
+        </div>
+      </section>
+
+      <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
+        <div class="panel-header">
+          <h2 style="color:var(--section-equipes)">Produtividade por Equipe (Top 15)</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartProdutividade"></canvas>
+        </div>
+      </section>
+    </div>
+
+    <!-- Row 9: Full-width panorama overview -->
     <div class="analytics-full" ng-if="!vm.loadingInc">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
