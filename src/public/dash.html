@@ -958,6 +958,9 @@
       margin-top: 6px;
       font-weight: 400;
     }
+    [data-theme="dark"] .kpi-item .kpi-label {
+      color: #b0b0be;
+    }
 
     .kpi-item.kpi-danger {
       box-shadow: var(--shadow), 0 0 16px rgba(228,0,43,0.08);
@@ -966,6 +969,7 @@
       box-shadow: var(--shadow-md), 0 0 36px rgba(228,0,43,0.18);
     }
     .kpi-item.kpi-danger .kpi-value { color: var(--danger); }
+    [data-theme="dark"] .kpi-item.kpi-danger .kpi-value { color: #ff8a8a; }
     .kpi-item.kpi-danger::before { background: var(--danger); }
 
     .kpi-item.kpi-success {
@@ -975,6 +979,7 @@
       box-shadow: var(--shadow-md), 0 0 36px rgba(120,190,32,0.18);
     }
     .kpi-item.kpi-success .kpi-value { color: var(--success); }
+    [data-theme="dark"] .kpi-item.kpi-success .kpi-value { color: #b5e86a; }
     .kpi-item.kpi-success::before { background: var(--success); }
 
     .kpi-item.kpi-warning {
@@ -984,7 +989,7 @@
       box-shadow: var(--shadow-md), 0 0 36px rgba(237,139,0,0.18);
     }
     .kpi-item.kpi-warning .kpi-value { color: #b87400; }
-    [data-theme="dark"] .kpi-item.kpi-warning .kpi-value { color: #f5a623; }
+    [data-theme="dark"] .kpi-item.kpi-warning .kpi-value { color: #ffbe4a; }
     .kpi-item.kpi-warning::before { background: var(--warning); }
 
     /* ═══════════════════════════════════════════════════════════
