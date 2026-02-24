@@ -1141,12 +1141,91 @@
       vm.isSharing = true;
       $scope.$applyAsync();
 
+      // ── Temporarily remove ALL overflow / size constraints so html2canvas captures full content ──
+      var saved = [];
+      var allEls = comp.querySelectorAll('*');
+      for (var i = 0; i < allEls.length; i++) {
+        var s = allEls[i];
+        var cs = getComputedStyle(s);
+        var needsFix = cs.overflow !== 'visible' || cs.overflowX !== 'visible' || cs.overflowY !== 'visible'
+                    || (cs.maxHeight !== 'none' && cs.maxHeight !== '0px')
+                    || (cs.maxWidth  !== 'none' && cs.maxWidth  !== '0px');
+        if (needsFix) {
+          saved.push({
+            el: s,
+            overflow: s.style.overflow,
+            overflowX: s.style.overflowX,
+            overflowY: s.style.overflowY,
+            maxHeight: s.style.maxHeight,
+            maxWidth: s.style.maxWidth,
+            height: s.style.height,
+            width: s.style.width,
+            minWidth: s.style.minWidth
+          });
+          s.style.overflow = 'visible';
+          s.style.overflowX = 'visible';
+          s.style.overflowY = 'visible';
+          s.style.maxHeight = 'none';
+          s.style.maxWidth = 'none';
+          s.style.height = 'auto';
+          s.style.minWidth = '0';
+        }
+      }
+      // Also expand the comp wrapper itself and its parent (drag-item inside grid)
+      var compSaved = {
+        overflow: comp.style.overflow,
+        overflowX: comp.style.overflowX,
+        overflowY: comp.style.overflowY,
+        maxHeight: comp.style.maxHeight,
+        maxWidth: comp.style.maxWidth,
+        height: comp.style.height,
+        width: comp.style.width,
+        minWidth: comp.style.minWidth
+      };
+      comp.style.overflow = 'visible';
+      comp.style.overflowX = 'visible';
+      comp.style.overflowY = 'visible';
+      comp.style.maxHeight = 'none';
+      comp.style.maxWidth = 'none';
+      comp.style.width = 'max-content';
+      comp.style.minWidth = '0';
+
+      function restoreScroll() {
+        for (var j = 0; j < saved.length; j++) {
+          var r = saved[j];
+          r.el.style.overflow = r.overflow;
+          r.el.style.overflowX = r.overflowX;
+          r.el.style.overflowY = r.overflowY;
+          r.el.style.maxHeight = r.maxHeight;
+          r.el.style.maxWidth = r.maxWidth;
+          r.el.style.height = r.height;
+          r.el.style.width = r.width;
+          r.el.style.minWidth = r.minWidth;
+        }
+        comp.style.overflow = compSaved.overflow;
+        comp.style.overflowX = compSaved.overflowX;
+        comp.style.overflowY = compSaved.overflowY;
+        comp.style.maxHeight = compSaved.maxHeight;
+        comp.style.maxWidth = compSaved.maxWidth;
+        comp.style.height = compSaved.height;
+        comp.style.width = compSaved.width;
+        comp.style.minWidth = compSaved.minWidth;
+      }
+
+      // Force layout reflow so expanded sizes are computed
+      void comp.offsetWidth;
+
       html2canvas(comp, {
         backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary').trim() || '#ffffff',
         scale: 2,
         useCORS: true,
-        logging: false
+        logging: false,
+        scrollY: -window.scrollY,
+        scrollX: -window.scrollX,
+        width:  comp.scrollWidth,
+        height: comp.scrollHeight
       }).then(function (canvas) {
+        restoreScroll();
         canvas.toBlob(function (blob) {
           if (!blob) { vm.isSharing = false; $scope.$applyAsync(); return; }
 
@@ -1185,6 +1264,7 @@
           $scope.$applyAsync();
         }, 'image/png');
       }).catch(function () {
+        restoreScroll();
         vm.isSharing = false;
         $scope.$applyAsync();
       });
