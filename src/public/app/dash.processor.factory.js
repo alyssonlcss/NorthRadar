@@ -177,8 +177,8 @@
           break;
 
         case 'equipe':
+          // Equipes: mostra TODAS incidências (ativas + encerradas) para análise de volume
           filtered = incidencias.filter(function (inc) {
-            if (!H.isActive(inc)) return false;
             var eqDesl = inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null;
             var eqAtrib = inc.equipeAtribuida && inc.equipeAtribuida !== '-' ? inc.equipeAtribuida : null;
             return eqDesl === contexto.valor || eqAtrib === contexto.valor;
@@ -393,9 +393,9 @@
       // ── KPIs ──
       var kpis = buildKpis(active, totals, totalEletrodep);
 
-      // ── TOP 10 ──
+      // ── TOP 10 (tudo com ativas – sem dataFim) ──
       var top10Chi = buildTop10(active, 'chi');
-      var top10Tma = buildTop10(closed, 'tma');
+      var top10Tma = buildTop10(active, 'tma');
       var top10Cli = buildTop10(active, 'cli');
 
       return {

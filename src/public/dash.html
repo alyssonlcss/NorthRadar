@@ -1329,6 +1329,18 @@
       max-height: 300px;
     }
 
+    .chart-container-tall {
+      min-height: 380px;
+    }
+
+    .chart-container-tall canvas {
+      max-height: 420px;
+    }
+
+    .chart-container[style*="cursor"], .chart-container {
+      cursor: pointer;
+    }
+
     .analytics-grid-3 {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1879,7 +1891,7 @@
         <div class="panel-header">
           <h2 style="color:var(--section-top10)">Top 10 — CHI por Incidência</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Chi"></canvas>
         </div>
       </section>
@@ -1900,7 +1912,7 @@
         <div class="panel-header">
           <h2 style="color:var(--section-top10)">Top 10 — Clientes Afetados por Incidência</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Cli"></canvas>
         </div>
       </section>
@@ -1909,7 +1921,7 @@
         <div class="panel-header">
           <h2 style="color:var(--section-top10)">Top 10 — TMA (Encerradas)</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Tma"></canvas>
         </div>
       </section>
@@ -1942,7 +1954,7 @@
         <div class="panel-header">
           <h2 style="color:var(--section-equipes2)">Equipes Extras por Conjunto</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-tall">
           <canvas id="chartExtrasConj"></canvas>
         </div>
       </section>
@@ -2005,7 +2017,7 @@
         <div class="panel-header">
           <h2 style="color:var(--section-equipes)">Produtividade por Equipe (Top 15)</h2>
         </div>
-        <div class="chart-container">
+        <div class="chart-container chart-container-tall">
           <canvas id="chartProdutividade"></canvas>
         </div>
       </section>

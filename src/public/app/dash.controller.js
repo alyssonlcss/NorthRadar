@@ -265,6 +265,25 @@
       _chartInstances[key] = new Chart(el.getContext('2d'), config);
     }
 
+    /**
+     * Generic chart onClick handler — resolves clicked element
+     * and calls vm.abrirPopup with the mapped context.
+     *
+     * @param {string} chartKey - key of the _chartInstances entry
+     * @param {Array}  contextMap - array of { tipo, campo, valor } per data index
+     * @param {Event}  event - Chart.js event
+     * @param {Array}  elements - active elements from Chart.js
+     */
+    function _onChartClick(chartKey, contextMap, event, elements) {
+      if (!elements || elements.length === 0) return;
+      var idx = elements[0].index;
+      var ctx = contextMap[idx];
+      if (!ctx) return;
+      $timeout(function () {
+        vm.abrirPopup(ctx.tipo, ctx.campo, ctx.valor);
+      });
+    }
+
     /** Enel palette for chart segments */
     var _palette = [
       '#003DA5', '#E4002B', '#78BE20', '#ED8B00',
@@ -329,13 +348,16 @@
       var t = vm.totals || {};
       var data = [t.lt8h || 0, t.h8_16 || 0, t.h16_24 || 0, t.h24_48 || 0, t.gt48h || 0];
       var labels = ['< 8h', '8h – 16h', '16h – 24h', '24h – 48h', '> 48h'];
+      var campos = ['lt8h', 'h8_16', 'h16_24', 'h24_48', 'gt48h'];
       var colors = ['#78BE20', '#00A3E0', '#ED8B00', '#E4002B', '#6D2077'];
+      var ctxMap = campos.map(function (c) { return { tipo: 'card', campo: c }; });
 
       _makeChart('chartDuracao', 'duracao', {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
         options: angular.merge({}, _baseOptions(), {
           cutout: '60%',
+          onClick: function (evt, els) { _onChartClick('duracao', ctxMap, evt, els); },
           plugins: {
             legend: { position: 'right', labels: { color: _textColor(), padding: 14 } }
           }
@@ -350,12 +372,17 @@
       var data = [desp, k.naoDespachados || 0];
       var labels = ['Despachadas', 'Não Despachadas'];
       var colors = ['#78BE20', '#E4002B'];
+      var ctxMap = [
+        { tipo: 'card', campo: 'totalIncidencias' },
+        { tipo: 'card', campo: 'naoDespachados' }
+      ];
 
       _makeChart('chartDespacho', 'despacho', {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
         options: angular.merge({}, _baseOptions(), {
           cutout: '60%',
+          onClick: function (evt, els) { _onChartClick('despacho', ctxMap, evt, els); },
           plugins: {
             legend: { position: 'right', labels: { color: _textColor(), padding: 14 } }
           }
@@ -369,16 +396,19 @@
       var labels = list.map(function (r) { return r.numero || r.incidencia || '—'; });
       var data = list.map(function (r) { return r.chi || 0; });
       var colors = _chartColors(list.length);
+      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'chi', valor: r.numero }; });
 
       _makeChart('chartTop10Chi', 'top10Chi', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'CHI', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
+          onClick: function (evt, els) { _onChartClick('top10Chi', ctxMap, evt, els); },
+          layout: { padding: { left: 10 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
           }
         })
       });
@@ -391,11 +421,13 @@
       var labels = top8.map(function (r) { return r.conjunto || '—'; });
       var data = top8.map(function (r) { return r.clientesAfetados || 0; });
       var colors = _chartColors(top8.length);
+      var ctxMap = top8.map(function (r) { return { tipo: 'panorama', campo: 'clientesAfetados', valor: r.conjunto }; });
 
       _makeChart('chartClientesConj', 'clientesConj', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'Clientes', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('clientesConj', ctxMap, evt, els); },
           plugins: { legend: { display: false } },
           scales: {
             y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
@@ -413,6 +445,7 @@
       var labels = top.map(function (r) { return r.conjunto || '—'; });
       var dataInc = top.map(function (r) { return r.incidenciasAtivas || 0; });
       var dataEq = top.map(function (r) { return r.equipes || 0; });
+      var ctxMap = top.map(function (r) { return { tipo: 'panorama', campo: 'incidenciasAtivas', valor: r.conjunto }; });
 
       _makeChart('chartOcupacao', 'ocupacao', {
         type: 'bar',
@@ -424,6 +457,7 @@
           ]
         },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('ocupacao', ctxMap, evt, els); },
           scales: {
             y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
             x: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
@@ -432,17 +466,23 @@
       });
     }
 
-    // 6) Bar — Indicadores críticos (urgentes, eletrodep, essenciais, não despachados)
+    // 6) Bar — Indicadores críticos
     function _buildChartCriticos() {
       var k = vm.kpis || {};
       var labels = ['Urgentes', 'Eletrodep.', 'N/Despachados'];
       var data = [k.urgentes || 0, k.eletrodependentes || 0, k.naoDespachados || 0];
       var colors = ['#E4002B', '#6D2077', '#ED8B00'];
+      var ctxMap = [
+        { tipo: 'card', campo: 'urgente' },
+        { tipo: 'card', campo: 'eletrodependente' },
+        { tipo: 'card', campo: 'naoDespachados' }
+      ];
 
       _makeChart('chartCriticos', 'criticos', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'Quantidade', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('criticos', ctxMap, evt, els); },
           plugins: { legend: { display: false } },
           scales: {
             y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
@@ -458,37 +498,43 @@
       var labels = list.map(function (r) { return r.numero || '—'; });
       var data = list.map(function (r) { return r.clientesAfetadosAtual || r.clientesAfetados || 0; });
       var colors = _chartColors(list.length);
+      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'cli', valor: r.numero }; });
 
       _makeChart('chartTop10Cli', 'top10Cli', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'Clientes', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
+          onClick: function (evt, els) { _onChartClick('top10Cli', ctxMap, evt, els); },
+          layout: { padding: { left: 10 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
           }
         })
       });
     }
 
-    // 8) Horizontal bar — Top 10 TMA (encerradas)
+    // 8) Horizontal bar — Top 10 TMA (ativas)
     function _buildChartTop10Tma() {
       var list = (vm.top10Tma || []).slice(0, 10);
       var labels = list.map(function (r) { return r.numero || '—'; });
       var data = list.map(function (r) { return r.tma || 0; });
       var colors = _chartColors(list.length);
+      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'tma', valor: r.numero }; });
 
       _makeChart('chartTop10Tma', 'top10Tma', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'TMA (min)', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
+          onClick: function (evt, els) { _onChartClick('top10Tma', ctxMap, evt, els); },
+          layout: { padding: { left: 10 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
           }
         })
       });
@@ -503,6 +549,7 @@
       var labels = top.map(function (r) { return r.conjunto || '—'; });
       var dataTurno = top.map(function (r) { return Math.max(0, (r.equipes || 0) - (r.qtt2Rec || 0)); });
       var dataExtras = top.map(function (r) { return r.qtt2Rec || 0; });
+      var ctxMap = top.map(function (r) { return { tipo: 'panorama', campo: 'equipes', valor: r.conjunto }; });
 
       _makeChart('chartEquipesConj', 'equipesConj', {
         type: 'bar',
@@ -514,6 +561,7 @@
           ]
         },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('equipesConj', ctxMap, evt, els); },
           scales: {
             y: { stacked: true, grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
             x: { stacked: true, grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
@@ -522,13 +570,14 @@
       });
     }
 
-    // 10) Horizontal bar — Equipes Extras por Conjunto (somente conjuntos com extras)
+    // 10) Horizontal bar — Equipes Extras por Conjunto
     function _buildChartExtrasConj() {
       var filtered = (vm.panorama || []).filter(function (r) { return r.qtt2Rec > 0; });
       filtered.sort(function (a, b) { return (b.qtt2Rec || 0) - (a.qtt2Rec || 0); });
       var top = filtered.slice(0, 12);
       var labels = top.map(function (r) { return r.conjunto || '—'; });
       var data = top.map(function (r) { return r.qtt2Rec || 0; });
+      var ctxMap = top.map(function (r) { return { tipo: 'panorama', campo: 'qtt2Rec', valor: r.conjunto }; });
 
       _makeChart('chartExtrasConj', 'extrasConj', {
         type: 'bar',
@@ -541,9 +590,11 @@
         },
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
+          onClick: function (evt, els) { _onChartClick('extrasConj', ctxMap, evt, els); },
+          layout: { padding: { left: 10 } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 } } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
           }
         })
       });
@@ -565,6 +616,8 @@
       var dataCli = keys.map(function (k) { return poloMap[k].cli; });
       var dataEq = keys.map(function (k) { return poloMap[k].eq; });
       var colors = _chartColors(keys.length);
+      // Polo doughnut click → show all incidences (no specific filter granularity)
+      var ctxMap = keys.map(function () { return { tipo: 'card', campo: 'totalIncidencias' }; });
 
       _makeChart('chartPolo', 'polo', {
         type: 'doughnut',
@@ -576,6 +629,7 @@
         },
         options: angular.merge({}, _baseOptions(), {
           cutout: '55%',
+          onClick: function (evt, els) { _onChartClick('polo', ctxMap, evt, els); },
           plugins: {
             legend: { position: 'right', labels: { color: _textColor(), padding: 14 } },
             tooltip: {
@@ -591,17 +645,17 @@
       });
     }
 
-    // 12) Stacked bar — Atividade das equipes (atribuidas, improdutivas, emergenciais, comerciais)
+    // 12) Stacked bar — Atividade das equipes
     function _buildChartAtividade() {
       var list = (vm.equipes || []).slice();
       if (list.length === 0) return;
-      // Sort by total activity desc
       list.sort(function (a, b) {
         return ((b.atribuidas || 0) + (b.improdutivas || 0) + (b.emergenciais || 0) + (b.comerciais || 0))
              - ((a.atribuidas || 0) + (a.improdutivas || 0) + (a.emergenciais || 0) + (a.comerciais || 0));
       });
       var top = list.slice(0, 20);
       var labels = top.map(function (eq) { return eq.nome || '—'; });
+      var ctxMap = top.map(function (eq) { return { tipo: 'equipe', campo: 'equipes', valor: eq.nome }; });
 
       _makeChart('chartAtividade', 'atividade', {
         type: 'bar',
@@ -615,6 +669,7 @@
           ]
         },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('atividade', ctxMap, evt, els); },
           scales: {
             y: { stacked: true, grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
             x: { stacked: true, grid: { display: false }, ticks: { color: _textColor(), font: { size: 9 }, maxRotation: 60 } }
@@ -633,6 +688,7 @@
       });
       var top = filtered.slice(0, 10);
       var labels = top.map(function (r) { return r.conjunto || '—'; });
+      var ctxMap = top.map(function (r) { return { tipo: 'panorama', campo: 'naoDespachados', valor: r.conjunto }; });
 
       _makeChart('chartRiskConj', 'riskConj', {
         type: 'bar',
@@ -645,6 +701,7 @@
           ]
         },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('riskConj', ctxMap, evt, els); },
           scales: {
             y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
             x: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
@@ -660,11 +717,13 @@
       var top = filtered.slice(0, 10);
       var labels = top.map(function (r) { return r.conjunto || '—'; });
       var data = top.map(function (r) { return r.qttAvisos || 0; });
+      var ctxMap = top.map(function (r) { return { tipo: 'panorama', campo: 'qttAvisos', valor: r.conjunto }; });
 
       _makeChart('chartAvisos', 'avisos', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'Avisos', data: data, backgroundColor: _isDark() ? '#FF5C7A' : '#E4002B', borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('avisos', ctxMap, evt, els); },
           plugins: { legend: { display: false } },
           scales: {
             y: { grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
@@ -684,16 +743,19 @@
       var labels = top.map(function (eq) { return eq.nome || '—'; });
       var data = top.map(function (eq) { return eq.produtividadeHora || 0; });
       var colors = _chartColors(top.length);
+      var ctxMap = top.map(function (eq) { return { tipo: 'equipe', campo: 'equipes', valor: eq.nome }; });
 
       _makeChart('chartProdutividade', 'produtividade', {
         type: 'bar',
         data: { labels: labels, datasets: [{ label: 'Prod./h', data: data, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
+          onClick: function (evt, els) { _onChartClick('produtividade', ctxMap, evt, els); },
+          layout: { padding: { left: 10 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 9 } } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10, weight: '500' }, padding: 6, autoSkip: false } }
           }
         })
       });
@@ -704,6 +766,7 @@
       var sorted = (vm.panorama || []).slice().sort(function (a, b) { return (b.clientesAfetados || 0) - (a.clientesAfetados || 0); });
       var top = sorted.slice(0, 12);
       var labels = top.map(function (r) { return r.conjunto || '—'; });
+      var ctxMap = top.map(function (r) { return { tipo: 'panorama', campo: 'conjunto', valor: r.conjunto }; });
 
       _makeChart('chartPanorama', 'panorama', {
         type: 'bar',
@@ -717,6 +780,7 @@
           ]
         },
         options: angular.merge({}, _baseOptions(), {
+          onClick: function (evt, els) { _onChartClick('panorama', ctxMap, evt, els); },
           scales: {
             y: { stacked: false, grid: { color: _gridColor() }, ticks: { color: _textColor() }, beginAtZero: true },
             x: { stacked: false, grid: { display: false }, ticks: { color: _textColor(), font: { size: 10 }, maxRotation: 45 } }
