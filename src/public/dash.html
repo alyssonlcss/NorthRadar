@@ -441,6 +441,22 @@
       box-shadow: 0 4px 24px rgba(0,0,0,0.18);
       animation: slideDown 0.3s ease;
     }
+    .share-toast-selected {
+      background: rgba(255,255,255,0.13);
+      color: #fff;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+    .share-mode-active [data-comp-id].share-selected {
+      outline: 3px solid #00c6ff !important;
+      outline-offset: 4px;
+      background: rgba(0,198,255,0.07);
+      box-shadow: 0 0 0 2px #00c6ff;
+    }
+    }
     @keyframes slideDown {
       from { transform: translateY(-100%); }
       to   { transform: translateY(0); }
@@ -2523,7 +2539,8 @@
        SHARE TOAST BANNER
        ═══════════════════════════════════════════════════════ -->
   <div class="share-toast" ng-show="vm.shareMode">
-    <span>Clique no painel que deseja compartilhar</span>
+    <span ng-if="!vm.shareSelected.length">Clique no painel que deseja compartilhar <span style="font-size:12px;opacity:0.7">(Ctrl para múltiplos)</span></span>
+    <span ng-if="vm.shareSelected.length" class="share-toast-selected">Selecionados: {{vm.shareSelected.length}}</span>
     <button class="share-toast-cancel" ng-click="vm.cancelShare()">Cancelar</button>
   </div>
 

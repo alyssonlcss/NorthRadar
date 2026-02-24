@@ -1105,16 +1105,21 @@
     function startShare() {
       if (vm.shareMode) { cancelShare(); return; } // toggle off
       vm.shareMode = true;
+      vm.shareSelected = [];
       document.body.classList.add('share-mode-active');
-
-      // Delegate click on comp panels
       document.addEventListener('click', _shareClickHandler, true);
+      document.addEventListener('keyup', _shareKeyupHandler, true);
     }
 
     function cancelShare() {
       vm.shareMode = false;
+      vm.shareSelected = [];
       document.body.classList.remove('share-mode-active');
       document.removeEventListener('click', _shareClickHandler, true);
+      document.removeEventListener('keyup', _shareKeyupHandler, true);
+      // Remove highlight
+      var all = document.querySelectorAll('[data-comp-id].share-selected');
+      for (var i = 0; i < all.length; i++) all[i].classList.remove('share-selected');
       $scope.$applyAsync();
     }
 
@@ -1129,21 +1134,201 @@
         }
         el = el.parentElement;
       }
-      if (!comp) return; // clicked outside any panel — ignore
-
+      if (!comp) return;
       e.preventDefault();
       e.stopPropagation();
 
-      // Exit share mode
+      // Multi-select with Ctrl
+      if (e.ctrlKey) {
+        var idx = vm.shareSelected.indexOf(comp);
+        if (idx === -1) {
+          vm.shareSelected.push(comp);
+          comp.classList.add('share-selected');
+        } else {
+          vm.shareSelected.splice(idx, 1);
+          comp.classList.remove('share-selected');
+        }
+        $scope.$applyAsync();
+        return;
+      }
+      // If Ctrl not held, capture just this one
+      vm.shareMode = false;
+      vm.shareSelected = [];
+      document.body.classList.remove('share-mode-active');
+      document.removeEventListener('click', _shareClickHandler, true);
+      document.removeEventListener('keyup', _shareKeyupHandler, true);
+      comp.classList.remove('share-selected');
+      vm.isSharing = true;
+      $scope.$applyAsync();
+      captureAndSharePanel(comp);
+    }
+
+    // When Ctrl is released, generate images for all selected
+    function _shareKeyupHandler(e) {
+      if (e.key !== 'Control') return;
+      if (!vm.shareSelected || !vm.shareSelected.length) return;
       vm.shareMode = false;
       document.body.classList.remove('share-mode-active');
       document.removeEventListener('click', _shareClickHandler, true);
+      document.removeEventListener('keyup', _shareKeyupHandler, true);
+      var targets = vm.shareSelected.slice();
+      for (var i = 0; i < targets.length; i++) targets[i].classList.remove('share-selected');
+      var names = [];
+      for (var i = 0; i < targets.length; i++) {
+        var title = targets[i].querySelector('.panel-header h2');
+        names.push(title ? title.textContent.trim() : 'Painel');
+      }
+      vm.shareSelected = [];
       vm.isSharing = true;
       $scope.$applyAsync();
+      // Sequentially capture all panels, then share all together
+      var canvases = [];
+      var idx = 0;
+      function next() {
+        if (idx >= targets.length) return shareAllPanels();
+        capturePanelToCanvas(targets[idx], function (canvas) {
+          canvases.push(canvas);
+          idx++;
+          next();
+        });
+      }
+      next();
 
-      // ── Temporarily remove ALL overflow / size constraints so html2canvas captures full content ──
+      function shareAllPanels() {
+        if (!canvases.length) { vm.isSharing = false; $scope.$applyAsync(); return; }
+        var files = [];
+        var fileNames = [];
+        var msg = 'Dashboard NorthRadar — ' + names.join(' | ') + ' — ' + new Date().toLocaleString('pt-BR');
+        var done = 0;
+        for (var i = 0; i < canvases.length; i++) {
+          (function(i) {
+            canvases[i].toBlob(function(blob) {
+              if (!blob) { done++; if (done === canvases.length) finishShare(); return; }
+              var fileName = 'NorthRadar_' + (names[i] || 'Painel') + '_' + new Date().toLocaleString('pt-BR').replace(/[\/ :]/g, '-') + '.png';
+              files[i] = new File([blob], fileName, { type: 'image/png' });
+              fileNames[i] = fileName;
+              done++;
+              if (done === canvases.length) finishShare();
+            }, 'image/png');
+          })(i);
+        }
+        function finishShare() {
+          // Try Web Share API (mobile)
+          if (navigator.share && navigator.canShare) {
+            var shareData = { files: files, title: 'NorthRadar', text: msg };
+            if (navigator.canShare(shareData)) {
+              navigator.share(shareData)
+                .catch(function () {})
+                .finally(function () {
+                  vm.isSharing = false;
+                  $scope.$applyAsync();
+                });
+              return;
+            }
+          }
+          // Fallback: download all PNGs + open wa.me
+          for (var i = 0; i < files.length; i++) {
+            var url = URL.createObjectURL(files[i]);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = fileNames[i];
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }
+          window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank');
+          vm.isSharing = false;
+          $scope.$applyAsync();
+        }
+      }
+      function capturePanelToCanvas(panel, cb) {
+        // Remove overflow/size constraints
+        var saved = [];
+        var allEls = panel.querySelectorAll('*');
+        for (var i = 0; i < allEls.length; i++) {
+          var s = allEls[i];
+          var cs = getComputedStyle(s);
+          var needsFix = cs.overflow !== 'visible' || cs.overflowX !== 'visible' || cs.overflowY !== 'visible'
+                      || (cs.maxHeight !== 'none' && cs.maxHeight !== '0px')
+                      || (cs.maxWidth  !== 'none' && cs.maxWidth  !== '0px');
+          if (needsFix) {
+            saved.push({
+              el: s,
+              overflow: s.style.overflow,
+              overflowX: s.style.overflowX,
+              overflowY: s.style.overflowY,
+              maxHeight: s.style.maxHeight,
+              maxWidth: s.style.maxWidth,
+              height: s.style.height,
+              width: s.style.width,
+              minWidth: s.style.minWidth
+            });
+            s.style.overflow = 'visible';
+            s.style.overflowX = 'visible';
+            s.style.overflowY = 'visible';
+            s.style.maxHeight = 'none';
+            s.style.maxWidth = 'none';
+            s.style.height = 'auto';
+            s.style.minWidth = '0';
+          }
+        }
+        var compSaved = {
+          overflow: panel.style.overflow,
+          overflowX: panel.style.overflowX,
+          overflowY: panel.style.overflowY,
+          maxHeight: panel.style.maxHeight,
+          maxWidth: panel.style.maxWidth,
+          height: panel.style.height,
+          width: panel.style.width,
+          minWidth: panel.style.minWidth
+        };
+        panel.style.overflow = 'visible';
+        panel.style.overflowX = 'visible';
+        panel.style.overflowY = 'visible';
+        panel.style.maxHeight = 'none';
+        panel.style.maxWidth = 'none';
+        panel.style.width = 'max-content';
+        panel.style.minWidth = '0';
+        void panel.offsetWidth;
+        html2canvas(panel, {
+          backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary').trim() || '#ffffff',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          scrollY: -window.scrollY,
+          scrollX: -window.scrollX,
+          width:  panel.scrollWidth,
+          height: panel.scrollHeight
+        }).then(function (canvas) {
+          for (var j = 0; j < saved.length; j++) {
+            var r = saved[j];
+            r.el.style.overflow = r.overflow;
+            r.el.style.overflowX = r.overflowX;
+            r.el.style.overflowY = r.overflowY;
+            r.el.style.maxHeight = r.maxHeight;
+            r.el.style.maxWidth = r.maxWidth;
+            r.el.style.height = r.height;
+            r.el.style.width = r.width;
+            r.el.style.minWidth = r.minWidth;
+          }
+          panel.style.overflow = compSaved.overflow;
+          panel.style.overflowX = compSaved.overflowX;
+          panel.style.overflowY = compSaved.overflowY;
+          panel.style.maxHeight = compSaved.maxHeight;
+          panel.style.maxWidth = compSaved.maxWidth;
+          panel.style.height = compSaved.height;
+          panel.style.width = compSaved.width;
+          panel.style.minWidth = compSaved.minWidth;
+          cb(canvas);
+        }).catch(function () { cb(null); });
+      }
+    }
+
+    function captureAndSharePanel(panel, name, cb) {
+      // Remove overflow/size constraints
       var saved = [];
-      var allEls = comp.querySelectorAll('*');
+      var allEls = panel.querySelectorAll('*');
       for (var i = 0; i < allEls.length; i++) {
         var s = allEls[i];
         var cs = getComputedStyle(s);
@@ -1171,26 +1356,34 @@
           s.style.minWidth = '0';
         }
       }
-      // Also expand the comp wrapper itself and its parent (drag-item inside grid)
       var compSaved = {
-        overflow: comp.style.overflow,
-        overflowX: comp.style.overflowX,
-        overflowY: comp.style.overflowY,
-        maxHeight: comp.style.maxHeight,
-        maxWidth: comp.style.maxWidth,
-        height: comp.style.height,
-        width: comp.style.width,
-        minWidth: comp.style.minWidth
+        overflow: panel.style.overflow,
+        overflowX: panel.style.overflowX,
+        overflowY: panel.style.overflowY,
+        maxHeight: panel.style.maxHeight,
+        maxWidth: panel.style.maxWidth,
+        height: panel.style.height,
+        width: panel.style.width,
+        minWidth: panel.style.minWidth
       };
-      comp.style.overflow = 'visible';
-      comp.style.overflowX = 'visible';
-      comp.style.overflowY = 'visible';
-      comp.style.maxHeight = 'none';
-      comp.style.maxWidth = 'none';
-      comp.style.width = 'max-content';
-      comp.style.minWidth = '0';
-
-      function restoreScroll() {
+      panel.style.overflow = 'visible';
+      panel.style.overflowX = 'visible';
+      panel.style.overflowY = 'visible';
+      panel.style.maxHeight = 'none';
+      panel.style.maxWidth = 'none';
+      panel.style.width = 'max-content';
+      panel.style.minWidth = '0';
+      void panel.offsetWidth;
+      html2canvas(panel, {
+        backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary').trim() || '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        scrollY: -window.scrollY,
+        scrollX: -window.scrollX,
+        width:  panel.scrollWidth,
+        height: panel.scrollHeight
+      }).then(function (canvas) {
         for (var j = 0; j < saved.length; j++) {
           var r = saved[j];
           r.el.style.overflow = r.overflow;
@@ -1202,51 +1395,30 @@
           r.el.style.width = r.width;
           r.el.style.minWidth = r.minWidth;
         }
-        comp.style.overflow = compSaved.overflow;
-        comp.style.overflowX = compSaved.overflowX;
-        comp.style.overflowY = compSaved.overflowY;
-        comp.style.maxHeight = compSaved.maxHeight;
-        comp.style.maxWidth = compSaved.maxWidth;
-        comp.style.height = compSaved.height;
-        comp.style.width = compSaved.width;
-        comp.style.minWidth = compSaved.minWidth;
-      }
-
-      // Force layout reflow so expanded sizes are computed
-      void comp.offsetWidth;
-
-      html2canvas(comp, {
-        backgroundColor: getComputedStyle(document.body).getPropertyValue('--bg-primary').trim() || '#ffffff',
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        scrollY: -window.scrollY,
-        scrollX: -window.scrollX,
-        width:  comp.scrollWidth,
-        height: comp.scrollHeight
-      }).then(function (canvas) {
-        restoreScroll();
+        panel.style.overflow = compSaved.overflow;
+        panel.style.overflowX = compSaved.overflowX;
+        panel.style.overflowY = compSaved.overflowY;
+        panel.style.maxHeight = compSaved.maxHeight;
+        panel.style.maxWidth = compSaved.maxWidth;
+        panel.style.height = compSaved.height;
+        panel.style.width = compSaved.width;
+        panel.style.minWidth = compSaved.minWidth;
         canvas.toBlob(function (blob) {
-          if (!blob) { vm.isSharing = false; $scope.$applyAsync(); return; }
-
-          var ts = new Date().toLocaleString('pt-BR').replace(/[\/:]/g, '-');
-          var fileName = 'NorthRadar_' + ts + '.png';
-
+          if (!blob) { if (cb) cb(); return; }
+          var ts = new Date().toLocaleString('pt-BR').replace(/[\/ :]/g, '-');
+          var fileName = 'NorthRadar_' + (name || 'Painel') + '_' + ts + '.png';
+          var msg = encodeURIComponent('Dashboard NorthRadar — ' + (name || 'Painel') + ' — ' + new Date().toLocaleString('pt-BR'));
           // Try Web Share API (mobile)
           if (navigator.share && navigator.canShare) {
             var file = new File([blob], fileName, { type: 'image/png' });
-            var shareData = { files: [file], title: 'NorthRadar', text: 'Dashboard NorthRadar' };
+            var shareData = { files: [file], title: 'NorthRadar', text: msg };
             if (navigator.canShare(shareData)) {
               navigator.share(shareData)
                 .catch(function () {})
-                .finally(function () {
-                  vm.isSharing = false;
-                  $scope.$applyAsync();
-                });
+                .finally(function () { if (cb) cb(); });
               return;
             }
           }
-
           // Fallback: download PNG + open wa.me
           var url = URL.createObjectURL(blob);
           var a = document.createElement('a');
@@ -1256,18 +1428,10 @@
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
-
-          var msg = encodeURIComponent('Dashboard NorthRadar \u2014 ' + new Date().toLocaleString('pt-BR'));
           window.open('https://wa.me/?text=' + msg, '_blank');
-
-          vm.isSharing = false;
-          $scope.$applyAsync();
+          if (cb) cb();
         }, 'image/png');
-      }).catch(function () {
-        restoreScroll();
-        vm.isSharing = false;
-        $scope.$applyAsync();
-      });
+      }).catch(function () { if (cb) cb(); });
     }
 
     function fecharPopup() {
