@@ -393,10 +393,10 @@
     // 3) Horizontal bar — Top 10 CHI
     function _buildChartTop10Chi() {
       var list = (vm.top10Chi || []).slice(0, 10);
-      var labels = list.map(function (r) { return r.numero || r.incidencia || '—'; });
+      var labels = list.map(function (r) { return r.incidencia || '—'; });
       var data = list.map(function (r) { return r.chi || 0; });
       var colors = _chartColors(list.length);
-      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'chi', valor: r.numero }; });
+      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'chi', valor: r.incidencia }; });
 
       _makeChart('chartTop10Chi', 'top10Chi', {
         type: 'bar',
@@ -404,11 +404,11 @@
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
           onClick: function (evt, els) { _onChartClick('top10Chi', ctxMap, evt, els); },
-          layout: { padding: { left: 10 } },
+          layout: { padding: { left: 20 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 12, weight: '600' }, padding: 8, autoSkip: false } }
           }
         })
       });
@@ -495,10 +495,10 @@
     // 7) Horizontal bar — Top 10 Clientes Afetados por incidência
     function _buildChartTop10Cli() {
       var list = (vm.top10Cli || []).slice(0, 10);
-      var labels = list.map(function (r) { return r.numero || '—'; });
-      var data = list.map(function (r) { return r.clientesAfetadosAtual || r.clientesAfetados || 0; });
+      var labels = list.map(function (r) { return r.incidencia || '—'; });
+      var data = list.map(function (r) { return r.cli || 0; });
       var colors = _chartColors(list.length);
-      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'cli', valor: r.numero }; });
+      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'cli', valor: r.incidencia }; });
 
       _makeChart('chartTop10Cli', 'top10Cli', {
         type: 'bar',
@@ -506,23 +506,23 @@
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
           onClick: function (evt, els) { _onChartClick('top10Cli', ctxMap, evt, els); },
-          layout: { padding: { left: 10 } },
+          layout: { padding: { left: 20 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 12, weight: '600' }, padding: 8, autoSkip: false } }
           }
         })
       });
     }
 
-    // 8) Horizontal bar — Top 10 TMA (ativas)
+    // 8) Horizontal bar — Top 10 TMA
     function _buildChartTop10Tma() {
       var list = (vm.top10Tma || []).slice(0, 10);
-      var labels = list.map(function (r) { return r.numero || '—'; });
+      var labels = list.map(function (r) { return r.incidencia || '—'; });
       var data = list.map(function (r) { return r.tma || 0; });
       var colors = _chartColors(list.length);
-      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'tma', valor: r.numero }; });
+      var ctxMap = list.map(function (r) { return { tipo: 'top10', campo: 'tma', valor: r.incidencia }; });
 
       _makeChart('chartTop10Tma', 'top10Tma', {
         type: 'bar',
@@ -530,11 +530,11 @@
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
           onClick: function (evt, els) { _onChartClick('top10Tma', ctxMap, evt, els); },
-          layout: { padding: { left: 10 } },
+          layout: { padding: { left: 20 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 12, weight: '600' }, padding: 8, autoSkip: false } }
           }
         })
       });
@@ -591,10 +591,10 @@
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
           onClick: function (evt, els) { _onChartClick('extrasConj', ctxMap, evt, els); },
-          layout: { padding: { left: 10 } },
+          layout: { padding: { left: 20 } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 11, weight: '500' }, padding: 6, autoSkip: false } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 12, weight: '600' }, padding: 8, autoSkip: false } }
           }
         })
       });
@@ -751,11 +751,11 @@
         options: angular.merge({}, _baseOptions(), {
           indexAxis: 'y',
           onClick: function (evt, els) { _onChartClick('produtividade', ctxMap, evt, els); },
-          layout: { padding: { left: 10 } },
+          layout: { padding: { left: 20 } },
           plugins: { legend: { display: false } },
           scales: {
             x: { grid: { color: _gridColor() }, ticks: { color: _textColor() } },
-            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 10, weight: '500' }, padding: 6, autoSkip: false } }
+            y: { grid: { display: false }, ticks: { color: _textColor(), font: { size: 12, weight: '600' }, padding: 8, autoSkip: false } }
           }
         })
       });

@@ -1320,21 +1320,23 @@
 
     .chart-container {
       position: relative;
-      padding: 20px;
-      min-height: 280px;
+      padding: 16px 20px;
+      min-height: 300px;
+      max-height: 360px;
     }
 
     .chart-container canvas {
       width: 100% !important;
-      max-height: 300px;
+      max-height: 320px;
     }
 
     .chart-container-tall {
-      min-height: 380px;
+      min-height: 360px;
+      max-height: 420px;
     }
 
     .chart-container-tall canvas {
-      max-height: 420px;
+      max-height: 380px;
     }
 
     .chart-container[style*="cursor"], .chart-container {
@@ -1357,7 +1359,8 @@
     }
 
     .analytics-full .chart-container {
-      min-height: 320px;
+      min-height: 340px;
+      max-height: 400px;
     }
 
     .analytics-full .chart-container canvas {
@@ -1919,7 +1922,7 @@
 
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 style="color:var(--section-top10)">Top 10 — TMA (Encerradas)</h2>
+          <h2 style="color:var(--section-top10)">Top 10 — TMA</h2>
         </div>
         <div class="chart-container chart-container-tall">
           <canvas id="chartTop10Tma"></canvas>
@@ -1975,8 +1978,8 @@
         <div class="panel-header">
           <h2 style="color:var(--section-equipes)">Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
         </div>
-        <div class="chart-container" style="min-height:360px;">
-          <canvas id="chartAtividade" style="max-height:400px;"></canvas>
+        <div class="chart-container">
+          <canvas id="chartAtividade"></canvas>
         </div>
       </section>
     </div>
