@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/style/dash.css">
+  <link rel="icon" type="image/png" href="/icon/logo.png">
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.3/angular.min.js"></script>
   <script>
     // Apply saved theme IMMEDIATELY to prevent FOUC (before CSS paints)
@@ -29,7 +30,9 @@
        ═══════════════════════════════════════════════════════ -->
   <header class="header">
     <div class="header-brand">
-      <div class="logo-icon">E</div>
+      <div class="logo-icon" style="background:transparent">
+        <img src="/icon/logo.png" alt="NorthRadar Logo" style="width:32px;height:32px;" />
+      </div>
       <h1>NorthRadar</h1>
       <div class="route-switcher">
         <button class="route-btn" ng-class="{'active': vm.currentView==='operational'}" ng-click="vm.switchView('operational')">· Operacional</button>
