@@ -1519,7 +1519,6 @@
         { key: 'alarmeMR',                label: 'Alarme MR' },
         { key: 'statusMonitorRamal',      label: 'Status MR' },
         { key: 'inicioMR',                label: 'Início MR' },
-        { key: 'atribuicao',              label: 'Atribuição' },
         { key: 'equipeAtribuida',         label: 'Eq. Atribuída' },
         { key: 'equipeDeslocada',         label: 'Eq. Deslocada' },
         { key: 'tmp',                     label: 'TMP' },
