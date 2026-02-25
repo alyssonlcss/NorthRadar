@@ -31,7 +31,8 @@
   <header class="header">
     <div class="header-brand">
       <div class="logo-icon" style="background:transparent">
-        <img src="/icon/logo.png" alt="NorthRadar Logo" style="width:64px;height:64px;" />
+        <img ng-if="!vm.darkMode" src="/icon/logo.png" alt="NorthRadar Logo" style="width:64px;height:64px;" />
+        <img ng-if="vm.darkMode" src="/icon/logo-dark.png" alt="NorthRadar Logo Dark" style="width: 40px;height:40px;" />
       </div>
       <h1>NorthRadar</h1>
       <div class="route-switcher">
