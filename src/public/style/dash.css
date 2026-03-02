@@ -24,6 +24,11 @@
   --section-equipes2-glow: rgba(237,139,0,0.12);
   --section-equipes2-glow-hover: rgba(237,139,0,0.28);
 
+  --section-desl: #0EA5C9;
+  --section-desl-light: #e8f7fc;
+  --section-desl-glow: rgba(14,165,201,0.12);
+  --section-desl-glow-hover: rgba(14,165,201,0.28);
+
   /* Brand — Enel corporate */
   --enel-blue: #1d1d1f;
   --enel-dark: #000000;
@@ -136,6 +141,11 @@
   --section-equipes2-light: rgba(245,166,35,0.16);
   --section-equipes2-glow: rgba(245,166,35,0.08);
   --section-equipes2-glow-hover: rgba(245,166,35,0.20);
+
+  --section-desl: #38BDF8;
+  --section-desl-light: rgba(56,189,248,0.10);
+  --section-desl-glow: rgba(56,189,248,0.14);
+  --section-desl-glow-hover: rgba(56,189,248,0.30);
 
   --shadow-xs: 0 1px 2px rgba(0,0,0,0.3);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
@@ -921,8 +931,47 @@ body {
 }
 .equipes2-panel:hover {
   box-shadow: var(--shadow-md), 0 0 40px var(--section-equipes2-glow-hover), 0 0 80px var(--section-equipes2-glow) !important;
-  border-color: var(--section-equipes2) !important;
 }
+
+.desl-panel {
+  border-left: 3px solid var(--section-desl) !important;
+  box-shadow: var(--shadow), 0 0 20px var(--section-desl-glow) !important;
+}
+.desl-panel:hover {
+  box-shadow: var(--shadow-md), 0 0 40px var(--section-desl-glow-hover), 0 0 80px var(--section-desl-glow) !important;
+  border-color: var(--section-desl) !important;
+}
+.desl-panel .panel-header {
+  background: transparent;
+  color: var(--text-primary);
+}
+.desl-panel .panel-header h2 {
+  color: var(--section-desl);
+}
+.desl-panel .panel-subtitle {
+  font-weight: 400;
+  font-size: 13px;
+  opacity: 0.75;
+}
+.desl-panel .panel-header .badge-count {
+  background: var(--section-desl-light);
+  color: var(--section-desl);
+}
+.desl-panel .data-table thead th {
+  background: var(--section-desl-light);
+  color: var(--section-desl);
+}
+[data-theme="dark"] .desl-panel .panel-header h2 {
+  color: var(--section-desl);
+}
+[data-theme="dark"] .desl-panel .data-table thead th {
+  color: var(--section-desl);
+}
+.desl-panel .data-table { font-size: 12px; }
+.desl-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
+.desl-panel .data-table tbody td { padding: 7px 10px; }
+.desl-panel .panel-header { padding: 14px 16px 10px; }
+.desl-panel .panel-header h2 { font-size: 14px; }
 .equipes2-panel .panel-header {
   background: transparent;
   color: var(--text-primary);

@@ -527,6 +527,74 @@
     </section>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════
+         DESLOCAMENTOS (Spotfire — on-demand, carregamento em segundo plano)
+         ═══════════════════════════════════════════════════════ -->
+    <div class="drag-item drag-item-full" data-comp-id="op-desl"
+         draggable="true"
+         ng-drag-start="vm.onCompDragStart($event, 'op-desl')"
+         ng-drag-over="vm.onCompDragOver($event)"
+         ng-drag-leave="vm.onCompDragLeave($event)"
+         ng-drop="vm.onCompDrop($event, 'op-desl')"
+         ng-drag-end="vm.onCompDragEnd($event)"
+         ng-style="vm.getCompOrder('op-desl')">
+    <section class="panel desl-panel">
+      <div class="panel-header">
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>DESLOCAMENTOS | M300
+          <span ng-if="vm.deslocamentos.lastUpdated" class="panel-subtitle"> &mdash; atualizado {{vm.deslocamentos.lastUpdated | date:'HH:mm:ss'}}</span>
+        </h2>
+        <span class="badge-count">{{vm.deslocamentos.total}} registros</span>
+      </div>
+
+      <!-- Carregando -->
+      <div class="loading-overlay" ng-if="vm.loadingDesl">
+        <div class="spinner"></div>
+        <div class="loading-text">Consultando Spotfire...</div>
+      </div>
+
+      <!-- Erro -->
+      <div class="empty-state" ng-if="!vm.loadingDesl && vm.errorDesl">
+        Deslocamentos indispon&iacute;veis: {{vm.errorDesl}}
+      </div>
+
+      <!-- Tabela -->
+      <div class="table-wrapper" ng-if="!vm.loadingDesl && !vm.errorDesl"
+           ng-style="vm.deslocamentos.items.length > 20 ? {'max-height':'480px','overflow-y':'auto'} : {}">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="sortable" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('desl','polo')">Polo<span class="sort-indicator" ng-if="vm.sort.desl.field==='polo'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='polo'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','dia')">Dia<span class="sort-indicator" ng-if="vm.sort.desl.field==='dia'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='dia'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','equipe')">Equipe<span class="sort-indicator" ng-if="vm.sort.desl.field==='equipe'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='equipe'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','ordem')">Ordem<span class="sort-indicator" ng-if="vm.sort.desl.field==='ordem'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='ordem'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','despachado')">Despachado<span class="sort-indicator" ng-if="vm.sort.desl.field==='despachado'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='despachado'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','aCaminho')">A Caminho<span class="sort-indicator" ng-if="vm.sort.desl.field==='aCaminho'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='aCaminho'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','noLocal')">No Local<span class="sort-indicator" ng-if="vm.sort.desl.field==='noLocal'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='noLocal'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','liberada')">Liberada<span class="sort-indicator" ng-if="vm.sort.desl.field==='liberada'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='liberada'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','qtd')">Qtd<span class="sort-indicator" ng-if="vm.sort.desl.field==='qtd'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='qtd'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','horas')">Horas<span class="sort-indicator" ng-if="vm.sort.desl.field==='horas'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='horas'">&#8645;</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr ng-repeat="d in vm.deslocamentos.items | orderBy:vm.sort.desl.field:vm.sort.desl.reverse track by $index">
+              <td ng-if="vm.selectedPolo==='TODOS'">{{d.polo}}</td>
+              <td>{{d.dia}}</td>
+              <td><strong>{{d.equipe}}</strong></td>
+              <td>{{d.ordem}}</td>
+              <td>{{d.despachado || '—'}}</td>
+              <td>{{d.aCaminho  || '—'}}</td>
+              <td>{{d.noLocal   || '—'}}</td>
+              <td>{{d.liberada  || '—'}}</td>
+              <td class="num">{{d.qtd   || '—'}}</td>
+              <td class="num">{{d.horas || '—'}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" ng-if="!vm.deslocamentos.items.length && !vm.loadingDesl">Sem registros de deslocamento.</div>
+      </div>
+    </section>
+    </div>
+
     </div><!-- /comp-grid -->
 
   </div>

@@ -42,6 +42,7 @@
       top10Cli:  { field: '', reverse: false },
       equipes:   { field: '', reverse: false },
       equipes2:  { field: '', reverse: false },
+      desl:      { field: '', reverse: false },
       popup:     { field: '', reverse: false }
     };
 
@@ -91,7 +92,7 @@
 
     var defaultOpOrder = [
       'op-kpi', 'op-top10chi', 'op-top10tma', 'op-top10cli',
-      'op-panorama', 'op-equipes', 'op-equipes2'
+      'op-panorama', 'op-equipes', 'op-equipes2', 'op-desl'
     ];
     var defaultAnOrder = [
       'an-kpi',
