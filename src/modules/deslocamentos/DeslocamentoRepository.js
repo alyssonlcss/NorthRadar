@@ -74,14 +74,23 @@ class DeslocamentoRepository {
     // Se a própria tabela Deslocamentos já estiver maximizada, mantemos assim.
     await this._restoreIfOtherVisualMaximized(page);
 
-    // 2. Aplicar filtros base única vez por sessão
+    // 2. Aplicar filtros base única vez por sessão (com retry caso os itens ainda não estejam renderizados)
     if (!this._filtersApplied) {
-      await this._waitForFiltersReady(page);
-      const ok1 = await this._select_emServico(page);
-      const ok2 = await this._select_area_norte(page);
-      this._filtersApplied = ok1 && ok2;
+      const MAX_FILTER_RETRIES = 4;
+      const FILTER_RETRY_DELAY_MS = 3000;
+      for (let attempt = 1; attempt <= MAX_FILTER_RETRIES; attempt++) {
+        await this._waitForFiltersReady(page);
+        const ok1 = await this._select_emServico(page);
+        const ok2 = await this._select_area_norte(page);
+        this._filtersApplied = ok1 && ok2;
+        if (this._filtersApplied) break;
+        if (attempt < MAX_FILTER_RETRIES) {
+          this._logger.warn(`Filtros fixos não aplicados (tentativa ${attempt}/${MAX_FILTER_RETRIES}) — aguardando ${FILTER_RETRY_DELAY_MS / 1000}s...`);
+          await new Promise((r) => setTimeout(r, FILTER_RETRY_DELAY_MS));
+        }
+      }
       if (!this._filtersApplied) {
-        this._logger.warn('Filtros fixos não foram aplicados (ainda) — tentará novamente na próxima request');
+        throw new Error('Painel de filtros do Spotfire não ficou pronto a tempo — tente novamente em alguns instantes');
       }
     }
 
@@ -124,14 +133,23 @@ class DeslocamentoRepository {
     // Se a própria tabela Deslocamentos já estiver maximizada, mantemos assim.
     await this._restoreIfOtherVisualMaximized(page);
 
-    // 2. Aplicar filtros fixos uma única vez por sessão
+    // 2. Aplicar filtros fixos uma única vez por sessão (com retry caso os itens ainda não estejam renderizados)
     if (!this._filtersApplied) {
-      await this._waitForFiltersReady(page);
-      const ok1 = await this._select_emServico(page);
-      const ok2 = await this._select_area_norte(page);
-      this._filtersApplied = ok1 && ok2;
+      const MAX_FILTER_RETRIES = 4;
+      const FILTER_RETRY_DELAY_MS = 3000;
+      for (let attempt = 1; attempt <= MAX_FILTER_RETRIES; attempt++) {
+        await this._waitForFiltersReady(page);
+        const ok1 = await this._select_emServico(page);
+        const ok2 = await this._select_area_norte(page);
+        this._filtersApplied = ok1 && ok2;
+        if (this._filtersApplied) break;
+        if (attempt < MAX_FILTER_RETRIES) {
+          this._logger.warn(`Filtros fixos não aplicados (tentativa ${attempt}/${MAX_FILTER_RETRIES}) — aguardando ${FILTER_RETRY_DELAY_MS / 1000}s...`);
+          await new Promise((r) => setTimeout(r, FILTER_RETRY_DELAY_MS));
+        }
+      }
       if (!this._filtersApplied) {
-        this._logger.warn('Filtros fixos não foram aplicados (ainda) — tentará novamente na próxima request');
+        throw new Error('Painel de filtros do Spotfire não ficou pronto a tempo — tente novamente em alguns instantes');
       }
     }
 
@@ -1163,24 +1181,69 @@ class DeslocamentoRepository {
           }
 
           rescueAttempts++;
-          this._logger.warn(`  Estável em ${uniqueCount}/${targetRowCount} — tentando destravar (resgate ${rescueAttempts}/${MAX_RESCUE})...`);
+          const missing = targetRowCount - uniqueCount;
+          this._logger.warn(`  Estável em ${uniqueCount}/${targetRowCount} — resgate ${rescueAttempts}/${MAX_RESCUE}: modo linha a linha (${missing} faltando)...`);
 
+          // ── Estratégia de resgate: linha a linha ──────────────────────────
+          // PageDown/Ctrl+End pula blocos e faz o virtualizador reciclar linhas
+          // antes de capturá-las. A solução é:
+          //   1) Retroceder para antes do possível gap (3× PageUp).
+          //   2) Avançar com ArrowDown — cada press expõe exatamente 1 linha.
+          // Isso garante que cada índice virtualizado passe pelo viewport.
           await this._focusTableViewport(page);
-          await page.keyboard.down('Control');
-          await page.keyboard.press('End');
-          await page.keyboard.up('Control');
+          for (let pu = 0; pu < 3; pu++) {
+            await page.keyboard.press('PageUp');
+            await new Promise((r) => setTimeout(r, 60));
+          }
+          await this._waitWhileBusy(page, 2000);
 
-          // Um step maior no scrollbar costuma forçar render de novos blocos.
-          await this._dragScrollbarHandle(page, { to: 'step', stepPx: 520 });
+          // Avança no mínimo o suficiente para cobrir as linhas faltando + margem.
+          const arrowCount = Math.max(80, missing * 4 + 40);
+          for (let k = 0; k < arrowCount; k++) {
+            await page.keyboard.press('ArrowDown');
 
-          // PageDown extra pra estimular carregamento.
-          await this._focusTableViewport(page);
-          await page.keyboard.press('PageDown');
-          await page.keyboard.press('PageDown');
+            // Captura a cada 8 teclas para não sobrecarregar o CDP
+            if (k % 8 === 0) {
+              const arrowSnap = await this._safeEvaluate(page, (visualId) => {
+                const visual = document.querySelector(`[sf-visual-id="${visualId}"]`);
+                if (!visual) return [];
+                const rowMap = new Map();
+                for (const el of visual.querySelectorAll('.sfc-value-cell[row][column]')) {
+                  const r = parseInt(el.getAttribute('row'));
+                  const c = parseInt(el.getAttribute('column'));
+                  if (isNaN(r) || isNaN(c)) continue;
+                  if (!rowMap.has(r)) rowMap.set(r, new Map());
+                  rowMap.get(r).set(c, el.querySelector('.cell-text')?.innerText?.trim() ?? '');
+                }
+                return [...rowMap.entries()]
+                  .sort((a, b) => a[0] - b[0])
+                  .map(([rowNum, colMap]) => {
+                    const maxCol = Math.max(...colMap.keys());
+                    const cells = [];
+                    for (let c = 0; c <= maxCol; c++) cells.push(colMap.get(c) ?? '');
+                    return { rowNum, cells };
+                  });
+              }, TABLE_VISUAL_ID);
 
-          await new Promise((r) => setTimeout(r, 160));
-          await this._waitWhileBusy(page, 3500);
+              for (const { rowNum, cells } of (arrowSnap || [])) {
+                seenByRowNum.set(rowNum, cells);
+                const key = cells
+                  .map((v) => (v ?? '').toString().replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim())
+                  .join(' | ');
+                if (key) seenByKey.set(key, cells);
+              }
 
+              const uc2 = Math.max(seenByRowNum.size, seenByKey.size);
+              if (targetRowCount != null && uc2 >= targetRowCount) {
+                this._logger.info(`  [resgate ${rescueAttempts}] Meta atingida durante ArrowDown: ${uc2}/${targetRowCount}`);
+                break;
+              }
+            }
+
+            await new Promise((r) => setTimeout(r, 28));
+          }
+
+          await this._waitWhileBusy(page, 2000);
           stableRounds = 0;
           forcedBottomAttempts = 0;
           continue;
@@ -1395,9 +1458,24 @@ class DeslocamentoRepository {
 
     while (Date.now() - start < timeoutMs) {
       const ok = await this._safeEvaluate(page, () => {
-        const hasListItems = document.querySelectorAll('.HtmlTextAreaControl .sf-element-list-box-item').length > 0;
-        const hasHtac = document.querySelectorAll('.HtmlTextArea').length > 0;
-        return hasHtac && hasListItems;
+        const htacs = document.querySelectorAll('.HtmlTextArea');
+        if (!htacs.length) return false;
+
+        // Verifica que os itens dos filtros já estão populados:
+        // pelo menos um controle deve ter 3+ itens (Base: tem ATLÂNTICO, CENTRO-NORTE, NORTE)
+        // e outro deve conter um dos valores esperados de Disponibilidade ou Área.
+        const controls = Array.from(
+          document.querySelectorAll('.HtmlTextAreaControl .sf-element-list-box-item'),
+        );
+        if (controls.length < 3) return false;
+
+        const titles = controls.map(
+          (el) => (el.getAttribute('title') || el.textContent || '').replace(/\u00a0/g, ' ').trim(),
+        );
+        const hasServico = titles.some((t) => t.includes('Em Servi'));
+        const hasNorte   = titles.some((t) => t === 'NORTE');
+        // Aceita qualquer indício de que os filtros chave já estão presentes
+        return hasServico || hasNorte;
       });
       if (ok) return true;
       await new Promise((r) => setTimeout(r, 350));
