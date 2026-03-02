@@ -754,6 +754,46 @@ body {
   font-weight: 500;
 }
 
+/* ── Padrão de alinhamento de colunas ────────────────────────
+   .num      → direita  — valores numéricos / contagens
+   .col-time → centro   — horários (HH:mm) e durações
+   .col-date → centro   — datas (DD/MM ou DD/MM/AA)
+   .col-code → centro   — códigos curtos (polo, equipe, OS)
+   ─────────────────────────────────────────────────────────── */
+
+/* Cabeçalhos de colunas numéricas alinham à direita */
+.data-table thead th.num {
+  text-align: right;
+}
+
+/* Horários e durações */
+.data-table thead th.col-time,
+.data-table tbody td.col-time,
+.data-table tfoot td.col-time {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* Datas */
+.data-table thead th.col-date,
+.data-table tbody td.col-date,
+.data-table tfoot td.col-date {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Códigos curtos (polo, equipe, OS) */
+.data-table thead th.col-code,
+.data-table tbody td.col-code {
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .data-table tfoot td {
   padding: 12px 14px;
   font-weight: 600;
