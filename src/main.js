@@ -81,10 +81,11 @@ async function main() {
     logger.info('2/4 — Iniciando scheduler de incidências (refresh 60 min)...');
     await incidenceService.startScheduler();
 
-    // 3. Deslocamentos Spotfire (primeira carga + auto-refresh)
-    logger.info('3/4 — Iniciando scheduler de deslocamentos Spotfire...');
-    deslocamentoService.startScheduler().catch((err) => {
-      logger.warn(`Scheduler de deslocamentos falhou na inicialização (continuando sem Spotfire): ${err.message}`);
+    // 3. Deslocamentos Spotfire — apenas login + navegação ao relatório.
+    // A extração ocorre sob demanda quando o dashboard carrega ou troca de filtro.
+    logger.info('3/4 — Inicializando Spotfire (login + navegação)...');
+    await deslocamentoService.initialize().catch((err) => {
+      logger.warn(`Inicialização do Spotfire falhou (continuando sem Spotfire): ${err.message}`);
     });
 
     // 4. Web server

@@ -86,8 +86,19 @@ class DeslocamentoService {
   // ── Scheduler ────────────────────────────────────────────────────
 
   /**
+   * Inicializa o SpotfireProvider: faz login e navega até o relatório.
+   * Não extrai dados — a extração ocorre apenas sob demanda (request da API).
+   */
+  async initialize() {
+    this._logger.info('Inicializando Spotfire (login + navegação ao relatório)...');
+    await this._spotfire.initialize();
+    this._logger.info('Spotfire pronto. Aguardando requisições do dashboard.');
+  }
+
+  /**
    * Inicializa o SpotfireProvider, executa a primeira carga de todos os
    * polos e agenda o refresh periódico.
+   * @deprecated Use initialize() para inicialização sem extração automática.
    */
   async startScheduler() {
     this._logger.info(`Iniciando scheduler — ${this._polos.join(', ')} | refresh ${this._intervalMs / 60000} min`);
