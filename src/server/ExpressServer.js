@@ -14,11 +14,12 @@ const Logger = require('../shared/Logger');
 class ExpressServer {
   /**
    * @param {Object} deps
-   * @param {import('../modules/incidences/IncidenceService')} deps.incidenceService
-   * @param {import('../modules/auth/AuthProvider')}           deps.authProvider
+   * @param {import('../modules/incidences/IncidenceService')}       deps.incidenceService
+   * @param {import('../modules/auth/AuthProvider')}                 deps.authProvider
+   * @param {import('../modules/deslocamentos/DeslocamentoService')} deps.deslocamentoService
    * @param {number} [port=3000]
    */
-  constructor({ incidenceService, authProvider }, port = 3000) {
+  constructor({ incidenceService, authProvider, deslocamentoService }, port = 3000) {
     this._port = port;
     this._server = null;
     this._logger = Logger.create('WebServer');
@@ -27,7 +28,7 @@ class ExpressServer {
     this._app.use(express.json());
     this._app.use(express.static(path.join(__dirname, '..', 'public')));
 
-    registerRoutes(this._app, { incidenceService, authProvider });
+    registerRoutes(this._app, { incidenceService, authProvider, deslocamentoService });
 
     this._app.use(errorHandler);
   }

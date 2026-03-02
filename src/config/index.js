@@ -45,6 +45,23 @@ const config = {
   // ── Refresh interval em milissegundos ──
   refreshIntervalMs:
     (parseInt(process.env.REFRESH_INTERVAL_MINUTES, 10) || 110) * 60 * 1000,
+
+  // ── Spotfire (Deslocamentos) ──
+  spotfire: {
+    url: process.env.SPOTFIRE_URL ||
+      'http://elabziplra00.enelint.global:8090/spotfire/login.html#/',
+    reportUrl: process.env.SPOTFIRE_REPORT_URL ||
+      'http://elabziplra00.enelint.global:8090/spotfire/wp/analysis?file=/M300/Produtividade%20UO%20TR%20-%20CE',
+    credentials: {
+      username: process.env.SPOTFIRE_USERNAME || '',
+      password: process.env.SPOTFIRE_PASSWORD || '',
+    },
+    polos: (process.env.SPOTFIRE_POLOS || 'ATLANTICO,DECEN,DNORT').split(',').map(s => s.trim()),
+    headless: process.env.SPOTFIRE_HEADLESS === 'true',
+    timeout: parseInt(process.env.SPOTFIRE_TIMEOUT_MS, 10) || 30000,
+    refreshIntervalMs:
+      (parseInt(process.env.SPOTFIRE_REFRESH_INTERVAL_MINUTES, 10) || 30) * 60 * 1000,
+  },
 };
 
 module.exports = config;

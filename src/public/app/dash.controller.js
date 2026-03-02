@@ -58,6 +58,9 @@
     vm.equipes2Recurso       = [];
     vm.totalEquipes          = 0;
     vm.totalEquipes2         = 0;
+    vm.deslocamentos         = { items: [], total: 0, lastUpdated: null };
+    vm.loadingDesl           = false;
+    vm.errorDesl             = null;
     vm.debugInfo             = {};
     vm.showDebug             = false;
     vm.debugResult           = null;
@@ -922,6 +925,33 @@
       vm.hasError = false;
       loadIncidenciasEClientesCriticos();
       loadEquipes();
+      loadDeslocamentos();
+    }
+
+    // ── Deslocamentos ──────────────────────────────────
+
+    function loadDeslocamentos() {
+      vm.loadingDesl = true;
+      vm.errorDesl = null;
+
+      var poloParam = _getPoloParam();
+      console.log('[Ctrl] Buscando deslocamentos para polos=' + poloParam + '...');
+
+      Api.getDeslocamentos(poloParam)
+        .then(function (data) {
+          vm.deslocamentos = {
+            items:       data.items       || [],
+            total:       data.total       || 0,
+            lastUpdated: data.lastUpdated || null
+          };
+          vm.loadingDesl = false;
+          console.log('[Ctrl] Deslocamentos carregados: ' + vm.deslocamentos.total + ' itens');
+        })
+        .catch(function (err) {
+          console.warn('[Ctrl] Deslocamentos indisponíveis para polo=' + polo + ':', err);
+          vm.errorDesl = (err && err.statusText) || 'Indisponível';
+          vm.loadingDesl = false;
+        });
     }
 
     // ── Incidências + Clientes Críticos (paralelo) ──────

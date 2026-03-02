@@ -17,6 +17,7 @@
       getIncidencias: getIncidencias,
       getEquipes: getEquipes,
       getClientesCriticos: getClientesCriticos,
+      getDeslocamentos: getDeslocamentos,
       getDebug: getDebug
     };
 
@@ -136,6 +137,26 @@
     function getDebug(polo) {
       return $http.get('/api/dash/debug', { params: { polos: polo } })
         .then(function (res) { return res.data; });
+    }
+
+    /**
+     * Busca deslocamentos do polo (ou todos os polos).
+     * O polo corresponde ao filtro "Base:" do Spotfire:
+     *   ATLANTICO → ATLÂNTICO, DECEN → CENTRO-NORTE, DNORT → NORTE
+     * @param {string} poloParam - 'ATLANTICO,DECEN,DNORT' etc.
+     * @returns {Promise<Object>} { items, total, lastUpdated }
+     */
+    function getDeslocamentos(poloParam) {
+      return $http.get('/api/dash/deslocamentos', { params: { polos: poloParam } })
+        .then(function (res) {
+          var data = res.data;
+          if (data.success === false) {
+            throw { data: data, statusText: data.message || 'Erro deslocamentos' };
+          }
+          console.log('[DashApi] Deslocamentos recebidos para polos=' + poloParam +
+            ' — ' + (data.total || (data.items && data.items.length) || 0) + ' itens');
+          return data;
+        });
     }
   }
 
