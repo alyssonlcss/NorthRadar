@@ -61,6 +61,9 @@ const config = {
     timeout: parseInt(process.env.SPOTFIRE_TIMEOUT_MS, 10) || 30000,
     refreshIntervalMs:
       (parseInt(process.env.SPOTFIRE_REFRESH_INTERVAL_MINUTES, 10) || 30) * 60 * 1000,
+    // Cooldown por usuário+filtro no endpoint on-demand (padrão: 10 min)
+    cooldownMs:
+      (parseInt(process.env.DESLOCAMENTO_COOLDOWN_MINUTES, 10) || 10) * 60 * 1000,
   },
 };
 
