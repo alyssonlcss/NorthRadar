@@ -1182,23 +1182,43 @@ class DeslocamentoRepository {
 
           rescueAttempts++;
           const missing = targetRowCount - uniqueCount;
-          this._logger.warn(`  Estável em ${uniqueCount}/${targetRowCount} — resgate ${rescueAttempts}/${MAX_RESCUE}: modo linha a linha (${missing} faltando)...`);
 
-          // ── Estratégia de resgate: linha a linha ──────────────────────────
-          // PageDown/Ctrl+End pula blocos e faz o virtualizador reciclar linhas
-          // antes de capturá-las. A solução é:
-          //   1) Retroceder para antes do possível gap (3× PageUp).
-          //   2) Avançar com ArrowDown — cada press expõe exatamente 1 linha.
-          // Isso garante que cada índice virtualizado passe pelo viewport.
+          // ── Estratégias de resgate escalonadas ───────────────────────────
+          // Resgate 1: scan rápido — retrocede ~3 páginas e avança linha a linha.
+          //            Resolve gaps próximos ao fim (caso mais comum).
+          // Resgate 2+: scan completo desde o topo (Ctrl+Home → ArrowDown × total).
+          //             Garante que todo índice virtualizado passe pelo viewport,
+          //             independente de onde o gap esteja.
+          const fullScan = rescueAttempts >= 2;
+          this._logger.warn(
+            `  Estável em ${uniqueCount}/${targetRowCount} — resgate ${rescueAttempts}/${MAX_RESCUE}: ` +
+            `${fullScan ? 'varredura completa do topo' : 'modo linha a linha'} (${missing} faltando)...`,
+          );
+
           await this._focusTableViewport(page);
-          for (let pu = 0; pu < 3; pu++) {
-            await page.keyboard.press('PageUp');
-            await new Promise((r) => setTimeout(r, 60));
-          }
-          await this._waitWhileBusy(page, 2000);
 
-          // Avança no mínimo o suficiente para cobrir as linhas faltando + margem.
-          const arrowCount = Math.max(80, missing * 4 + 40);
+          if (fullScan) {
+            // Vai ao topo absoluto para garantir cobertura total
+            await page.keyboard.down('Control');
+            await page.keyboard.press('Home');
+            await page.keyboard.up('Control');
+            await this._waitWhileBusy(page, 2000);
+          } else {
+            // Retrocede ~3 páginas para cobrir gap próximo ao fim
+            for (let pu = 0; pu < 3; pu++) {
+              await page.keyboard.press('PageUp');
+              await new Promise((r) => setTimeout(r, 60));
+            }
+            await this._waitWhileBusy(page, 2000);
+          }
+
+          // Número de ArrowDown:
+          // - Scan completo: percorre todas as linhas esperadas com margem de 20%.
+          // - Scan parcial:  cobre as linhas faltando com ampla margem de 4×.
+          const arrowCount = fullScan
+            ? Math.ceil(targetRowCount * 1.2)
+            : Math.max(80, missing * 4 + 40);
+
           for (let k = 0; k < arrowCount; k++) {
             await page.keyboard.press('ArrowDown');
 
