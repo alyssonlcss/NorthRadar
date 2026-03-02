@@ -42,7 +42,7 @@ const POLO_DISPLAY = {
 // Colunas padrão (usadas quando o Spotfire não expõe os headers na DOM)
 const DEFAULT_HEADERS = [
   'dia', 'equipe', 'ordem', 'despachado', 'aCaminho',
-  'noLocal', 'liberada', 'inicioOs', 'fimOs', 'qtd', 'horas',
+  'noLocal', 'liberada', 'inicioOs', 'fimOs', 'qtd', 'horas', 'emAtendimento',
 ];
 
 class DeslocamentoRepository {
@@ -1615,17 +1615,18 @@ class DeslocamentoRepository {
 
     return new Deslocamento({
       polo,
-      dia:        row.dia        ?? row['Dia']        ?? null,
-      equipe:     row.equipe     ?? row['Equipe']     ?? null,
-      ordem:      row.ordem      ?? row['Ordem']      ?? null,
-      despachado: row.despachado ?? row['Despachado'] ?? null,
-      aCaminho:   row.aCaminho   ?? row['ACaminho']   ?? null,
-      noLocal:    row.noLocal    ?? row['NoLocal']     ?? null,
-      liberada:   row.liberada   ?? row['liberada']   ?? null,
-      inicioOs:   row.inicioOs   ?? row['InicioOS']   ?? null,
-      fimOs:      row.fimOs      ?? row['fimOs']      ?? null,
-      qtd:        row.qtd        ?? row['Qtd']        ?? null,
-      horas:      row.horas      ?? row['Horas']      ?? null,
+      dia:           row.dia           ?? row['Dia']           ?? null,
+      equipe:        row.equipe        ?? row['Equipe']        ?? null,
+      ordem:         row.ordem         ?? row['Ordem']         ?? null,
+      despachado:    row.despachado    ?? row['Despachado']    ?? null,
+      aCaminho:      row.aCaminho      ?? row['a_caminho']     ?? null,
+      noLocal:       row.noLocal       ?? row['no_local']      ?? null,
+      liberada:      row.liberada      ?? row['Liberada']      ?? null,
+      inicioOs:      row.inicioOs      ?? row['inicio_os']     ?? null,
+      fimOs:         row.fimOs         ?? row['fim_os']        ?? null,
+      qtd:           row.qtd           ?? row['Qtd']                ?? row['qtd_deslocamentos']  ?? null,
+      horas:         row.horas         ?? row['Horas']              ?? row['horas_trabalhadas']  ?? null,
+      emAtendimento: row.emAtendimento ?? row['em_atendimento']     ?? null,
     });
   }
 
@@ -1637,12 +1638,13 @@ class DeslocamentoRepository {
     const MAP = {
       'Dia': 'dia', 'Equipe': 'equipe', 'Ordem': 'ordem',
       'Despachado': 'despachado', 'A Caminho': 'aCaminho', 'ACaminho': 'aCaminho',
-      'No Local': 'noLocal', 'NoLocal': 'noLocal',
+      'No Local': 'noLocal', 'NoLocal': 'noLocal', 'no local': 'noLocal',
       'Liberada': 'liberada', 'liberada': 'liberada',
       'Início OS': 'inicioOs', 'InicioOS': 'inicioOs', 'Inicio OS': 'inicioOs',
       'Fim OS': 'fimOs', 'fimOs': 'fimOs', 'Fim Os': 'fimOs',
-      'Qtd': 'qtd', 'Quantidade': 'qtd',
-      'Horas': 'horas',
+      'Qtd': 'qtd', 'Quantidade': 'qtd', 'Qtd Deslocamentos': 'qtd', 'Qtd deslocamentos': 'qtd',
+      'Horas': 'horas', 'Horas Trabalhadas': 'horas', 'Horas trabalhadas': 'horas',
+      'Em Atendimento': 'emAtendimento', 'Em atendimento': 'emAtendimento',
     };
     return MAP[header] ?? header.toLowerCase().replace(/\s+/g, '_');
   }

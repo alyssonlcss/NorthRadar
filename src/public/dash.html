@@ -571,8 +571,9 @@
               <th class="sortable" ng-click="vm.sortBy('desl','aCaminho')">A Caminho<span class="sort-indicator" ng-if="vm.sort.desl.field==='aCaminho'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='aCaminho'">&#8645;</span></th>
               <th class="sortable" ng-click="vm.sortBy('desl','noLocal')">No Local<span class="sort-indicator" ng-if="vm.sort.desl.field==='noLocal'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='noLocal'">&#8645;</span></th>
               <th class="sortable" ng-click="vm.sortBy('desl','liberada')">Liberada<span class="sort-indicator" ng-if="vm.sort.desl.field==='liberada'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='liberada'">&#8645;</span></th>
-              <th class="sortable" ng-click="vm.sortBy('desl','qtd')">Qtd<span class="sort-indicator" ng-if="vm.sort.desl.field==='qtd'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='qtd'">&#8645;</span></th>
-              <th class="sortable" ng-click="vm.sortBy('desl','horas')">Horas<span class="sort-indicator" ng-if="vm.sort.desl.field==='horas'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='horas'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','qtd')">Qtd Desl.<span class="sort-indicator" ng-if="vm.sort.desl.field==='qtd'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='qtd'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','horas')">Hrs Trab.<span class="sort-indicator" ng-if="vm.sort.desl.field==='horas'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='horas'">&#8645;</span></th>
+              <th class="sortable" ng-click="vm.sortBy('desl','emAtendimento')">Em Exe.<span class="sort-indicator" ng-if="vm.sort.desl.field==='emAtendimento'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='emAtendimento'">&#8645;</span></th>
             </tr>
           </thead>
           <tbody>
@@ -587,6 +588,7 @@
               <td>{{d.liberada  || '—'}}</td>
               <td class="num">{{d.qtd   || '—'}}</td>
               <td class="num">{{d.horas || '—'}}</td>
+              <td>{{d.emAtendimento || '—'}}</td>
             </tr>
           </tbody>
         </table>

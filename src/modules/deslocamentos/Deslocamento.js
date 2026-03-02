@@ -17,8 +17,9 @@ class Deslocamento {
    * @param {string|null}  props.liberada    — Horário de liberação
    * @param {string|null}  props.inicioOs    — Horário de início da OS
    * @param {string|null}  props.fimOs       — Horário de fim da OS
-   * @param {string|null}  props.qtd         — Quantidade
-   * @param {string|null}  props.horas       — Horas trabalhadas
+   * @param {string|null}  props.qtd            — Quantidade de deslocamentos
+   * @param {string|null}  props.horas          — Horas trabalhadas
+   * @param {string|null}  props.emAtendimento  — Em atendimento
    */
   constructor({
     polo,
@@ -33,6 +34,7 @@ class Deslocamento {
     fimOs = null,
     qtd = null,
     horas = null,
+    emAtendimento = null,
   }) {
     this.polo = polo;
     this.dia = dia;
@@ -46,6 +48,7 @@ class Deslocamento {
     this.fimOs = fimOs;
     this.qtd = qtd;
     this.horas = horas;
+    this.emAtendimento = emAtendimento;
   }
 
   /** Duração total em minutos (fimOs - despachado), ou null se incompleto */
@@ -79,6 +82,7 @@ class Deslocamento {
       fimOs: this.fimOs,
       qtd: this.qtd,
       horas: this.horas,
+      emAtendimento: this.emAtendimento,
       duracaoMinutos: this.duracaoMinutos,
     };
   }
