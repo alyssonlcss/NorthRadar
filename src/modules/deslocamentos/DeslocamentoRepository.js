@@ -592,6 +592,8 @@ class DeslocamentoRepository {
     // Localiza o controle Base: em runtime (ID muda a cada recarga)
     let baseCtrlId = await this._findControlByLabel(page, HTAC_LABELS.base);
     if (!baseCtrlId) {
+      // Filtro às vezes demora a aparecer no DOM (principalmente após restore/maximize).
+      await this._waitForFiltersReady(page, { timeoutMs: 8000 });
       const recovered = await this._recoverFiltersPanel(page);
       if (recovered) {
         baseCtrlId = await this._findControlByLabel(page, HTAC_LABELS.base);
@@ -873,6 +875,9 @@ class DeslocamentoRepository {
       targetY = Math.max(minY, Math.min(maxY, targetY));
     }
 
+    // Se já estamos praticamente na posição alvo, não faz drag (evita flicker/pisca).
+    if (Math.abs(targetY - handleCenterY) < 1.5) return false;
+
     await page.mouse.move(handleCenterX, handleCenterY);
     await page.mouse.down();
     await page.mouse.move(handleCenterX, targetY, { steps: 12 });
@@ -982,7 +987,12 @@ class DeslocamentoRepository {
     // Spotfire exibe um status do tipo "106 of 423 rows" (ou "106 de 423 linhas").
     // Na prática, o primeiro número tende a ser o real (após filtros). Quando
     // atingimos essa contagem, podemos encerrar a captura sem depender só do scrollbar.
-    let targetRowCount = await this._getDeslocamentosRowCountHint(page);
+    // Importante: o indicador pode estar mostrando o valor do filtro anterior enquanto
+    // o Spotfire ainda está atualizando. Então esperamos estabilizar antes de usar.
+    let targetRowCount = await this._waitForDeslocamentosRowCountHintStable(page, {
+      timeoutMs: 12000,
+      stableReads: 3,
+    });
     if (Number.isFinite(targetRowCount) && targetRowCount > 0) {
       this._logger.info(`Meta de linhas pelo indicador do Spotfire: ${targetRowCount}`);
     } else {
@@ -994,6 +1004,17 @@ class DeslocamentoRepository {
     let stableRounds = 0;
     const MAX_STABLE = 10;
     const MAX_ITERS = 250;
+
+    // Evita ficar insistindo em "drag para bottom" quando o Spotfire já chegou ao fim
+    // mas o DOM/medidas não confirmam (isso faz a barra piscar).
+    let forcedBottomAttempts = 0;
+    const MAX_FORCED_BOTTOM = 2;
+
+    // Quando existe uma meta (X of Y rows) e ainda não atingimos X,
+    // não podemos desistir só porque o scrollbar estabilizou — precisamos
+    // tentar destravar a virtualização algumas vezes.
+    let rescueAttempts = 0;
+    const MAX_RESCUE = 4;
 
     let lastScrollTop = null;
     let lastMaxRow = null;
@@ -1080,16 +1101,24 @@ class DeslocamentoRepository {
         break;
       }
 
-      // Se não conseguimos ler o indicador no começo (ou ele mudou), re-tenta de tempos em tempos.
-      if (targetRowCount == null && (Date.now() - lastHintCheckAt) >= HINT_RECHECK_MS) {
+      // Revalida o indicador de tempos em tempos.
+      // Isso resolve o caso em que a primeira leitura ainda estava com valor do filtro anterior.
+      if ((Date.now() - lastHintCheckAt) >= HINT_RECHECK_MS) {
         lastHintCheckAt = Date.now();
         const hint = await this._getDeslocamentosRowCountHint(page);
         if (Number.isFinite(hint) && hint > 0) {
-          targetRowCount = hint;
-          this._logger.info(`Meta de linhas (tardia) pelo indicador do Spotfire: ${targetRowCount}`);
-          if (uniqueCount >= targetRowCount) {
-            this._logger.info(`Indicador Spotfire atingido: ${uniqueCount}/${targetRowCount} — encerrando loop.`);
-            break;
+          // Só atualiza quando faz sentido para o fluxo atual.
+          // - Não reduz abaixo do que já capturamos.
+          // - Evita thrash quando o indicador oscila.
+          const canUpdate = hint >= uniqueCount;
+          const changed = targetRowCount == null || hint !== targetRowCount;
+          if (changed && canUpdate) {
+            targetRowCount = hint;
+            this._logger.info(`Meta de linhas (atualizada) pelo indicador do Spotfire: ${targetRowCount}`);
+            if (uniqueCount >= targetRowCount) {
+              this._logger.info(`Indicador Spotfire atingido: ${uniqueCount}/${targetRowCount} — encerrando loop.`);
+              break;
+            }
           }
         }
       }
@@ -1126,14 +1155,56 @@ class DeslocamentoRepository {
 
       // Se estabilizou mas ainda não está no bottom, forçamos um salto pro fim uma vez.
       if (!snapshot.atBottom && stableRounds >= 6) {
-        this._logger.info('  Scroll estabilizou sem chegar no fim — forçando drag para o bottom...');
-        const dragged = await this._dragScrollbarHandle(page, { to: 'bottom' });
-        if (dragged) {
+        // Se temos meta e ainda não batemos nela, tenta destravar e continuar.
+        if (targetRowCount != null && uniqueCount < targetRowCount) {
+          if (rescueAttempts >= MAX_RESCUE) {
+            this._logger.warn(`  Estável em ${uniqueCount}/${targetRowCount} e não avança; limite de resgate atingido — encerrando.`);
+            break;
+          }
+
+          rescueAttempts++;
+          this._logger.warn(`  Estável em ${uniqueCount}/${targetRowCount} — tentando destravar (resgate ${rescueAttempts}/${MAX_RESCUE})...`);
+
+          await this._focusTableViewport(page);
+          await page.keyboard.down('Control');
+          await page.keyboard.press('End');
+          await page.keyboard.up('Control');
+
+          // Um step maior no scrollbar costuma forçar render de novos blocos.
+          await this._dragScrollbarHandle(page, { to: 'step', stepPx: 520 });
+
+          // PageDown extra pra estimular carregamento.
+          await this._focusTableViewport(page);
+          await page.keyboard.press('PageDown');
+          await page.keyboard.press('PageDown');
+
+          await new Promise((r) => setTimeout(r, 160));
+          await this._waitWhileBusy(page, 3500);
+
           stableRounds = 0;
-          await new Promise((r) => setTimeout(r, 120));
-          await this._waitWhileBusy(page, 3000);
+          forcedBottomAttempts = 0;
           continue;
         }
+
+        if (forcedBottomAttempts >= MAX_FORCED_BOTTOM) {
+          this._logger.warn('  Scroll estabilizou sem progresso; limite de tentativas de bottom atingido — encerrando para evitar loop.');
+          break;
+        }
+
+        this._logger.info('  Scroll estabilizou sem chegar no fim — forçando drag para o bottom...');
+        const dragged = await this._dragScrollbarHandle(page, { to: 'bottom' });
+        forcedBottomAttempts++;
+
+        // Se não houve movimento, não adianta insistir (evita piscar indefinidamente)
+        if (!dragged) {
+          this._logger.warn('  Drag para bottom não moveu a alça — encerrando para evitar loop.');
+          break;
+        }
+
+        stableRounds = 0;
+        await new Promise((r) => setTimeout(r, 120));
+        await this._waitWhileBusy(page, 3000);
+        continue;
       }
 
       // PageDown no viewport da tabela; se estiver "preso", tenta Ctrl+End + wheel.
@@ -1170,6 +1241,47 @@ class DeslocamentoRepository {
     const result = byRowNum.length >= byContent.length ? byRowNum : byContent;
     this._logger.info(`Extração concluída: ${result.length} linhas (rowIdx=${byRowNum.length}, contentKey=${byContent.length})`);
     return result;
+  }
+
+  async _waitForDeslocamentosRowCountHintStable(page, { timeoutMs = 12000, stableReads = 3 } = {}) {
+    const start = Date.now();
+
+    // 1) Aguarda busy sumir (se estiver carregando)
+    // (não falha se o busy nunca aparecer — apenas segue)
+    await this._waitWhileBusy(page, Math.min(6000, timeoutMs));
+
+    // 2) Coleta o indicador até estabilizar (mesmo valor N vezes seguidas)
+    let last = null;
+    let stable = 0;
+
+    while ((Date.now() - start) < timeoutMs) {
+      // Se ficou busy de novo, reseta estabilidade e espera.
+      const isBusy = await this._safeEvaluate(page, () => !!document.querySelector('.sf-busy'));
+      if (isBusy) {
+        stable = 0;
+        await new Promise((r) => setTimeout(r, 200));
+        continue;
+      }
+
+      const hint = await this._getDeslocamentosRowCountHint(page);
+
+      if (Number.isFinite(hint) && hint > 0) {
+        if (last === hint) stable++;
+        else {
+          last = hint;
+          stable = 1;
+        }
+
+        if (stable >= stableReads) return hint;
+      } else {
+        // Sem hint ainda — aguarda um pouco.
+        stable = 0;
+      }
+
+      await new Promise((r) => setTimeout(r, 250));
+    }
+
+    return last;
   }
 
   async _getDeslocamentosRowCountHint(page) {

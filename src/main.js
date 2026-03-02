@@ -24,6 +24,21 @@ const ExpressServer = require('./server/ExpressServer');
 // ── Logger ──
 const logger = Logger.create('Main');
 
+// ── Segurança em runtime (especialmente em debug / Node 22) ──
+// Em algumas execuções (ex.: VS Code debug), rejections não tratadas podem derrubar o processo.
+// Aqui garantimos que um erro de request (Spotfire instável / DOM) não mate o servidor.
+process.on('unhandledRejection', (reason) => {
+  const msg = reason instanceof Error ? reason.stack || reason.message : String(reason);
+  logger.error(`UnhandledRejection: ${msg}`);
+  if (process.env.NODE_ENV === 'production') process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+  const msg = err instanceof Error ? err.stack || err.message : String(err);
+  logger.error(`UncaughtException: ${msg}`);
+  if (process.env.NODE_ENV === 'production') process.exit(1);
+});
+
 // ═══════════════════════════════════════════════════
 //  Montar dependências
 // ═══════════════════════════════════════════════════
