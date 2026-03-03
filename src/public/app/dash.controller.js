@@ -890,6 +890,47 @@
       }
     }
 
+    /**
+     * Enriquece cada item de uma lista top10 com contagens de equipes
+     * cruzando pelo campo `incidencia` (= ORDEM no Spotfire):
+     *   eqAtrib — qtd de equipes distintas com campo `despachado` preenchido
+     *   eqDesl  — qtd de equipes distintas com campo `aCaminho` preenchido
+     */
+    function _enrichTop10ComDeslocamentos(top10List, deslItems) {
+      // Indexa deslocamentos por ORDEM
+      var byOrdem = {};
+      (deslItems || []).forEach(function (d) {
+        var key = String(d.ordem || '').trim();
+        if (!key || key === '—' || key === '-') return;
+        if (!byOrdem[key]) byOrdem[key] = [];
+        byOrdem[key].push(d);
+      });
+
+      top10List.forEach(function (r) {
+        var key = String(r.incidencia || '').trim();
+        var matches = byOrdem[key] || [];
+        var atrib = {};
+        var desl  = {};
+        matches.forEach(function (d) {
+          var eq = (d.equipe || '').trim();
+          if (!eq) return;
+          if (d.despachado && d.despachado !== '—' && d.despachado !== '-') atrib[eq] = true;
+          if (d.aCaminho  && d.aCaminho  !== '—' && d.aCaminho  !== '-') desl[eq]  = true;
+        });
+        r.eqAtrib = Object.keys(atrib).length;
+        r.eqDesl  = Object.keys(desl).length;
+      });
+    }
+
+    /** Aplica enriquecimento nas 3 listas top10 se ambos os dados estiverem disponíveis. */
+    function _applyDeslEnrichment() {
+      var deslItems = vm.deslocamentos ? vm.deslocamentos.items : [];
+      if (!deslItems || !deslItems.length) return;
+      if (vm.top10Chi.length) _enrichTop10ComDeslocamentos(vm.top10Chi, deslItems);
+      if (vm.top10Tma.length) _enrichTop10ComDeslocamentos(vm.top10Tma, deslItems);
+      if (vm.top10Cli.length) _enrichTop10ComDeslocamentos(vm.top10Cli, deslItems);
+    }
+
     function loadPolo() {
       try {
         var saved = localStorage.getItem(POLO_KEY);
@@ -983,6 +1024,8 @@
             total:       data.total       || 0,
             lastUpdated: data.lastUpdated || null
           };
+          // Re-enriquecer top10 com novos dados de deslocamentos
+          _applyDeslEnrichment();
           vm.loadingDesl = false;
           _checkPoloChangeDone();
           console.log('[Ctrl] Deslocamentos carregados: ' + vm.deslocamentos.total + ' itens');
@@ -1034,6 +1077,9 @@
         vm.top10Tma    = result.top10Tma;
         vm.top10Cli    = result.top10Cli;
         vm.debugInfo   = result.debugInfo;
+
+        // Cruzar com deslocamentos para contar equipes atribuídas/deslocadas por incidência
+        _applyDeslEnrichment();
 
         // Mantém totalEquipes vindo de equipes (se já carregou)
         vm.kpis.totalEquipes = vm.totalEquipes;
