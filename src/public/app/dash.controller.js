@@ -203,7 +203,26 @@
       return el;
     }
 
+    // Só permite arrastar se o mousedown foi no drag-handle
+    vm._dragFromHandle = false;
+    document.addEventListener('mousedown', function (e) {
+      var el = e.target;
+      while (el) {
+        if (el.classList && el.classList.contains('drag-handle')) {
+          vm._dragFromHandle = true;
+          return;
+        }
+        el = el.parentElement;
+      }
+      vm._dragFromHandle = false;
+    });
+
     function onCompDragStart($event, compId) {
+      if (!vm._dragFromHandle) {
+        $event.preventDefault();
+        return;
+      }
+      vm._dragFromHandle = false;
       vm.draggingComp = compId;
       $event.dataTransfer.effectAllowed = 'move';
       $event.dataTransfer.setData('text/plain', compId);
@@ -250,6 +269,7 @@
 
     function onCompDragEnd() {
       vm.draggingComp = null;
+      vm._dragFromHandle = false;
       var allItems = document.querySelectorAll('.drag-item');
       for (var i = 0; i < allItems.length; i++) {
         allItems[i].classList.remove('drag-over', 'dragging');

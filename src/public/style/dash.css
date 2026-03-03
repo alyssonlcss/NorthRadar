@@ -1547,6 +1547,9 @@ body {
 .drag-item-full {
   grid-column: 1 / -1;
 }
+.drag-item {
+  cursor: default;
+}
 .drag-item .panel {
   margin-bottom: 0;
 }
