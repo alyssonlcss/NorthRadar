@@ -298,10 +298,14 @@
     }
 
     function selectPolo(polo) {
+      var isNewPolo = polo !== vm.selectedPolo;
       vm.selectedPolo = polo;
       vm.dropdownOpen = false;
       savePolo(polo);
-      changePolo(polo);
+      if (isNewPolo) {
+        vm.poloChanging = true;
+      }
+      loadAll();
     }
 
     // ═══════════════════════════════════════════════════════
@@ -874,12 +878,8 @@
     // ═══════════════════════════════════════════════════════
 
     function changePolo(polo) {
-      var isNewPolo = polo !== vm.selectedPolo;
       vm.selectedPolo = polo;
       savePolo(polo);
-      if (isNewPolo) {
-        vm.poloChanging = true;
-      }
       loadAll();
     }
 
@@ -968,8 +968,18 @@
             console.log('[Ctrl] Deslocamentos gen=' + generation + ' descartados (polo já trocou)');
             return;
           }
+          var newItems = data.items || [];
+          // Durante auto-refresh mantém dados existentes se o servidor retornar
+          // vazio (ex.: Spotfire re-inicializando). Troca apenas quando há dados
+          // ou quando é uma mudança real de polo.
+          if (!vm.poloChanging && newItems.length === 0 && vm.deslocamentos.items.length > 0) {
+            console.log('[Ctrl] Deslocamentos: resposta vazia ignorada (auto-refresh, dados anteriores mantidos)');
+            vm.loadingDesl = false;
+            _checkPoloChangeDone();
+            return;
+          }
           vm.deslocamentos = {
-            items:       data.items       || [],
+            items:       newItems,
             total:       data.total       || 0,
             lastUpdated: data.lastUpdated || null
           };
