@@ -70,12 +70,23 @@ class DeslocamentoRepository {
 
     await this._spotfire.waitForIdle();
 
+    // Verificar se sessão Spotfire expirou desde a última extração
+    if (await this._spotfire.ensureSession()) {
+      this._filtersApplied = false;
+    }
+
     // 1. Se houver outra visualização maximizada, restaurar.
     // Se a própria tabela Deslocamentos já estiver maximizada, mantemos assim.
     await this._restoreIfOtherVisualMaximized(page);
 
     // 2. Aplicar filtros base única vez por sessão (com retry caso os itens ainda não estejam renderizados)
     if (!this._filtersApplied) {
+      // Detectar sessão expirada antes de iniciar os retries
+      const reauthed = await this._spotfire.ensureSession();
+      if (reauthed) {
+        this._logger.info('Sessão re-estabelecida — filtros serão reaplicados nesta extração');
+      }
+
       const MAX_FILTER_RETRIES = 4;
       const FILTER_RETRY_DELAY_MS = 3000;
       for (let attempt = 1; attempt <= MAX_FILTER_RETRIES; attempt++) {
@@ -86,6 +97,14 @@ class DeslocamentoRepository {
         if (this._filtersApplied) break;
         if (attempt < MAX_FILTER_RETRIES) {
           this._logger.warn(`Filtros fixos não aplicados (tentativa ${attempt}/${MAX_FILTER_RETRIES}) — aguardando ${FILTER_RETRY_DELAY_MS / 1000}s...`);
+          // Verificar novamente se a sessão não expirou durante a espera
+          const expired = await this._spotfire.ensureSession();
+          if (expired) {
+            this._logger.info('Sessão Spotfire re-estabelecida durante retry de filtros — reiniciando contagem');
+            // Reiniciar loop desde a tentativa 1
+            attempt = 0;
+            continue;
+          }
           await new Promise((r) => setTimeout(r, FILTER_RETRY_DELAY_MS));
         }
       }
@@ -129,12 +148,23 @@ class DeslocamentoRepository {
 
     await this._spotfire.waitForIdle();
 
+    // Verificar se sessão Spotfire expirou desde a última extração
+    if (await this._spotfire.ensureSession()) {
+      this._filtersApplied = false;
+    }
+
     // 1. Se houver outra visualização maximizada, restaurar.
     // Se a própria tabela Deslocamentos já estiver maximizada, mantemos assim.
     await this._restoreIfOtherVisualMaximized(page);
 
     // 2. Aplicar filtros fixos uma única vez por sessão (com retry caso os itens ainda não estejam renderizados)
     if (!this._filtersApplied) {
+      // Detectar sessão expirada antes de iniciar os retries
+      const reauthed = await this._spotfire.ensureSession();
+      if (reauthed) {
+        this._logger.info('Sessão re-estabelecida — filtros serão reaplicados nesta extração');
+      }
+
       const MAX_FILTER_RETRIES = 4;
       const FILTER_RETRY_DELAY_MS = 3000;
       for (let attempt = 1; attempt <= MAX_FILTER_RETRIES; attempt++) {
@@ -145,6 +175,13 @@ class DeslocamentoRepository {
         if (this._filtersApplied) break;
         if (attempt < MAX_FILTER_RETRIES) {
           this._logger.warn(`Filtros fixos não aplicados (tentativa ${attempt}/${MAX_FILTER_RETRIES}) — aguardando ${FILTER_RETRY_DELAY_MS / 1000}s...`);
+          // Verificar novamente se a sessão não expirou durante a espera
+          const expired = await this._spotfire.ensureSession();
+          if (expired) {
+            this._logger.info('Sessão Spotfire re-estabelecida durante retry de filtros — reiniciando contagem');
+            attempt = 0;
+            continue;
+          }
           await new Promise((r) => setTimeout(r, FILTER_RETRY_DELAY_MS));
         }
       }

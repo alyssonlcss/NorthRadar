@@ -48,7 +48,8 @@ class SpotfireProvider {
   // ── Pública ───────────────────────────────────────────────────────
 
   /**
-   * Inicializa o browser e realiza o login no Spotfire.
+   * Inicializa o browser e navega até o relatório.
+   * Se o Spotfire redirecionar para login, autentica e re-navega automaticamente.
    * Idempotente: chamadas subsequentes são no-op.
    */
   async initialize() {
@@ -59,11 +60,8 @@ class SpotfireProvider {
       this._logger.info('Iniciando browser...');
       await this._launchBrowser();
 
-      this._logger.info('Realizando login no Spotfire...');
-      await this._login();
-
       this._logger.info('Navegando para o relatório de Deslocamentos...');
-      await this._navigateToDeslocamentos();
+      await this._goToReport();
 
       this._isInitialized = true;
       this._logger.info('SpotfireProvider pronto');
@@ -114,6 +112,22 @@ class SpotfireProvider {
       .catch(() => this._logger.warn('Timeout aguardando idle — continuando...'));
   }
 
+  /**
+   * Verifica se a sessão do Spotfire expirou (redirecionamento para login)
+   * e re-autentica + re-navega se necessário.
+   *
+   * @returns {Promise<boolean>} true se uma re-autenticação foi realizada
+   */
+  async ensureSession() {
+    const onLoginPage = await this._isOnLoginPage();
+    if (!onLoginPage) return false;
+
+    this._logger.warn('Sessão Spotfire expirada — re-autenticando e reabrindo relatório...');
+    await this._goToReport();
+    this._logger.info('Sessão re-estabelecida');
+    return true;
+  }
+
   // ── Privada ───────────────────────────────────────────────────────
 
   async _launchBrowser() {
@@ -132,54 +146,74 @@ class SpotfireProvider {
     this._page.setDefaultTimeout(config.spotfire.timeout);
   }
 
-  async _login() {
-    await this._page.goto(config.spotfire.url, { waitUntil: 'networkidle2', timeout: config.spotfire.timeout });
+  /**
+   * Navega diretamente para o relatório via URL.
+   * Detecta redirecionamento para login e autentica automaticamente.
+   */
+  async _goToReport() {
+    const reportUrl = config.spotfire.reportUrl;
+    this._logger.info(`Acessando relatório: ${reportUrl}`);
 
-    // Aguardar o formulário de login aparecer (ou confirmar que já está logado)
-    this._logger.info('Aguardando página de login carregar...');
-    const hasLoginForm = await this._page
-      .waitForFunction(
-        () => !!document.querySelector("input[type='password']"),
-        { timeout: 10000 },
-      )
-      .then(() => true)
-      .catch(() => false);
+    await this._page.goto(reportUrl, { waitUntil: 'networkidle2', timeout: config.spotfire.timeout });
 
-    if (!hasLoginForm) {
-      this._logger.info('Sessão já autenticada');
-      return;
+    if (await this._isOnLoginPage()) {
+      this._logger.info('Redirecionado para login — autenticando...');
+      await this._doLogin();
+
+      // Re-navega após login bem-sucedido
+      this._logger.info('Re-navegando para o relatório após login...');
+      await this._page.goto(reportUrl, { waitUntil: 'networkidle2', timeout: config.spotfire.timeout });
     }
 
-    this._logger.info('Formulário de login detectado — preenchendo credenciais...');
+    await this.waitForIdle();
+    this._logger.info('Relatório de Deslocamentos aberto');
+  }
 
-    // Aguardar campo usuário estar visível e interagível
-    await this._page.waitForSelector("input[type='text']", { visible: true, timeout: config.spotfire.timeout });
+  /**
+   * Retorna true se a page atual é a tela de login do Spotfire.
+   */
+  async _isOnLoginPage() {
+    try {
+      const url = this._page.url();
+      if (url.includes('login')) return true;
+      // Verifica também pela presença do formulário (SPA pode não mudar a URL)
+      return await this._page.evaluate(
+        () => !!document.querySelector("input[type='password']"),
+      );
+    } catch {
+      return false;
+    }
+  }
 
-    // Usuário
+  /**
+   * Preenche e submete o formulário de login do Spotfire.
+   */
+  async _doLogin() {
+    this._logger.info('Aguardando formulário de login carregar...');
+    await this._page.waitForSelector("input[type='password']", { visible: true, timeout: 15000 });
+    await this._page.waitForSelector("input[type='text']",     { visible: true, timeout: config.spotfire.timeout });
+
+    this._logger.info('Preenchendo credenciais...');
+
     await puppeteer.Locator.race(SELECTORS.auth.username.map((s) => this._page.locator(s)))
       .fill(config.spotfire.credentials.username);
 
-    // Senha
     await puppeteer.Locator.race(SELECTORS.auth.password.map((s) => this._page.locator(s)))
       .fill(config.spotfire.credentials.password);
 
-    // Checkbox "Lembrar-me" (opcional)
     await this._page
       .click(SELECTORS.auth.rememberMe, { timeout: 3000 })
       .catch(() => this._logger.warn('"Lembrar-me" não encontrado'));
 
-    // Submeter — usar waitForFunction em vez de waitForNavigation
-    // pois o Spotfire é SPA com hash-routing (não dispara evento de navegação confiável)
     await puppeteer.Locator.race(SELECTORS.auth.loginButton.map((s) => this._page.locator(s))).click();
 
-    // Aguardar o formulário de login desaparecer (indica login bem-sucedido)
+    // Aguardar formulário desaparecer = login concluído
     await this._page
       .waitForFunction(
         () => !document.querySelector("input[type='password']"),
         { timeout: config.spotfire.timeout },
       )
       .catch(async () => {
-        // Fallback: verificar se URL mudou
         const url = this._page.url();
         if (url.includes('login')) {
           throw new Error('Login no Spotfire falhou — formulário ainda visível após timeout');
@@ -188,50 +222,6 @@ class SpotfireProvider {
       });
 
     this._logger.info('Login realizado');
-  }
-
-  async _navigateToDeslocamentos() {
-    this._logger.info('Aguardando painel inicial do Spotfire...');
-    await this.waitForIdle();
-
-    const TITLE = 'Produtividade UO TR - CE';
-    this._logger.info(`Procurando item "${TITLE}" nos recentes...`);
-
-    // Aguarda até o texto aparecer na DOM (classe é dinâmica, busca por conteúdo)
-    await this._page
-      .waitForFunction(
-        (t) => !!Array.from(document.querySelectorAll('div'))
-          .find((d) => d.childElementCount === 0 && d.textContent.trim() === t),
-        { timeout: config.spotfire.timeout },
-        TITLE,
-      )
-      .catch(() => {
-        this._logger.warn(`"${TITLE}" não encontrado no painel de recentes — continuando`);
-      });
-
-    // Encontrar e clicar no elemento clicável pai
-    const clicked = await this._page.evaluate((t) => {
-      const el = Array.from(document.querySelectorAll('div'))
-        .find((d) => d.childElementCount === 0 && d.textContent.trim() === t);
-      if (!el) return false;
-      // Sobe até encontrar container clicável do item MRU
-      const clickable = el.closest('[class*="sfx_info"], [class*="sfx_mru"], [class*="mru"]')
-        || el.parentElement?.parentElement
-        || el.parentElement;
-      if (clickable) { clickable.click(); return true; }
-      return false;
-    }, TITLE);
-
-    if (!clicked) {
-      this._logger.warn('Não foi possível clicar no item — continuando na página atual');
-      return;
-    }
-
-    this._logger.info('Item clicado — aguardando relatório carregar...');
-    // Aguardar navegação SPA + Spotfire renderizar
-    await new Promise((r) => setTimeout(r, 3000));
-    await this.waitForIdle();
-    this._logger.info('Relatório de Deslocamentos aberto');
   }
 
   _stopBusyWatcher() {
