@@ -55,6 +55,13 @@ function registerRoutes(app, { incidenceService, authProvider, deslocamentoServi
     });
   });
 
+  // ── API: configurações públicas do frontend ──
+  app.get('/api/config', (_req, res) => {
+    res.json({
+      dashboardRefreshIntervalMs: config.dashboardRefreshIntervalMs,
+    });
+  });
+
   // ── API: health check ──
   app.get('/api/health', (_req, res) => {
     const data = incidenceService.getData();

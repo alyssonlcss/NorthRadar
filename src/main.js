@@ -54,7 +54,8 @@ const deslocamentoService = new DeslocamentoService(
   deslocamentoRepo,
   spotfireProvider,
   config.spotfire.polos,
-  config.spotfire.refreshIntervalMs,
+  // refreshIntervalMs omitido: o scheduler automático não é utilizado.
+  // Deslocamentos são buscados sob demanda (via dashboard) e não em background.
 );
 
 const PORT = process.env.PORT || 3000;

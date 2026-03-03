@@ -18,7 +18,6 @@ class PuppeteerAuthProvider extends AuthProvider {
     this._token = null;
     this._tokenExpiry = null;
     this._browser = null;
-    this._refreshInterval = null;
     this._isInitialized = false;
     this._logger = Logger.create('AuthProvider');
   }
@@ -33,7 +32,7 @@ class PuppeteerAuthProvider extends AuthProvider {
       this._tokenExpiry = this._getTokenExpiry(savedToken);
       this._logger.info('✅ Token carregado do .env (ainda válido)');
       this._logger.info(`  Expira em: ${new Date(this._tokenExpiry).toLocaleString()}`);
-      this._startAutoRefresh();
+
       this._isInitialized = true;
       return this._token;
     }
@@ -51,9 +50,7 @@ class PuppeteerAuthProvider extends AuthProvider {
     // 3. Salvar token no .env
     this._saveTokenToEnv(token);
 
-    this._startAutoRefresh();
     this._isInitialized = true;
-
     return token;
   }
 
@@ -66,7 +63,6 @@ class PuppeteerAuthProvider extends AuthProvider {
   }
 
   async shutdown() {
-    this._stopAutoRefresh();
     if (this._browser) {
       await this._browser.close();
       this._browser = null;
@@ -249,28 +245,6 @@ class PuppeteerAuthProvider extends AuthProvider {
     try {
       if (page && !page.isClosed()) await page.close();
     } catch (_) { /* já fechada */ }
-  }
-
-  _startAutoRefresh() {
-    const intervalMs = config.refreshIntervalMs;
-    const intervalMin = Math.round(intervalMs / 60000);
-    this._logger.info(`Auto-refresh configurado (${intervalMin} min)`);
-
-    this._refreshInterval = setInterval(async () => {
-      this._logger.info(`Renovando token... (${new Date().toLocaleTimeString()})`);
-      try {
-        await this._authenticate();
-      } catch (error) {
-        this._logger.error(`Erro ao renovar token: ${error.message}`);
-      }
-    }, intervalMs);
-  }
-
-  _stopAutoRefresh() {
-    if (this._refreshInterval) {
-      clearInterval(this._refreshInterval);
-      this._refreshInterval = null;
-    }
   }
 
   // ═══════ Token persistence ═══════

@@ -88,7 +88,7 @@
   <div class="main-content" ng-if="vm.currentView==='operational'">
 
     <!-- Drag hint -->
-    <div ng-if="!vm.loadingInc" class="drag-hint">
+    <div class="drag-hint">
       <span class="drag-hint-icon">&#x2630;</span>
       <span class="drag-hint-text">Arraste qualquer painel para reposicionar livremente</span>
     </div>
@@ -103,8 +103,7 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'op-kpi')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('op-kpi')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('op-kpi')">
       <div class="kpi-bar">
         <div class="kpi-item kpi-warning kpi-item-dual">
           <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'totalIncidencias')">{{vm.kpis.totalIncidencias | number}}</span>
@@ -151,12 +150,10 @@
          ng-style="vm.getCompOrder('op-top10chi')">
     <section class="panel top10-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CHI</h2>
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CHI<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
       </div>
-      <div class="loading-overlay" ng-if="vm.loadingInc">
-        <div class="spinner"></div>
-      </div>
-      <div class="table-wrapper" ng-if="!vm.loadingInc">
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+      <div class="table-wrapper" ng-show="!vm.poloChanging || !vm.loadingInc">
         <table class="data-table">
           <thead>
             <tr>
@@ -205,12 +202,10 @@
          ng-style="vm.getCompOrder('op-top10tma')">
     <section class="panel top10-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – TMA</h2>
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – TMA<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
       </div>
-      <div class="loading-overlay" ng-if="vm.loadingInc">
-        <div class="spinner"></div>
-      </div>
-      <div class="table-wrapper" ng-if="!vm.loadingInc">
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+      <div class="table-wrapper" ng-show="!vm.poloChanging || !vm.loadingInc">
         <table class="data-table">
           <thead>
             <tr>
@@ -259,12 +254,10 @@
          ng-style="vm.getCompOrder('op-top10cli')">
     <section class="panel top10-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CLI. AFETADOS</h2>
+        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CLI. AFETADOS<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
       </div>
-      <div class="loading-overlay" ng-if="vm.loadingInc">
-        <div class="spinner"></div>
-      </div>
-      <div class="table-wrapper" ng-if="!vm.loadingInc">
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+      <div class="table-wrapper" ng-show="!vm.poloChanging || !vm.loadingInc">
         <table class="data-table">
           <thead>
             <tr>
@@ -313,23 +306,19 @@
          ng-style="vm.getCompOrder('op-panorama')">
     <section class="panel panorama-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>Panorama de Incidências – {{vm.selectedPolo}}</h2>
+        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>Panorama de Incidências – {{vm.selectedPolo}}<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} conjuntos</span>
       </div>
 
-      <!-- Loading -->
-      <div class="loading-overlay" ng-if="vm.loadingInc">
-        <div class="spinner"></div>
-        <div class="loading-text">Carregando incidências...</div>
-      </div>
-
       <!-- Error -->
-      <div class="error-state" ng-if="vm.errorInc && !vm.loadingInc">
+      <div class="error-state" ng-if="vm.errorInc && !vm.poloChanging">
         ⚠ Erro ao carregar incidências: {{vm.errorInc}}
       </div>
 
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+
       <!-- Table -->
-      <div class="table-wrapper" ng-if="!vm.loadingInc && !vm.errorInc" ng-style="vm.panorama.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
+      <div class="table-wrapper" ng-show="!vm.errorInc && (!vm.poloChanging || !vm.loadingInc)" ng-style="vm.panorama.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
         <table class="data-table" ng-style="{'max-height': vm.panorama.length > 15 ? '420px' : '', 'overflow-y': vm.panorama.length > 15 ? 'auto' : ''}">
           <thead>
             <tr>
@@ -413,20 +402,17 @@
          ng-style="vm.getCompOrder('op-equipes')">
     <section class="panel equipes-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}</h2>
+        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
         <span class="badge-count">{{vm.totalEquipes}} equipes</span>
       </div>
 
-      <div class="loading-overlay" ng-if="vm.loadingEq">
-        <div class="spinner"></div>
-        <div class="loading-text">Carregando equipes...</div>
-      </div>
-
-      <div class="error-state" ng-if="vm.errorEq && !vm.loadingEq">
+      <div class="error-state" ng-if="vm.errorEq && !vm.poloChanging">
         ⚠ Erro ao carregar equipes: {{vm.errorEq}}
       </div>
 
-      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq" ng-style="vm.equipes.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingEq"></div>
+
+      <div class="table-wrapper" ng-show="!vm.errorEq && (!vm.poloChanging || !vm.loadingEq)" ng-style="vm.equipes.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
         <table class="data-table" ng-style="{'max-height': vm.equipes.length > 15 ? '420px' : '', 'overflow-y': vm.equipes.length > 15 ? 'auto' : ''}">
           <thead>
             <tr>
@@ -479,15 +465,13 @@
          ng-style="vm.getCompOrder('op-equipes2')">
     <section class="panel equipes2-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EXTRAS – TOTAL: {{vm.totalEquipes2}}</h2>
+        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EXTRAS – TOTAL: {{vm.totalEquipes2}}<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
         <span class="badge-count">{{vm.totalEquipes2}} equipes</span>
       </div>
 
-      <div class="loading-overlay" ng-if="vm.loadingEq">
-        <div class="spinner"></div>
-      </div>
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingEq"></div>
 
-      <div class="table-wrapper" ng-if="!vm.loadingEq && !vm.errorEq" ng-style="vm.equipes2Recurso.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
+      <div class="table-wrapper" ng-show="!vm.errorEq && (!vm.poloChanging || !vm.loadingEq)" ng-style="vm.equipes2Recurso.length > 15 ? {'max-height':'420px','overflow-y':'auto'} : {}">
         <table class="data-table" ng-style="{'max-height': vm.equipes2Recurso.length > 15 ? '420px' : '', 'overflow-y': vm.equipes2Recurso.length > 15 ? 'auto' : ''}">
           <thead>
             <tr>
@@ -542,23 +526,21 @@
       <div class="panel-header">
         <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>DESLOCAMENTOS | M300
           <span ng-if="vm.deslocamentos.lastUpdated" class="panel-subtitle"> &mdash; atualizado {{vm.deslocamentos.lastUpdated | date:'HH:mm:ss'}}</span>
+          <span class="panel-spinner" ng-show="vm.loadingDesl && !vm.poloChanging"></span>
         </h2>
         <span class="badge-count">{{vm.deslocamentos.total}} registros</span>
       </div>
 
-      <!-- Carregando -->
-      <div class="loading-overlay" ng-if="vm.loadingDesl">
-        <div class="spinner"></div>
-        <div class="loading-text">Consultando Spotfire...</div>
+      <!-- Erro (não-bloqueante: mantém dados anteriores visíveis) -->
+      <div class="error-state desl-error-banner" ng-if="vm.errorDesl && !vm.poloChanging">
+        &#9888; Atualização falhou: {{vm.errorDesl}}
       </div>
 
-      <!-- Erro -->
-      <div class="empty-state" ng-if="!vm.loadingDesl && vm.errorDesl">
-        Deslocamentos indispon&iacute;veis: {{vm.errorDesl}}
-      </div>
+      <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingDesl"></div>
 
-      <!-- Tabela -->
-      <div class="table-wrapper" ng-if="!vm.loadingDesl && !vm.errorDesl"
+      <!-- Tabela (sempre visível) -->
+      <div class="table-wrapper"
+           ng-show="!vm.poloChanging || !vm.loadingDesl"
            ng-style="vm.deslocamentos.items.length > 20 ? {'max-height':'480px','overflow-y':'auto'} : {}">
         <table class="data-table">
           <thead>
@@ -592,7 +574,7 @@
             </tr>
           </tbody>
         </table>
-        <div class="empty-state" ng-if="!vm.deslocamentos.items.length && !vm.loadingDesl">Sem registros de deslocamento.</div>
+        <div class="empty-state" ng-if="!vm.deslocamentos.items.length">Sem registros de deslocamento.</div>
       </div>
     </section>
     </div>
@@ -606,14 +588,8 @@
        ═══════════════════════════════════════════════════════ -->
   <div class="main-content" ng-if="vm.currentView==='analytics'">
 
-    <!-- Loading -->
-    <div class="loading-overlay" ng-if="vm.loadingInc">
-      <div class="spinner"></div>
-      <div class="loading-text">Carregando dados analíticos...</div>
-    </div>
-
     <!-- Drag hint -->
-    <div ng-if="!vm.loadingInc" class="drag-hint">
+    <div class="drag-hint">
       <span class="drag-hint-icon">&#x2630;</span>
       <span class="drag-hint-text">Arraste qualquer painel para reposicionar livremente</span>
     </div>
@@ -628,8 +604,7 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-kpi')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-kpi')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-kpi')">
       <div class="kpi-bar">
         <div class="kpi-item kpi-warning kpi-item-dual">
           <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'totalIncidencias')">{{vm.kpis.totalIncidencias | number}}</span>
@@ -671,13 +646,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-duracao')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-duracao')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-duracao')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Tempo de Duração</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Tempo de Duração<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartDuracao"></canvas>
         </div>
       </section>
@@ -691,13 +666,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-despacho')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-despacho')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-despacho')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Despacho de Incidências</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Despacho de Incidências<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartDespacho"></canvas>
         </div>
       </section>
@@ -711,13 +686,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-top10chi')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-top10chi')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-top10chi')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartTop10Chi"></canvas>
         </div>
       </section>
@@ -731,13 +706,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-clientesConj')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-clientesConj')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-clientesConj')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 10)</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 10)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartClientesConj"></canvas>
         </div>
       </section>
@@ -751,13 +726,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-top10cli')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-top10cli')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-top10cli')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartTop10Cli"></canvas>
         </div>
       </section>
@@ -771,13 +746,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-top10tma')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-top10tma')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-top10tma')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — TMA</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — TMA<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartTop10Tma"></canvas>
         </div>
       </section>
@@ -791,13 +766,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-equipesConj')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-equipesConj')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-equipesConj')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Equipes por Conjunto — Turno vs Extras</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Equipes por Conjunto — Turno vs Extras<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartEquipesConj"></canvas>
         </div>
       </section>
@@ -811,13 +786,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-ocupacao')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-ocupacao')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-ocupacao')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Ocupação das Equipes (Inc. / Equipe por Conjunto)</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Ocupação das Equipes (Inc. / Equipe por Conjunto)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartOcupacao"></canvas>
         </div>
       </section>
@@ -831,13 +806,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-extrasConj')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-extrasConj')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-extrasConj')">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto</h2>
+          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartExtrasConj"></canvas>
         </div>
       </section>
@@ -851,13 +826,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-polo')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-polo')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-polo')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Polo</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Polo<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartPolo"></canvas>
         </div>
       </section>
@@ -871,13 +846,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-atividade')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-atividade')"
-         ng-if="!vm.loadingEq">
+         ng-style="vm.getCompOrder('an-atividade')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container chart-container-full">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingEq"></div>
+        <div class="chart-container chart-container-full" ng-show="!vm.poloChanging || !vm.loadingEq">
           <canvas id="chartAtividade"></canvas>
         </div>
       </section>
@@ -891,13 +866,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-criticos')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-criticos')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-criticos')">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Indicadores Críticos</h2>
+          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Indicadores Críticos<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartCriticos"></canvas>
         </div>
       </section>
@@ -911,13 +886,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-riskConj')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-riskConj')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-riskConj')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Não Despachados / Essenciais / Críticos por Conjunto</h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Não Despachados / Essenciais / Críticos por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartRiskConj"></canvas>
         </div>
       </section>
@@ -931,13 +906,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-avisos')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-avisos')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-avisos')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Avisos por Conjunto (Top 10)</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Avisos por Conjunto (Top 10)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartAvisos"></canvas>
         </div>
       </section>
@@ -951,13 +926,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-produtividade')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-produtividade')"
-         ng-if="!vm.loadingInc && !vm.loadingEq">
+         ng-style="vm.getCompOrder('an-produtividade')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)</h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)<span class="panel-spinner" ng-show="(vm.loadingInc || vm.loadingEq) && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container">
+        <div class="panel-loading" ng-if="vm.poloChanging && (vm.loadingInc || vm.loadingEq)"></div>
+        <div class="chart-container" ng-show="!vm.poloChanging || !(vm.loadingInc || vm.loadingEq)">
           <canvas id="chartProdutividade"></canvas>
         </div>
       </section>
@@ -971,13 +946,13 @@
          ng-drag-leave="vm.onCompDragLeave($event)"
          ng-drop="vm.onCompDrop($event, 'an-panorama')"
          ng-drag-end="vm.onCompDragEnd($event)"
-         ng-style="vm.getCompOrder('an-panorama')"
-         ng-if="!vm.loadingInc">
+         ng-style="vm.getCompOrder('an-panorama')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Panorama Geral — Incidências por Conjunto</h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Panorama Geral — Incidências por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
-        <div class="chart-container chart-container-full">
+        <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
+        <div class="chart-container chart-container-full" ng-show="!vm.poloChanging || !vm.loadingInc">
           <canvas id="chartPanorama"></canvas>
         </div>
       </section>

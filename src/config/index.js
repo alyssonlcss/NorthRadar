@@ -42,9 +42,12 @@ const config = {
   // ── Caminho do arquivo .env (para persistir o token) ──
   envFilePath: path.resolve(__dirname, '..', '..', '.env'),
 
-  // ── Refresh interval em milissegundos ──
-  refreshIntervalMs:
-    (parseInt(process.env.REFRESH_INTERVAL_MINUTES, 10) || 110) * 60 * 1000,
+  // ── Intervalo de auto-refresh do dashboard no browser ──
+  // Define com que frequência o frontend atualiza TODOS os painéis
+  // (incidências, equipes e deslocamentos — tudo junto).
+  // Variável: DASHBOARD_REFRESH_INTERVAL_MINUTES
+  dashboardRefreshIntervalMs:
+    (parseInt(process.env.DASHBOARD_REFRESH_INTERVAL_MINUTES, 10) || 15) * 60 * 1000,
 
   // ── Spotfire (Deslocamentos) ──
   spotfire: {
@@ -59,9 +62,9 @@ const config = {
     polos: (process.env.SPOTFIRE_POLOS || 'ATLANTICO,DECEN,DNORT').split(',').map(s => s.trim()),
     headless: process.env.SPOTFIRE_HEADLESS === 'true',
     timeout: parseInt(process.env.SPOTFIRE_TIMEOUT_MS, 10) || 30000,
-    refreshIntervalMs:
-      (parseInt(process.env.SPOTFIRE_REFRESH_INTERVAL_MINUTES, 10) || 30) * 60 * 1000,
-    // Cooldown por usuário+filtro no endpoint on-demand (padrão: 10 min)
+    // Cooldown por usuário ao trocar manualmente o filtro de polo no dashboard.
+    // Impede que o Spotfire seja consultado repetidamente para o mesmo filtro.
+    // Variável: DESLOCAMENTO_COOLDOWN_MINUTES
     cooldownMs:
       (parseInt(process.env.DESLOCAMENTO_COOLDOWN_MINUTES, 10) || 10) * 60 * 1000,
   },

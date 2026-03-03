@@ -1068,6 +1068,22 @@ body {
   font-weight: 400;
 }
 
+/* ── Inline panel loading spinner (background-refresh indicator) ── */
+.panel-spinner {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid transparent;
+  border-top-color: currentColor;
+  border-right-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-left: 8px;
+  opacity: 0.55;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
 .empty-state {
   text-align: center;
   padding: 48px 20px;
@@ -1084,6 +1100,44 @@ body {
   font-size: 13px;
   font-weight: 500;
   border-radius: 0;
+}
+
+/* Compact non-blocking error banner (used where we keep old data visible) */
+.desl-error-banner {
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+  opacity: 0.85;
+}
+
+/* In-panel loading area shown during polo filter change (replaces table/chart content) */
+.panel-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.panel-loading::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(0, 0, 0, 0.08);
+  border-top-color: var(--enel-accent);
+  border-right-color: var(--enel-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+.panel-loading::after {
+  content: 'Carregando...';
 }
 
 /* ═══════════════════════════════════════════════════════════

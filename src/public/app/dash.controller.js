@@ -13,12 +13,12 @@
 
   angular.module('dashApp')
     .controller('DashCtrl', [
-      '$scope', '$interval', '$timeout', '$q',
+      '$scope', '$interval', '$timeout', '$q', '$http',
       'DashApi', 'DashProcessor', 'DashHelpers',
       DashCtrl
     ]);
 
-  function DashCtrl($scope, $interval, $timeout, $q, Api, Proc, Helpers) {
+  function DashCtrl($scope, $interval, $timeout, $q, $http, Api, Proc, Helpers) {
     var vm = this;
 
     // ── View-model state ─────────────────────────────────
@@ -62,6 +62,7 @@
     vm.deslocamentos         = { items: [], total: 0, lastUpdated: null };
     vm.loadingDesl           = false;
     vm.errorDesl             = null;
+    vm.poloChanging          = false;
     vm.debugInfo             = {};
     vm.showDebug             = false;
     vm.debugResult           = null;
@@ -149,8 +150,16 @@
     vm.shareMode       = false;
 
     // ── Bootstrap ────────────────────────────────────────
+    // Busca o intervalo de refresh configurado no servidor (.env → DASHBOARD_REFRESH_INTERVAL_MINUTES)
+    $http.get('/api/config')
+      .then(function (res) {
+        var ms = (res.data && res.data.dashboardRefreshIntervalMs) || 900000;
+        $interval(loadAll, ms);
+      })
+      .catch(function () {
+        $interval(loadAll, 900000); // fallback 15 min
+      });
     checkAuthAndLoad();
-    $interval(loadAll, 900000); // 15 min
 
     // If persisted view was analytics, build charts after data loads
     if (vm.currentView === 'analytics') {
@@ -867,7 +876,15 @@
     function changePolo(polo) {
       vm.selectedPolo = polo;
       savePolo(polo);
+      vm.poloChanging = true;
       loadAll();
+    }
+
+    /** Quando todos os loaders terminam após uma troca de polo, desliga a flag. */
+    function _checkPoloChangeDone() {
+      if (vm.poloChanging && !vm.loadingInc && !vm.loadingEq && !vm.loadingDesl) {
+        vm.poloChanging = false;
+      }
     }
 
     function loadPolo() {
@@ -930,28 +947,39 @@
     }
 
     // ── Deslocamentos ──────────────────────────────────
+    // Contador de geração: garante que respostas atrasadas (de um polo
+    // anterior) não sobrescrevam dados de uma requisição mais recente.
+    var _deslGeneration = 0;
 
     function loadDeslocamentos() {
       vm.loadingDesl = true;
       vm.errorDesl = null;
 
       var poloParam = _getPoloParam();
-      console.log('[Ctrl] Buscando deslocamentos para polos=' + poloParam + '...');
+      var generation = ++_deslGeneration;
+      console.log('[Ctrl] Buscando deslocamentos para polos=' + poloParam + ' (gen=' + generation + ')...');
 
       Api.getDeslocamentos(poloParam)
         .then(function (data) {
+          if (generation !== _deslGeneration) {
+            console.log('[Ctrl] Deslocamentos gen=' + generation + ' descartados (polo já trocou)');
+            return;
+          }
           vm.deslocamentos = {
             items:       data.items       || [],
             total:       data.total       || 0,
             lastUpdated: data.lastUpdated || null
           };
           vm.loadingDesl = false;
+          _checkPoloChangeDone();
           console.log('[Ctrl] Deslocamentos carregados: ' + vm.deslocamentos.total + ' itens');
         })
         .catch(function (err) {
-          console.warn('[Ctrl] Deslocamentos indisponíveis para polo=' + polo + ':', err);
-          vm.errorDesl = (err && err.statusText) || 'Indisponível';
+          if (generation !== _deslGeneration) return;
+          console.warn('[Ctrl] Deslocamentos indisponíveis para polo=' + poloParam + ':', err);
+          vm.errorDesl = (err && (err.statusText || err.message)) || 'Indisponível';
           vm.loadingDesl = false;
+          _checkPoloChangeDone();
         });
     }
 
@@ -1000,6 +1028,7 @@
         vm.loadingInc = false;
         vm.lastUpdate = new Date();
         vm.refreshing = false;
+        _checkPoloChangeDone();
 
         console.log('[Ctrl] Dados carregados. Eletrodep: ' + cruzamento.totalEletrodep +
                     ', Clientes críticos: ' + clCriticos.length);
@@ -1013,6 +1042,7 @@
         vm.loadingInc = false;
         vm.hasError = true;
         vm.refreshing = false;
+        _checkPoloChangeDone();
 
         if (err.status === 401) {
           console.warn('[Ctrl] 401 — token expirado, retry em 10 s...');
@@ -1039,6 +1069,7 @@
 
           vm.kpis.totalEquipes = vm.totalEquipes;
           vm.loadingEq = false;
+          _checkPoloChangeDone();
 
           // Refresh equipe-dependent charts
           $timeout(buildAllCharts, 100);
@@ -1047,6 +1078,7 @@
           console.error('[Ctrl] Erro equipes:', err);
           vm.errorEq = extractErrorMsg(err);
           vm.loadingEq = false;
+          _checkPoloChangeDone();
 
           if (err.status === 401) {
             $timeout(loadEquipes, 10000);
