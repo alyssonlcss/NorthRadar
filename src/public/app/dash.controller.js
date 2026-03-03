@@ -874,9 +874,12 @@
     // ═══════════════════════════════════════════════════════
 
     function changePolo(polo) {
+      var isNewPolo = polo !== vm.selectedPolo;
       vm.selectedPolo = polo;
       savePolo(polo);
-      vm.poloChanging = true;
+      if (isNewPolo) {
+        vm.poloChanging = true;
+      }
       loadAll();
     }
 
