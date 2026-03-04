@@ -21,6 +21,14 @@
   function DashCtrl($scope, $interval, $timeout, $q, $http, Api, Proc, Helpers) {
     var vm = this;
 
+    // ── LocalStorage keys (declarados antes de qualquer uso) ─
+    var VIEW_KEY     = 'northradar_view';
+    var THEME_KEY    = 'northradar_theme';
+    var POLO_KEY     = 'northradar_polo';
+    var OP_ORDER_KEY = 'northradar_op_order';
+    var AN_ORDER_KEY = 'northradar_an_order';
+    var IGNORED_KEY  = 'northradar_ignored_inc';
+
     // ── View-model state ─────────────────────────────────
     vm.polos          = ['TODOS', 'ATLANTICO', 'DECEN', 'DNORT'];
     vm.selectedPolo   = loadPolo();
@@ -80,16 +88,11 @@
     vm.expandedCell = { visible: false, label: '', value: '', top: 0, left: 0 };
 
     // ── Analytics view state ─────────────────────────────
-    var VIEW_KEY = 'northradar_view';
     vm.currentView = loadView();
     vm.switchView  = switchView;
     var _chartInstances = {};
 
     // ── Unified component drag-and-drop ─────────────────
-    var THEME_KEY   = 'northradar_theme';
-    var POLO_KEY    = 'northradar_polo';
-    var OP_ORDER_KEY = 'northradar_op_order';
-    var AN_ORDER_KEY = 'northradar_an_order';
 
     var defaultOpOrder = [
       'op-kpi', 'op-top10chi', 'op-top10tma', 'op-top10cli',
@@ -111,6 +114,10 @@
     vm.opOrder = _loadOrder(OP_ORDER_KEY, defaultOpOrder);
     vm.anOrder = _loadOrder(AN_ORDER_KEY, defaultAnOrder);
     vm.draggingComp = null;
+
+    // ── Context menu ─────────────────────────────────────
+    vm.ignoredIncidencias = _loadIgnored();
+    vm.ctxMenu = { visible: false, x: 0, y: 0, cellText: '', isTop10: false, incidencia: null };
 
     // ── Dark mode ────────────────────────────────────────
     vm.darkMode = loadTheme();
@@ -149,6 +156,10 @@
     vm.cancelShare     = cancelShare;
     vm.isSharing       = false;
     vm.shareMode       = false;
+    vm.ctxCopiar       = ctxCopiar;
+    vm.ctxIgnorarInc   = ctxIgnorarInc;
+    vm.ctxResetLayout  = ctxResetLayout;
+    vm.ctxFechar       = function() { vm.ctxMenu.visible = false; };
 
     // ── Bootstrap ────────────────────────────────────────
     // Busca o intervalo de refresh configurado no servidor (.env → DASHBOARD_REFRESH_INTERVAL_MINUTES)
@@ -161,6 +172,18 @@
         $interval(loadAll, 900000); // fallback 15 min
       });
     checkAuthAndLoad();
+
+    // ── Context menu global listeners ────────────────────
+    document.addEventListener('contextmenu', _onContextMenu);
+    document.addEventListener('click', function (e) {
+      if (vm.ctxMenu.visible && !e.target.closest('#ctx-menu')) {
+        vm.ctxMenu.visible = false;
+        $scope.$apply();
+      }
+    });
+    $scope.$on('$destroy', function () {
+      document.removeEventListener('contextmenu', _onContextMenu);
+    });
 
     // If persisted view was analytics, build charts after data loads
     if (vm.currentView === 'analytics') {
@@ -1098,27 +1121,43 @@
         var items = results.incidencias || [];
         var clCriticos = results.clientesCriticos || [];
 
-        vm.rawIncidencias = items;
+        vm.rawIncidencias  = items;
+        vm._rawClCriticos  = clCriticos; // guardado para re-cálculo ao ignorar inc.
 
-        // Cruzar clientes críticos com incidências
-        var cruzamento = Proc.cruzarClientesCriticos(clCriticos, items);
-        vm.clientesPorIncidencia = cruzamento.clientesPorIncidencia;
+        // Itens filtrados (sem as incidências ignoradas) — usados para KPIs/panorama
+        var filteredItems = items.filter(function (inc) {
+          return !vm.ignoredIncidencias[inc.numero];
+        });
 
-        // Processar incidências com dados de eletrodep do cruzamento
-        var result = Proc.processIncidencias(
+        // Cruzamento completo (todos os itens) — para popup e top10 visuais
+        var cruzFull     = Proc.cruzarClientesCriticos(clCriticos, items);
+        // Cruzamento filtrado — para KPIs e panorama por conjunto
+        var cruzFiltered = Proc.cruzarClientesCriticos(clCriticos, filteredItems);
+
+        vm.clientesPorIncidencia = cruzFull.clientesPorIncidencia;
+
+        // KPIs e panorama calculados SEM as ignoradas
+        var kpiResult = Proc.processIncidencias(
+          filteredItems,
+          cruzFiltered.eletrodepPorConjunto,
+          cruzFiltered.totalEletrodep,
+          cruzFiltered.avisoPorConjunto
+        );
+        // Top10 calculados COM TODAS as incidências (ignoradas aparecem cinza)
+        var dispResult = Proc.processIncidencias(
           items,
-          cruzamento.eletrodepPorConjunto,
-          cruzamento.totalEletrodep,
-          cruzamento.avisoPorConjunto
+          cruzFull.eletrodepPorConjunto,
+          cruzFull.totalEletrodep,
+          cruzFull.avisoPorConjunto
         );
 
-        vm.panorama    = result.panorama;
-        vm.totals      = result.totals;
-        vm.kpis        = result.kpis;
-        vm.top10Chi    = result.top10Chi;
-        vm.top10Tma    = result.top10Tma;
-        vm.top10Cli    = result.top10Cli;
-        vm.debugInfo   = result.debugInfo;
+        vm.panorama    = kpiResult.panorama;
+        vm.totals      = kpiResult.totals;
+        vm.kpis        = kpiResult.kpis;
+        vm.top10Chi    = dispResult.top10Chi;
+        vm.top10Tma    = dispResult.top10Tma;
+        vm.top10Cli    = dispResult.top10Cli;
+        vm.debugInfo   = kpiResult.debugInfo;
 
         // Cruzar com deslocamentos para contar equipes atribuídas/deslocadas por incidência
         _applyDeslEnrichment();
@@ -1131,7 +1170,7 @@
         vm.refreshing = false;
         _checkPoloChangeDone();
 
-        console.log('[Ctrl] Dados carregados. Eletrodep: ' + cruzamento.totalEletrodep +
+        console.log('[Ctrl] Dados carregados. Eletrodep: ' + cruzFull.totalEletrodep +
                     ', Clientes críticos: ' + clCriticos.length);
 
         // Refresh analytics charts if view is active
@@ -1847,6 +1886,156 @@
       }
 
       return label;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CONTEXT MENU
+    // ═══════════════════════════════════════════════════════
+
+    function _loadIgnored() {
+      try {
+        var s = localStorage.getItem(IGNORED_KEY);
+        return s ? JSON.parse(s) : {};
+      } catch (e) { return {}; }
+    }
+
+    function _saveIgnored() {
+      try { localStorage.setItem(IGNORED_KEY, JSON.stringify(vm.ignoredIncidencias)); }
+      catch (e) { /* ignore */ }
+    }
+
+    function _onContextMenu(e) {
+      // Find closest <td> ancestor
+      var td = e.target;
+      while (td && td.tagName !== 'TD') td = td.parentElement;
+      if (!td) return; // not in a table cell — allow browser default
+
+      e.preventDefault();
+
+      var cellText = (td.innerText || td.textContent || '').trim();
+
+      // Detect if row is inside a top10-panel
+      var el = td;
+      var isTop10 = false;
+      var incidencia = null;
+      while (el && el !== document.body) {
+        if (el.classList && el.classList.contains('top10-panel')) { isTop10 = true; break; }
+        el = el.parentElement;
+      }
+
+      if (isTop10) {
+        var tr = td;
+        while (tr && tr.tagName !== 'TR') tr = tr.parentElement;
+        if (tr) {
+          var firstTd = tr.querySelector('td');
+          if (firstTd) {
+            var a = firstTd.querySelector('a');
+            incidencia = (a ? a.textContent : firstTd.textContent).trim();
+          }
+        }
+      }
+
+      var menuW = 250, menuH = isTop10 ? 135 : 95;
+      var x = (e.clientX + menuW > window.innerWidth)  ? e.clientX - menuW : e.clientX;
+      var y = (e.clientY + menuH > window.innerHeight) ? e.clientY - menuH : e.clientY;
+
+      vm.ctxMenu.visible    = true;
+      vm.ctxMenu.x          = x;
+      vm.ctxMenu.y          = y;
+      vm.ctxMenu.cellText   = cellText;
+      vm.ctxMenu.isTop10    = isTop10;
+      vm.ctxMenu.incidencia = incidencia;
+      $scope.$apply();
+    }
+
+    function ctxCopiar() {
+      var text = vm.ctxMenu.cellText;
+      if (text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        } else {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+        }
+      }
+      vm.ctxMenu.visible = false;
+    }
+
+    function ctxIgnorarInc() {
+      var inc = vm.ctxMenu.incidencia;
+      if (inc) {
+        if (vm.ignoredIncidencias[inc]) {
+          delete vm.ignoredIncidencias[inc];
+        } else {
+          vm.ignoredIncidencias[inc] = true;
+        }
+        _saveIgnored();
+        _recomputeFromRaw();
+      }
+      vm.ctxMenu.visible = false;
+    }
+
+    /** Re-processa todas as métricas excluindo incidências ignoradas dos cálculos.
+     *  As ignoradas permanecem nas listas top10 (visualmente cinza). */
+    function _recomputeFromRaw() {
+      if (!vm.rawIncidencias || !vm.rawIncidencias.length) return;
+
+      var allItems = vm.rawIncidencias;
+      var clCriticos = vm._rawClCriticos || [];
+
+      // Itens filtrados (sem ignoradas) — para KPIs/panorama
+      var filteredItems = allItems.filter(function (inc) {
+        return !vm.ignoredIncidencias[inc.numero];
+      });
+
+      // Cruzamento completo (todos) — para popup e top10 visuais
+      var cruzFull     = Proc.cruzarClientesCriticos(clCriticos, allItems);
+      // Cruzamento filtrado — para KPIs e panorama
+      var cruzFiltered = Proc.cruzarClientesCriticos(clCriticos, filteredItems);
+
+      vm.clientesPorIncidencia = cruzFull.clientesPorIncidencia;
+
+      var kpiResult = Proc.processIncidencias(
+        filteredItems,
+        cruzFiltered.eletrodepPorConjunto,
+        cruzFiltered.totalEletrodep,
+        cruzFiltered.avisoPorConjunto
+      );
+      var dispResult = Proc.processIncidencias(
+        allItems,
+        cruzFull.eletrodepPorConjunto,
+        cruzFull.totalEletrodep,
+        cruzFull.avisoPorConjunto
+      );
+
+      vm.panorama  = kpiResult.panorama;
+      vm.totals    = kpiResult.totals;
+      vm.kpis      = kpiResult.kpis;
+      vm.top10Chi  = dispResult.top10Chi;
+      vm.top10Tma  = dispResult.top10Tma;
+      vm.top10Cli  = dispResult.top10Cli;
+      vm.debugInfo = kpiResult.debugInfo;
+
+      // Preserva contagem de equipes (vem de outra chamada)
+      vm.kpis.totalEquipes = vm.totalEquipes;
+
+      // Re-enriquece top10 com dados de deslocamentos
+      _applyDeslEnrichment();
+
+      // Atualiza charts se a view analytics estiver ativa
+      $timeout(buildAllCharts, 100);
+    }
+
+    function ctxResetLayout() {
+      try { localStorage.removeItem(OP_ORDER_KEY); } catch (e) { /* ignore */ }
+      try { localStorage.removeItem(AN_ORDER_KEY); } catch (e) { /* ignore */ }
+      vm.opOrder = defaultOpOrder.slice();
+      vm.anOrder = defaultAnOrder.slice();
+      vm.ctxMenu.visible = false;
     }
 
     // ── Debug ────────────────────────────────────────────

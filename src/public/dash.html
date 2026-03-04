@@ -89,7 +89,7 @@
 
     <!-- Drag hint -->
     <div class="drag-hint">
-      <span class="drag-hint-icon">&#x2630;</span>
+      <span class="drag-hint-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>
       <span class="drag-hint-text">Arraste qualquer painel para reposicionar livremente</span>
     </div>
 
@@ -150,7 +150,7 @@
          ng-style="vm.getCompOrder('op-top10chi')">
     <section class="panel top10-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CHI<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+        <h2><span class="drag-handle" title="Arrastar para reposicionar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>TOP 10 – CHI<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
       </div>
       <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
       <div class="table-wrapper" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -172,7 +172,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)">
+            <tr ng-repeat="r in vm.top10Chi | orderBy:vm.sort.top10Chi.field:vm.sort.top10Chi.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'chi', r.incidencia)" ng-class="{'row-ignored': vm.ignoredIncidencias[r.incidencia]}">
               <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
               <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
               <td>{{r.nt}}</td>
@@ -206,7 +206,7 @@
          ng-style="vm.getCompOrder('op-top10tma')">
     <section class="panel top10-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – TMA<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+        <h2><span class="drag-handle" title="Arrastar para reposicionar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>TOP 10 – TMA<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
       </div>
       <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
       <div class="table-wrapper" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -228,7 +228,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)">
+            <tr ng-repeat="r in vm.top10Tma | orderBy:vm.sort.top10Tma.field:vm.sort.top10Tma.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'tma', r.incidencia)" ng-class="{'row-ignored': vm.ignoredIncidencias[r.incidencia]}">
               <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
               <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
               <td>{{r.nt}}</td>
@@ -262,7 +262,7 @@
          ng-style="vm.getCompOrder('op-top10cli')">
     <section class="panel top10-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>TOP 10 – CLI. AFETADOS<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+        <h2><span class="drag-handle" title="Arrastar para reposicionar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>TOP 10 – CLI. AFETADOS<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
       </div>
       <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
       <div class="table-wrapper" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -284,7 +284,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)">
+            <tr ng-repeat="r in vm.top10Cli | orderBy:vm.sort.top10Cli.field:vm.sort.top10Cli.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('top10', 'cli', r.incidencia)" ng-class="{'row-ignored': vm.ignoredIncidencias[r.incidencia]}">
               <td><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{r.incidencia}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{r.incidencia}}</a></td>
               <td ng-if="vm.selectedPolo==='TODOS'">{{r.polo}}</td>
               <td>{{r.nt}}</td>
@@ -318,7 +318,7 @@
          ng-style="vm.getCompOrder('op-panorama')">
     <section class="panel panorama-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>Panorama de Incidências – {{vm.selectedPolo}}<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+        <h2><span class="drag-handle" title="Arrastar para reordenar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Panorama de Incidências – {{vm.selectedPolo}}<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         <span class="badge-count" ng-if="vm.panorama.length">{{vm.panorama.length}} conjuntos</span>
       </div>
 
@@ -414,7 +414,7 @@
          ng-style="vm.getCompOrder('op-equipes')">
     <section class="panel equipes-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
+        <h2><span class="drag-handle" title="Arrastar para reordenar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>EQUIPES EM TURNO – TOTAL: {{vm.totalEquipes}}<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
         <span class="badge-count">{{vm.totalEquipes}} equipes</span>
       </div>
 
@@ -477,7 +477,7 @@
          ng-style="vm.getCompOrder('op-equipes2')">
     <section class="panel equipes2-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reordenar">&#x2630;</span>EQUIPES EXTRAS – TOTAL: {{vm.totalEquipes2}}<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
+        <h2><span class="drag-handle" title="Arrastar para reordenar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>EQUIPES EXTRAS – TOTAL: {{vm.totalEquipes2}}<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
         <span class="badge-count">{{vm.totalEquipes2}} equipes</span>
       </div>
 
@@ -536,7 +536,7 @@
          ng-style="vm.getCompOrder('op-desl')">
     <section class="panel desl-panel">
       <div class="panel-header">
-        <h2><span class="drag-handle" title="Arrastar para reposicionar">&#x2630;</span>DESLOCAMENTOS | M300
+        <h2><span class="drag-handle" title="Arrastar para reposicionar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>DESLOCAMENTOS | M300
           <span ng-if="vm.deslocamentos.lastUpdated" class="panel-subtitle"> &mdash; atualizado {{vm.deslocamentos.lastUpdated | date:'HH:mm:ss'}}</span>
           <span class="panel-spinner" ng-show="vm.loadingDesl && !vm.poloChanging"></span>
         </h2>
@@ -603,7 +603,7 @@
 
     <!-- Drag hint -->
     <div class="drag-hint">
-      <span class="drag-hint-icon">&#x2630;</span>
+      <span class="drag-hint-icon"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>
       <span class="drag-hint-text">Arraste qualquer painel para reposicionar livremente</span>
     </div>
 
@@ -662,7 +662,7 @@
          ng-style="vm.getCompOrder('an-duracao')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Tempo de Duração<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Distribuição por Tempo de Duração<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -682,7 +682,7 @@
          ng-style="vm.getCompOrder('an-despacho')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Despacho de Incidências<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Despacho de Incidências<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -702,7 +702,7 @@
          ng-style="vm.getCompOrder('an-top10chi')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — CHI por Incidência<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Top 10 — CHI por Incidência<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -722,7 +722,7 @@
          ng-style="vm.getCompOrder('an-clientesConj')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Clientes Afetados por Conjunto (Top 10)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Clientes Afetados por Conjunto (Top 10)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -742,7 +742,7 @@
          ng-style="vm.getCompOrder('an-top10cli')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — Clientes Afetados por Incidência<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Top 10 — Clientes Afetados por Incidência<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -762,7 +762,7 @@
          ng-style="vm.getCompOrder('an-top10tma')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Top 10 — TMA<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Top 10 — TMA<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -782,7 +782,7 @@
          ng-style="vm.getCompOrder('an-equipesConj')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Equipes por Conjunto — Turno vs Extras<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Equipes por Conjunto — Turno vs Extras<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -802,7 +802,7 @@
          ng-style="vm.getCompOrder('an-ocupacao')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Ocupação das Equipes (Inc. / Equipe por Conjunto)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Ocupação das Equipes (Inc. / Equipe por Conjunto)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -822,7 +822,7 @@
          ng-style="vm.getCompOrder('an-extrasConj')">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Equipes Extras por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Equipes Extras por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -842,7 +842,7 @@
          ng-style="vm.getCompOrder('an-polo')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Distribuição por Polo<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Distribuição por Polo<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -862,7 +862,7 @@
          ng-style="vm.getCompOrder('an-atividade')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Atividade das Equipes — Atribuídas / Improdutivas / Emergenciais / Comerciais<span class="panel-spinner" ng-show="vm.loadingEq && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingEq"></div>
         <div class="chart-container chart-container-full" ng-show="!vm.poloChanging || !vm.loadingEq">
@@ -882,7 +882,7 @@
          ng-style="vm.getCompOrder('an-criticos')">
       <section class="panel" style="border-left:3px solid var(--section-equipes2); box-shadow: var(--shadow), 0 0 20px var(--section-equipes2-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle">&#x2630;</span>Indicadores Críticos<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-equipes2"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Indicadores Críticos<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -902,7 +902,7 @@
          ng-style="vm.getCompOrder('an-riskConj')">
       <section class="panel" style="border-left:3px solid var(--section-top10); box-shadow: var(--shadow), 0 0 20px var(--section-top10-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-top10"><span class="drag-handle">&#x2630;</span>Não Despachados / Essenciais / Críticos por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-top10"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Não Despachados / Essenciais / Críticos por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -922,7 +922,7 @@
          ng-style="vm.getCompOrder('an-avisos')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Avisos por Conjunto (Top 10)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Avisos por Conjunto (Top 10)<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -942,7 +942,7 @@
          ng-style="vm.getCompOrder('an-produtividade')">
       <section class="panel" style="border-left:3px solid var(--section-equipes); box-shadow: var(--shadow), 0 0 20px var(--section-equipes-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-equipes"><span class="drag-handle">&#x2630;</span>Produtividade por Equipe (Top 15)<span class="panel-spinner" ng-show="(vm.loadingInc || vm.loadingEq) && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-equipes"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Produtividade por Equipe (Top 15)<span class="panel-spinner" ng-show="(vm.loadingInc || vm.loadingEq) && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && (vm.loadingInc || vm.loadingEq)"></div>
         <div class="chart-container" ng-show="!vm.poloChanging || !(vm.loadingInc || vm.loadingEq)">
@@ -962,7 +962,7 @@
          ng-style="vm.getCompOrder('an-panorama')">
       <section class="panel" style="border-left:3px solid var(--section-panorama); box-shadow: var(--shadow), 0 0 20px var(--section-panorama-glow);">
         <div class="panel-header">
-          <h2 class="chart-title chart-title-panorama"><span class="drag-handle">&#x2630;</span>Panorama Geral — Incidências por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
+          <h2 class="chart-title chart-title-panorama"><span class="drag-handle"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M10 9h4V6h3l-5-5-5 5h3v3zm-1 1H6V7l-5 5 5 5v-3h3v-4zm14 2l-5-5v3h-3v4h3v3l5-5zm-9 3h-4v3H7l5 5 5-5h-3v-3z"/></svg></span>Panorama Geral — Incidências por Conjunto<span class="panel-spinner" ng-show="vm.loadingInc && !vm.poloChanging"></span></h2>
         </div>
         <div class="panel-loading" ng-if="vm.poloChanging && vm.loadingInc"></div>
         <div class="chart-container chart-container-full" ng-show="!vm.poloChanging || !vm.loadingInc">
@@ -1106,6 +1106,28 @@
   <script src="app/dash.api.factory.js"></script>
   <script src="app/dash.processor.factory.js"></script>
   <script src="app/dash.controller.js"></script>
+
+  <!-- Context Menu -->
+  <div id="ctx-menu" class="ctx-menu" ng-show="vm.ctxMenu.visible"
+       ng-style="{top: vm.ctxMenu.y + 'px', left: vm.ctxMenu.x + 'px'}">
+    <ul class="ctx-menu-list">
+      <li class="ctx-menu-item" ng-click="vm.ctxCopiar()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4C3 1 2 2 2 3v14h2V3h12V1zm3 4H8C7 5 6 6 6 7v14c0 1 1 2 2 2h11c1 0 2-1 2-2V7c0-1-1-2-2-2zm0 16H8V7h11v14z"/></svg>
+        Copiar
+      </li>
+      <li class="ctx-menu-sep" ng-if="vm.ctxMenu.isTop10"></li>
+      <li class="ctx-menu-item ctx-menu-item--danger" ng-if="vm.ctxMenu.isTop10" ng-click="vm.ctxIgnorarInc()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>
+        <span ng-if="!vm.ignoredIncidencias[vm.ctxMenu.incidencia]">Ignorar Inc. para os cálculos</span>
+        <span ng-if="vm.ignoredIncidencias[vm.ctxMenu.incidencia]">Reativar Inc. nos cálculos</span>
+      </li>
+      <li class="ctx-menu-sep"></li>
+      <li class="ctx-menu-item" ng-click="vm.ctxResetLayout()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        Reset dashboard layout
+      </li>
+    </ul>
+  </div>
 
 </body>
 </html>
