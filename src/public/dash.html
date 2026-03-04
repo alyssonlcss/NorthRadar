@@ -1045,6 +1045,61 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════════════════════════════════════
+       MODAL DE ALERTA SONORO (BT→MT e Cliente Vital)
+       ═══════════════════════════════════════════════════════ -->
+  <div class="alert-modal-overlay" ng-if="vm.alertModal.visible" ng-click="vm.fecharAlerta()">
+    <div class="alert-modal-box" ng-class="'alert-modal-box--' + vm.alertModal.tipo" ng-click="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="alert-modal-header">
+        <span class="alert-modal-icon">&#128680;</span>
+        <h3 class="alert-modal-title">{{vm.alertModal.titulo}}</h3>
+        <span class="alert-modal-counter" ng-if="vm.alertModal.queueLen > 0">+{{vm.alertModal.queueLen}} pendente(s)</span>
+        <button class="alert-modal-close" ng-click="vm.fecharAlerta()">&times;</button>
+      </div>
+
+      <!-- Body -->
+      <div class="alert-modal-body">
+
+        <!-- Campos de resumo do incidente (ambos os tipos) -->
+        <div class="alert-campos-grid">
+          <div class="alert-campo" ng-repeat="f in vm.alertModal.campos">
+            <span class="alert-campo-label">{{f.label}}</span>
+            <span class="alert-campo-value" ng-class="f.cls">{{f.value}}</span>
+          </div>
+        </div>
+
+        <!-- Tabela de clientes vitais (apenas tipo 'vital') -->
+        <div class="alert-table-wrap" ng-if="vm.alertModal.tipo === 'vital' && vm.alertModal.dados.length > 0">
+          <h4 class="alert-table-title">Clientes Vitais com Aviso Ativo</h4>
+          <table class="popup-table">
+            <thead>
+              <tr>
+                <th ng-repeat="col in vm.alertModal.colunas">{{col.label}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr ng-repeat="row in vm.alertModal.dados track by $index" class="alert-vital-row">
+                <td ng-repeat="col in vm.alertModal.colunas">{{row[col.key]}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="alert-modal-footer">
+        <button class="btn-alert-next" ng-if="vm.alertModal.queueLen > 0" ng-click="vm.avancarAlerta()">
+          Próximo alerta ({{vm.alertModal.queueLen}})
+        </button>
+        <button class="btn-alert-ok" ng-click="vm.fecharAlerta()">Fechar</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Expanded cell detail box -->
   <div class="cell-expanded-backdrop" ng-if="vm.expandedCell.visible" ng-click="vm.closeExpandedCell()"></div>
   <div class="cell-expanded-box" ng-if="vm.expandedCell.visible"

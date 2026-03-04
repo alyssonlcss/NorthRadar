@@ -56,6 +56,22 @@
 
     // ── View-model data ──────────────────────────────────
     vm.rawIncidencias        = [];
+
+    // ── Alert state ──────────────────────────────────────
+    vm._prevIncMap    = {};   // {numero: {nivelTensao}} — estado da última atualização
+    vm._alertedVitals = {};   // {numero: true} — já alertou cliente vital nessa sessão
+    var _alertQueue        = [];   // fila de alertas pendentes
+    var _alertShowing      = false;
+    var _alertAutoClose    = null;  // $timeout promise para fechar automático
+    vm.alertModal = {
+      visible:  false,
+      tipo:     '',      // 'btmt' | 'vital'
+      titulo:   '',
+      campos:   [],      // [{label, value, cls}] — resumo do incidente
+      dados:    [],      // linhas para tabela CC (vital)
+      colunas:  [],      // colunas para tabela CC (vital)
+      queueLen: 0
+    };
     vm.clientesPorIncidencia = {};
     vm.panorama              = [];
     vm.totals                = {};
@@ -160,6 +176,8 @@
     vm.ctxIgnorarInc   = ctxIgnorarInc;
     vm.ctxResetLayout  = ctxResetLayout;
     vm.ctxFechar       = function() { vm.ctxMenu.visible = false; };
+    vm.fecharAlerta    = fecharAlerta;
+    vm.avancarAlerta   = avancarAlerta;
 
     // ── Bootstrap ────────────────────────────────────────
     // Busca o intervalo de refresh configurado no servidor (.env → DASHBOARD_REFRESH_INTERVAL_MINUTES)
@@ -924,6 +942,12 @@
     function changePolo(polo) {
       vm.selectedPolo = polo;
       savePolo(polo);
+      // Reset alert state when polo changes to avoid false positives
+      vm._prevIncMap    = {};
+      vm._alertedVitals = {};
+      _alertQueue       = [];
+      _alertShowing     = false;
+      vm.alertModal.visible = false;
       loadAll();
     }
 
@@ -1172,6 +1196,9 @@
 
         console.log('[Ctrl] Dados carregados. Eletrodep: ' + cruzFull.totalEletrodep +
                     ', Clientes críticos: ' + clCriticos.length);
+
+        // Verificar alertas (BT→MT e clientes vitais)
+        _checkAlerts(items, clCriticos, cruzFull);
 
         // Refresh analytics charts if view is active
         $timeout(buildAllCharts, 100);
@@ -2049,6 +2076,161 @@
         .catch(function (err) {
           vm.debugResult = 'Erro: ' + (err.message || JSON.stringify(err));
         });
+    }
+
+    // ── Alertas sonoros ──────────────────────────────────
+
+    function _checkAlerts(items, clCriticos, cruzFull) {
+      var isFirstLoad = Object.keys(vm._prevIncMap).length === 0;
+
+      if (!isFirstLoad) {
+        // 1) Escalada BT → MT
+        items.forEach(function (inc) {
+          if (!Helpers.isActive(inc)) return;
+          var prev = vm._prevIncMap[inc.numero];
+          if (prev && prev.nivelTensao === 'BT' &&
+              inc.nivelTensao && inc.nivelTensao.indexOf('MT') === 0) {
+            var duracaoH = Helpers.parseDuracao(inc.duracao);
+            var chi = Math.round((inc.clientesAfetadosAtual || 0) * duracaoH * 10) / 10;
+            _enqueueAlert({ tipo: 'btmt', inc: inc, chi: chi });
+          }
+        });
+      }
+
+      // 2) Cliente Vital com aviso (dispara uma vez por incidência por sessão)
+      items.forEach(function (inc) {
+        if (!Helpers.isActive(inc)) return;
+        if (vm._alertedVitals[inc.numero]) return;
+        var clientes = (cruzFull.clientesPorIncidencia[inc.numero] || []);
+        var vitais = clientes.filter(function (c) {
+          return c.segmento === 'Vital' && c.aviso && c.aviso !== '' && c.aviso !== '-';
+        });
+        if (vitais.length > 0) {
+          vm._alertedVitals[inc.numero] = true;
+          _enqueueAlert({ tipo: 'vital', inc: inc, vitais: vitais });
+        }
+      });
+
+      // Atualizar mapa de estado anterior para próxima comparação
+      vm._prevIncMap = {};
+      items.forEach(function (inc) {
+        vm._prevIncMap[inc.numero] = { nivelTensao: inc.nivelTensao };
+      });
+
+      _processAlertQueue();
+    }
+
+    function _enqueueAlert(alertObj) {
+      _alertQueue.push(alertObj);
+    }
+
+    function _processAlertQueue() {
+      if (_alertShowing || _alertQueue.length === 0) return;
+      _alertShowing = true;
+      var current = _alertQueue.shift();
+      _showAlert(current);
+      $scope.$applyAsync();
+    }
+
+    function _showAlert(alertObj) {
+      var inc    = alertObj.inc;
+      var suffix = String(inc.numero || '').slice(-4);
+
+      if (alertObj.tipo === 'btmt') {
+        vm.alertModal.tipo   = 'btmt';
+        vm.alertModal.titulo = '\u26a0 Incidência escalou de BT para MT';
+        vm.alertModal.campos = [
+          { label: 'Incidência',        value: inc.numero,                     cls: '' },
+          { label: 'Nível Tensão',      value: 'BT  \u2192  MT',              cls: 'alert-val-danger' },
+          { label: 'Clientes Afetados', value: inc.clientesAfetadosAtual || 0, cls: '' },
+          { label: 'CHI',               value: alertObj.chi,                   cls: '' },
+          { label: 'Alimentador',       value: inc.alimentador || '\u2014',    cls: '' },
+          { label: 'CD',                value: inc.cd || '\u2014',             cls: '' },
+          { label: 'N\u00ba Avisos',    value: inc.totalAvisos || 0,           cls: '' }
+        ];
+        vm.alertModal.dados   = [];
+        vm.alertModal.colunas = [];
+        _speakAlert('Aten\u00e7\u00e3o. incid\u00eancia final ' + suffix + ' subiu para MT');
+
+      } else if (alertObj.tipo === 'vital') {
+        vm.alertModal.tipo   = 'vital';
+        vm.alertModal.titulo = '\u26a0 Cliente Vital afetado';
+        vm.alertModal.campos = [
+          { label: 'Incidência',        value: inc.numero,                     cls: '' },
+          { label: 'Nível Tensão',      value: inc.nivelTensao || '\u2014',    cls: '' },
+          { label: 'Clientes Afetados', value: inc.clientesAfetadosAtual || 0, cls: '' },
+          { label: 'Alimentador',       value: inc.alimentador || '\u2014',    cls: '' },
+          { label: 'CD',                value: inc.cd || '\u2014',             cls: '' }
+        ];
+        vm.alertModal.colunas = [
+          { key: 'ccUc',          label: 'UC'           },
+          { key: 'ccNome',        label: 'Nome'         },
+          { key: 'ccSegmento',    label: 'Segmento'     },
+          { key: 'ccCriticidade', label: 'Criticidade'  },
+          { key: 'ccAviso',       label: 'Aviso'        }
+        ];
+        vm.alertModal.dados = alertObj.vitais.map(function (c) {
+          return {
+            ccUc:          c.uc          || '\u2014',
+            ccNome:        c.nome        || '\u2014',
+            ccSegmento:    c.segmento    || '\u2014',
+            ccCriticidade: c.criticidade != null ? c.criticidade : '\u2014',
+            ccAviso:       c.aviso       || '\u2014'
+          };
+        });
+        _speakAlert('Aten\u00e7\u00e3o, cliente vital afetado na incid\u00eancia final ' + suffix);
+      }
+
+      vm.alertModal.queueLen = _alertQueue.length;
+      vm.alertModal.visible  = true;
+
+      // Auto-fechar após 60 segundos
+      if (_alertAutoClose) { $timeout.cancel(_alertAutoClose); }
+      _alertAutoClose = $timeout(fecharAlerta, 60000);
+    }
+
+    function _speakAlert(text) {
+      if (!window.speechSynthesis) return;
+      try {
+        window.speechSynthesis.cancel();
+        var repeats = 3;
+        var count   = 0;
+        function _speak() {
+          var utt   = new SpeechSynthesisUtterance(text);
+          utt.lang  = 'pt-BR';
+          utt.rate  = 0.9;
+          utt.pitch = 1;
+          utt.onend = function () {
+            count++;
+            if (count < repeats) {
+              // pequena pausa entre repetições
+              setTimeout(_speak, 600);
+            }
+          };
+          window.speechSynthesis.speak(utt);
+        }
+        _speak();
+      } catch (e) {
+        console.warn('[Alert] speechSynthesis falhou:', e);
+      }
+    }
+
+    function fecharAlerta() {
+      if (_alertAutoClose) { $timeout.cancel(_alertAutoClose); _alertAutoClose = null; }
+      if (window.speechSynthesis) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+      vm.alertModal.visible = false;
+      _alertShowing = false;
+      if (_alertQueue.length > 0) {
+        $timeout(_processAlertQueue, 400);
+      }
+    }
+
+    function avancarAlerta() {
+      if (_alertAutoClose) { $timeout.cancel(_alertAutoClose); _alertAutoClose = null; }
+      if (window.speechSynthesis) { try { window.speechSynthesis.cancel(); } catch (e) {} }
+      vm.alertModal.visible = false;
+      _alertShowing = false;
+      $timeout(_processAlertQueue, 200);
     }
 
     // ── Helper privado ───────────────────────────────────
