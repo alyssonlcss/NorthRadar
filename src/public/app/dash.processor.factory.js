@@ -306,9 +306,9 @@
           observacao: inc.observacao || ''
         };
 
-        if (clientes.length === 0) {
-          // Sem clientes críticos: 1 linha com campos CC vazios
-          baseRow.ccUc = '—';
+        if (clientes.length === 0 || !contexto.comClientesCriticos) {
+          // Sem clientes críticos ou CC não solicitado: 1 linha com campos CC vazios
+          baseRow.ccUc = clientes.length > 0 ? '(' + clientes.length + ')' : '—';
           baseRow.ccNome = '—';
           baseRow.ccSegmento = '—';
           baseRow.ccCriticidade = '—';

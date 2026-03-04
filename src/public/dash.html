@@ -126,7 +126,7 @@
         <div class="kpi-item kpi-danger kpi-item-dual">
           <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'urgente')">{{vm.kpis.urgentes | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'eletrodependente')" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'eletrodependente', null, {comClientesCriticos: true})" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
           <span class="kpi-label kpi-lbl-left">Urgentes</span>
           <span class="kpi-label kpi-lbl-right" ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span>
         </div>
@@ -366,7 +366,7 @@
               <td class="num clickable" ng-class="{'cell-yellow': r.qtt2Rec > 0}" ng-click="vm.abrirPopup('panorama', 'qtt2Rec', r.conjunto)">{{r.qtt2Rec}}</td>
               <td class="num clickable" ng-class="{'cell-blue': r.qttAvisos > 0}" ng-click="vm.abrirPopup('panorama', 'qttAvisos', r.conjunto)">{{r.qttAvisos}}</td>
               <td class="num clickable" ng-class="{'cell-orange': r.clEssencial > 0}" ng-click="vm.abrirPopup('panorama', 'clEssencial', r.conjunto)">{{r.clEssencial}}</td>
-              <td class="num clickable" ng-class="{'cell-orange': r.eletrodependente > 0}" ng-click="vm.abrirPopup('panorama', 'eletrodependente', r.conjunto)">{{r.eletrodependente}}</td>
+              <td class="num clickable" ng-class="{'cell-orange': r.eletrodependente > 0}" ng-click="vm.abrirPopup('panorama', 'eletrodependente', r.conjunto, {comClientesCriticos: true})">{{r.eletrodependente}}</td>
               <td class="num clickable" ng-class="{'cell-green': r.lt8h > 0}" ng-click="vm.abrirPopup('panorama', 'lt8h', r.conjunto)">{{r.lt8h}}</td>
               <td class="num clickable" ng-class="{'cell-yellow': r.h8_16 > 0}" ng-click="vm.abrirPopup('panorama', 'h8_16', r.conjunto)">{{r.h8_16}}</td>
               <td class="num clickable" ng-class="{'cell-orange': r.h16_24 > 0}" ng-click="vm.abrirPopup('panorama', 'h16_24', r.conjunto)">{{r.h16_24}}</td>
@@ -640,7 +640,7 @@
         <div class="kpi-item kpi-danger kpi-item-dual">
           <span class="kpi-value kpi-val-left kpi-click-zone" ng-click="vm.abrirPopup('card', 'urgente')">{{vm.kpis.urgentes | number}}</span>
           <span class="kpi-sep-bar"></span>
-          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'eletrodependente')" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
+          <span class="kpi-value kpi-val-right kpi-click-zone" ng-click="vm.abrirPopup('card', 'eletrodependente', null, {comClientesCriticos: true})" ng-class="{'cell-blink': vm.totals.temAviso}">{{vm.kpis.eletrodependentes | number}}</span>
           <span class="kpi-label kpi-lbl-left">Urgentes</span>
           <span class="kpi-label kpi-lbl-right" ng-class="{'cell-blink': vm.totals.temAviso}">Cl. Críticos</span>
         </div>

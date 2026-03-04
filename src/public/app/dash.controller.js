@@ -1218,8 +1218,11 @@
      * @param {string} campo  - campo clicado (ex: 'urgente', 'eletrodependente', 'chi', etc)
      * @param {string} [valor] - filtro adicional (conjunto, numero, equipe)
      */
-    function abrirPopup(tipo, campo, valor) {
-      var contexto = { tipo: tipo, campo: campo, valor: valor || null };
+    function abrirPopup(tipo, campo, valor, opcoes) {
+      opcoes = opcoes || {};
+      var comCC = opcoes.comClientesCriticos === true;
+
+      var contexto = { tipo: tipo, campo: campo, valor: valor || null, comClientesCriticos: comCC };
 
       var dados = Proc.filtrarIncidenciasPorContexto(
         contexto,
@@ -1227,7 +1230,7 @@
         vm.clientesPorIncidencia
       );
 
-      var colunasContexto = _getColunasContexto(tipo, campo);
+      var colunasContexto = _getColunasContexto(tipo, campo, comCC);
 
       // Contextos que exibem incidências encerradas e precisam do filtro "Somente ATIVO"
       var mostrarFiltroAtivo = (tipo === 'equipe') || (campo === 'desl');
@@ -1246,7 +1249,7 @@
       // Reset popup sort on each open
       vm.sort.popup = { field: '', reverse: false };
 
-      console.log('[Ctrl] Popup aberto: ' + tipo + '/' + campo + ' → ' + dados.length + ' registros');
+      console.log('[Ctrl] Popup aberto: ' + tipo + '/' + campo + ' → ' + dados.length + ' registros (CC=' + comCC + ')');
     }
 
     function togglePopupFiltroAtivo() {
@@ -1648,7 +1651,10 @@
      * A ordem muda conforme o contexto do clique:
      * colunas contextuais vêm primeiro, depois as demais na ordem padrão.
      */
-    function _getColunasContexto(tipo, campo) {
+    function _getColunasContexto(tipo, campo, comClientesCriticos) {
+
+      // Colunas CC só incluídas quando solicitadas explicitamente
+      var ccKeys = ['ccUc', 'ccNome', 'ccSegmento', 'ccCriticidade', 'ccAviso'];
 
       // ── Todas as colunas disponíveis (ordem padrão) ──
       var todas = [
@@ -1797,6 +1803,8 @@
       // Adicionar as demais colunas na ordem original
       for (var i = 0; i < todas.length; i++) {
         if (!usedKeys[todas[i].key]) {
+          // Excluir colunas CC quando não solicitadas
+          if (!comClientesCriticos && ccKeys.indexOf(todas[i].key) !== -1) continue;
           result.push(todas[i]);
         }
       }
