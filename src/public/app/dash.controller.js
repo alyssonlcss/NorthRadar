@@ -520,7 +520,7 @@
 
     // 3) Horizontal bar — Top 10 CHI
     function _buildChartTop10Chi() {
-      var list = (vm.top10Chi || []).slice(0, 10);
+      var list = (vm.top10Chi || []).filter(function (r) { return !vm.ignoredIncidencias[r.incidencia]; }).slice(0, 10);
       var labels = list.map(function (r) { return r.incidencia || '—'; });
       var data = list.map(function (r) { return r.chi || 0; });
       var colors = _chartColors(list.length);
@@ -622,7 +622,7 @@
 
     // 7) Horizontal bar — Top 10 Clientes Afetados por incidência
     function _buildChartTop10Cli() {
-      var list = (vm.top10Cli || []).slice(0, 10);
+      var list = (vm.top10Cli || []).filter(function (r) { return !vm.ignoredIncidencias[r.incidencia]; }).slice(0, 10);
       var labels = list.map(function (r) { return r.incidencia || '—'; });
       var data = list.map(function (r) { return r.cli || 0; });
       var colors = _chartColors(list.length);
@@ -646,7 +646,7 @@
 
     // 8) Horizontal bar — Top 10 TMA
     function _buildChartTop10Tma() {
-      var list = (vm.top10Tma || []).slice(0, 10);
+      var list = (vm.top10Tma || []).filter(function (r) { return !vm.ignoredIncidencias[r.incidencia]; }).slice(0, 10);
       var labels = list.map(function (r) { return r.incidencia || '—'; });
       var data = list.map(function (r) { return r.tma || 0; });
       var colors = _chartColors(list.length);
