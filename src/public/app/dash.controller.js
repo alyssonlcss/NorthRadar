@@ -1755,6 +1755,8 @@
         prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
       } else if (campo === 'qtt2Rec') {
         prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
+      } else if (campo === 'desl') {
+        prioridade = ['numero', 'estado', 'equipeAtribuida', 'equipeDeslocada', 'dataAtribuicao', 'dataInicioDeslocamento', 'dataChegada', 'duracao', 'clientesAfetadosAtual', 'cd', 'alimentador'];
       } else if (tipo === 'equipe') {
         prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
       }

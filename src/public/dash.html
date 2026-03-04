@@ -560,7 +560,7 @@
               <th class="sortable col-code" ng-if="vm.selectedPolo==='TODOS'" ng-click="vm.sortBy('desl','polo')">Polo<span class="sort-indicator" ng-if="vm.sort.desl.field==='polo'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='polo'">&#8645;</span></th>
               <th class="sortable col-date" ng-click="vm.sortBy('desl','dia')">Dia<span class="sort-indicator" ng-if="vm.sort.desl.field==='dia'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='dia'">&#8645;</span></th>
               <th class="sortable col-code" ng-click="vm.sortBy('desl','equipe')">Equipe<span class="sort-indicator" ng-if="vm.sort.desl.field==='equipe'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='equipe'">&#8645;</span></th>
-              <th class="sortable col-code" ng-click="vm.sortBy('desl','ordem')">Ordem<span class="sort-indicator" ng-if="vm.sort.desl.field==='ordem'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='ordem'">&#8645;</span></th>
+              <th class="sortable col-code" ng-click="vm.sortBy('desl','ordem')">Incidência<span class="sort-indicator" ng-if="vm.sort.desl.field==='ordem'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='ordem'">&#8645;</span></th>
               <th class="sortable col-time" ng-click="vm.sortBy('desl','despachado')">Despachado<span class="sort-indicator" ng-if="vm.sort.desl.field==='despachado'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='despachado'">&#8645;</span></th>
               <th class="sortable col-time" ng-click="vm.sortBy('desl','aCaminho')">A Caminho<span class="sort-indicator" ng-if="vm.sort.desl.field==='aCaminho'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='aCaminho'">&#8645;</span></th>
               <th class="sortable col-time" ng-click="vm.sortBy('desl','noLocal')">No Local<span class="sort-indicator" ng-if="vm.sort.desl.field==='noLocal'">{{vm.sort.desl.reverse?'&#9660;':'&#9650;'}}</span><span class="sort-hint" ng-if="vm.sort.desl.field!=='noLocal'">&#8645;</span></th>
@@ -571,11 +571,12 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="d in vm.deslocamentos.items | orderBy:vm.sort.desl.field:vm.sort.desl.reverse track by $index">
+            <tr ng-repeat="d in vm.deslocamentos.items | orderBy:vm.sort.desl.field:vm.sort.desl.reverse track by $index"
+                class="clickable" ng-click="vm.abrirPopup('top10', 'desl', d.ordem)">
               <td class="col-code" ng-if="vm.selectedPolo==='TODOS'">{{d.polo}}</td>
               <td class="col-date">{{d.dia}}</td>
               <td class="col-code"><strong>{{d.equipe}}</strong></td>
-              <td class="col-code">{{d.ordem}}</td>
+              <td class="col-code"><a ng-href="http://sdeice.enelint.global/SAC_Detalhe_Inci.asp?inci_ref={{d.ordem}}" target="_blank" class="inc-link" ng-click="$event.stopPropagation()">{{d.ordem}}</a></td>
               <td class="col-time">{{d.despachado || '—'}}</td>
               <td class="col-time">{{d.aCaminho  || '—'}}</td>
               <td class="col-time">{{d.noLocal   || '—'}}</td>
