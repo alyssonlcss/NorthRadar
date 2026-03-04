@@ -164,9 +164,9 @@
               <th class="sortable num" ng-click="vm.sortBy('top10Chi','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='chi'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='chi'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Chi','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='tma'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='tma'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Chi','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='avisos'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='avisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Chi','atribuicao')">1ª Equipe<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='atribuicao'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='atribuicao'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Chi','eqAtrib')">Eq. Atrib.<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='eqAtrib'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='eqAtrib'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Chi','eqDesl')">Eq. Desl.<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='eqDesl'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='eqDesl'">⇅</span></th>
-              <th class="sortable" ng-click="vm.sortBy('top10Chi','atribuicao')">1ª Equipe<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='atribuicao'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='atribuicao'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('top10Chi','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='alimentador'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='alimentador'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('top10Chi','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Chi.field==='cd'">{{vm.sort.top10Chi.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Chi.field!=='cd'">⇅</span></th>
             </tr>
@@ -180,9 +180,9 @@
               <td class="num" ng-class="{'cell-red': r.chi > 0}">{{r.chi | number:1}}</td>
               <td class="num">{{r.tmaFormatted}}</td>
               <td class="num">{{r.avisos}}</td>
+              <td>{{r.atribuicao}}</td>
               <td class="num" ng-class="{'cell-green': r.eqAtrib > 0}">{{r.eqAtrib || 0}}</td>
               <td class="num" ng-class="{'cell-blue': r.eqDesl > 0}">{{r.eqDesl || 0}}</td>
-              <td>{{r.atribuicao}}</td>
               <td>{{r.alimentador}}</td>
               <td>{{r.cd}}</td>
             </tr>
@@ -220,9 +220,9 @@
               <th class="sortable num" ng-click="vm.sortBy('top10Tma','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='chi'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='chi'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Tma','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='tma'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='tma'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Tma','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='avisos'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='avisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Tma','atribuicao')">1ª Equipe<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='atribuicao'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='atribuicao'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Tma','eqAtrib')">Eq. Atrib.<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='eqAtrib'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='eqAtrib'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Tma','eqDesl')">Eq. Desl.<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='eqDesl'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='eqDesl'">⇅</span></th>
-              <th class="sortable" ng-click="vm.sortBy('top10Tma','atribuicao')">1ª Equipe<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='atribuicao'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='atribuicao'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('top10Tma','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='alimentador'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='alimentador'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('top10Tma','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Tma.field==='cd'">{{vm.sort.top10Tma.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Tma.field!=='cd'">⇅</span></th>
             </tr>
@@ -236,9 +236,9 @@
               <td class="num">{{r.chi | number:1}}</td>
               <td class="num" ng-class="{'cell-orange': r.tma > 0}">{{r.tmaFormatted}}</td>
               <td class="num">{{r.avisos}}</td>
+              <td>{{r.atribuicao}}</td>
               <td class="num" ng-class="{'cell-green': r.eqAtrib > 0}">{{r.eqAtrib || 0}}</td>
               <td class="num" ng-class="{'cell-blue': r.eqDesl > 0}">{{r.eqDesl || 0}}</td>
-              <td>{{r.atribuicao}}</td>
               <td>{{r.alimentador}}</td>
               <td>{{r.cd}}</td>
             </tr>
@@ -276,9 +276,9 @@
               <th class="sortable num" ng-click="vm.sortBy('top10Cli','chi')">CHI<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='chi'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='chi'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Cli','tma')">TMA<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='tma'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='tma'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Cli','avisos')">Avisos<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='avisos'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='avisos'">⇅</span></th>
+              <th class="sortable" ng-click="vm.sortBy('top10Cli','atribuicao')">1ª Equipe<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='atribuicao'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='atribuicao'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Cli','eqAtrib')">Eq. Atrib.<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='eqAtrib'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='eqAtrib'">⇅</span></th>
               <th class="sortable num" ng-click="vm.sortBy('top10Cli','eqDesl')">Eq. Desl.<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='eqDesl'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='eqDesl'">⇅</span></th>
-              <th class="sortable" ng-click="vm.sortBy('top10Cli','atribuicao')">1ª Equipe<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='atribuicao'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='atribuicao'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('top10Cli','alimentador')">Alimentador<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='alimentador'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='alimentador'">⇅</span></th>
               <th class="sortable" ng-click="vm.sortBy('top10Cli','cd')">CD<span class="sort-indicator" ng-if="vm.sort.top10Cli.field==='cd'">{{vm.sort.top10Cli.reverse?'▼':'▲'}}</span><span class="sort-hint" ng-if="vm.sort.top10Cli.field!=='cd'">⇅</span></th>
             </tr>
@@ -292,9 +292,9 @@
               <td class="num">{{r.chi | number:1}}</td>
               <td class="num">{{r.tmaFormatted}}</td>
               <td class="num">{{r.avisos}}</td>
+              <td>{{r.atribuicao}}</td>
               <td class="num" ng-class="{'cell-green': r.eqAtrib > 0}">{{r.eqAtrib || 0}}</td>
               <td class="num" ng-class="{'cell-blue': r.eqDesl > 0}">{{r.eqDesl || 0}}</td>
-              <td>{{r.atribuicao}}</td>
               <td>{{r.alimentador}}</td>
               <td>{{r.cd}}</td>
             </tr>

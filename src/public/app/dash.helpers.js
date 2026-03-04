@@ -56,6 +56,9 @@
       var duracaoHours = parseDuracao(duracaoStr);
       var chiVal = cli * duracaoHours;
 
+      var ovAtrib = (inc.equipeAtribuida && inc.equipeAtribuida !== '-') ? inc.equipeAtribuida.trim() : null;
+      var ovDesl  = (inc.equipeDeslocada  && inc.equipeDeslocada  !== '-') ? inc.equipeDeslocada.trim()  : null;
+
       return {
         incidencia: inc.numero || '',
         polo: inc.polo || '',
@@ -65,7 +68,9 @@
         tma: duracaoHours,
         tmaFormatted: duracaoStr,
         avisos: inc.totalAvisos || 0,
-        atribuicao: (inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null) || inc.equipeAtribuida || '-',
+        atribuicao: ovDesl || ovAtrib || '-',
+        operviewAtribuida: ovAtrib,
+        operviewDeslocada: ovDesl,
         alimentador: inc.alimentador || '',
         cd: inc.cd || ''
       };

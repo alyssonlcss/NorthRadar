@@ -917,7 +917,7 @@
      *   eqDesl  — qtd de equipes distintas com campo `aCaminho` preenchido
      */
     function _enrichTop10ComDeslocamentos(top10List, deslItems) {
-      // Indexa deslocamentos por ORDEM
+      // Indexa deslocamentos M300 por ORDEM (= número da incidência)
       var byOrdem = {};
       (deslItems || []).forEach(function (d) {
         var key = String(d.ordem || '').trim();
@@ -929,14 +929,35 @@
       top10List.forEach(function (r) {
         var key = String(r.incidencia || '').trim();
         var matches = byOrdem[key] || [];
+
+        // Sets chaveados por nome normalizado (UPPER) para deduplicação entre fontes
         var atrib = {};
         var desl  = {};
+
+        // --- Fonte 1: Oper View (1ª equipe de cada status) ---
+        if (r.operviewAtribuida) {
+          atrib[r.operviewAtribuida.toUpperCase()] = true;
+        }
+        if (r.operviewDeslocada) {
+          var ovDKey = r.operviewDeslocada.toUpperCase();
+          desl[ovDKey]  = true;
+          atrib[ovDKey] = true; // deslocada implica atribuída
+        }
+
+        // --- Fonte 2: M300 deslocamentos (equipes subsequentes) ---
         matches.forEach(function (d) {
           var eq = (d.equipe || '').trim();
           if (!eq) return;
-          if (d.despachado && d.despachado !== '—' && d.despachado !== '-') atrib[eq] = true;
-          if (d.aCaminho  && d.aCaminho  !== '—' && d.aCaminho  !== '-') desl[eq]  = true;
+          var eqKey = eq.toUpperCase();
+          if (d.despachado && d.despachado !== '—' && d.despachado !== '-') {
+            atrib[eqKey] = true;
+          }
+          if (d.aCaminho && d.aCaminho !== '—' && d.aCaminho !== '-') {
+            desl[eqKey]  = true;
+            atrib[eqKey] = true; // a caminho implica atribuída
+          }
         });
+
         r.eqAtrib = Object.keys(atrib).length;
         r.eqDesl  = Object.keys(desl).length;
       });
