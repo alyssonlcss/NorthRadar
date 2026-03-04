@@ -1422,6 +1422,30 @@ body {
   border-bottom: 1px solid var(--border);
   background: transparent;
   font-weight: 400;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.popup-filtro-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--enel-accent);
+  user-select: none;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--enel-accent);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.popup-filtro-label:has(input:checked) {
+  background: var(--enel-accent);
+  color: #fff;
+}
+.popup-filtro-label input[type="checkbox"] {
+  display: none;
 }
 .popup-body {
   overflow: auto; flex: 1;

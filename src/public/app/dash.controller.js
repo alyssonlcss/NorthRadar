@@ -134,6 +134,7 @@
     vm.testDebug      = testDebug;
     vm.abrirPopup     = abrirPopup;
     vm.fecharPopup    = fecharPopup;
+    vm.togglePopupFiltroAtivo = togglePopupFiltroAtivo;
     vm.scrollToComp   = scrollToComp;
     vm.sortBy         = sortBy;
     vm.expandCell     = expandCell;
@@ -1228,18 +1229,34 @@
 
       var colunasContexto = _getColunasContexto(tipo, campo);
 
+      // Contextos que exibem incidências encerradas e precisam do filtro "Somente ATIVO"
+      var mostrarFiltroAtivo = (tipo === 'equipe') || (campo === 'desl');
+
       vm.popup = {
         visible: true,
         titulo: _getTituloPopup(tipo, campo, valor),
         contextoCampo: campo,
+        dadosTodos: dados,
         dados: dados,
-        colunasContexto: colunasContexto
+        colunasContexto: colunasContexto,
+        mostrarFiltroAtivo: mostrarFiltroAtivo,
+        filtroAtivo: false
       };
 
       // Reset popup sort on each open
       vm.sort.popup = { field: '', reverse: false };
 
       console.log('[Ctrl] Popup aberto: ' + tipo + '/' + campo + ' → ' + dados.length + ' registros');
+    }
+
+    function togglePopupFiltroAtivo() {
+      if (vm.popup.filtroAtivo) {
+        vm.popup.dados = (vm.popup.dadosTodos || []).filter(function (row) {
+          return row.estado === 'ACTIVO' && (!row.dataFim || row.dataFim === '-');
+        });
+      } else {
+        vm.popup.dados = vm.popup.dadosTodos;
+      }
     }
 
     /**

@@ -999,6 +999,10 @@
       <!-- Info -->
       <div class="popup-info">
         Total: <strong>{{vm.popup.dados.length}}</strong> registro(s)
+        <label ng-if="vm.popup.mostrarFiltroAtivo" class="popup-filtro-label">
+          <input type="checkbox" ng-model="vm.popup.filtroAtivo" ng-change="vm.togglePopupFiltroAtivo()">
+          Somente ATIVO
+        </label>
       </div>
 
       <!-- Table -->
