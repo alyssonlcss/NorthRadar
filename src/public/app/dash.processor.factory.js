@@ -185,6 +185,22 @@
           });
           break;
 
+        case 'busca':
+          // Busca universal: pesquisa literalmente TODOS os campos de cada incidência
+          var _q = (contexto.valor || '').toLowerCase().trim();
+          if (!_q) { filtered = []; break; }
+          filtered = incidencias.filter(function (inc) {
+            var keys = Object.keys(inc);
+            for (var _i = 0; _i < keys.length; _i++) {
+              var _v = inc[keys[_i]];
+              if (_v !== null && _v !== undefined && _v !== false) {
+                if (String(_v).toLowerCase().indexOf(_q) >= 0) return true;
+              }
+            }
+            return false;
+          });
+          break;
+
         default:
           filtered = incidencias;
       }

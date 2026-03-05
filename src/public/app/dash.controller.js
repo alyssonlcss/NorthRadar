@@ -104,6 +104,10 @@
       colunasContexto: []
     };
 
+    // ── Universal Search ─────────────────────────────────
+    vm.searchQuery       = '';
+    vm.searchResultCount = 0;
+
     // ── Expanded cell state ──────────────────────────────
     vm.expandedCell = { visible: false, label: '', value: '', top: 0, left: 0 };
 
@@ -180,8 +184,19 @@
     vm.ctxIgnorarInc   = ctxIgnorarInc;
     vm.ctxResetLayout  = ctxResetLayout;
     vm.ctxFechar       = function() { vm.ctxMenu.visible = false; };
-    vm.fecharAlerta    = fecharAlerta;
-    vm.avancarAlerta   = avancarAlerta;
+    vm.fecharAlerta       = fecharAlerta;
+    vm.avancarAlerta      = avancarAlerta;
+    vm.buscarIncidencias  = buscarIncidencias;
+    vm.limparBusca        = limparBusca;
+
+    // ── Global keyboard shortcut — Ctrl+K opens search bar ──
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        var inp = document.getElementById('global-search-input');
+        if (inp) { inp.focus(); inp.select(); }
+      }
+    });
 
     // ── Bootstrap ────────────────────────────────────────
     // Busca o intervalo de refresh configurado no servidor (.env → DASHBOARD_REFRESH_INTERVAL_MINUTES)
@@ -1691,6 +1706,49 @@
       }).catch(function () { if (cb) cb(); });
     }
 
+    // ═══════════════════════════════════════════════════════
+    // UNIVERSAL SEARCH
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Busca universal: pesquisa todos os campos de todas as incidências
+     * (ativas e encerradas) e abre o popup com os resultados.
+     * Requisito mínimo: 2 caracteres.
+     */
+    function buscarIncidencias() {
+      var q = (vm.searchQuery || '').trim();
+      if (q.length < 2) return;
+
+      var dados = Proc.filtrarIncidenciasPorContexto(
+        { tipo: 'busca', campo: 'busca', valor: q },
+        vm.rawIncidencias,
+        vm.clientesPorIncidencia
+      );
+
+      vm.searchResultCount = dados.length;
+
+      var colunas = _getColunasContexto('busca', 'busca', false);
+
+      vm.popup = {
+        visible: true,
+        titulo: 'Busca: "' + q + '" — ' + dados.length + ' resultado(s)',
+        contextoCampo: 'busca',
+        dadosTodos: dados,
+        dados: dados,
+        colunasContexto: colunas,
+        mostrarFiltroAtivo: true,
+        filtroAtivo: false
+      };
+
+      vm.sort.popup = { field: '', reverse: false };
+      console.log('[Ctrl] Busca universal: "' + q + '" → ' + dados.length + ' resultados');
+    }
+
+    function limparBusca() {
+      vm.searchQuery = '';
+      vm.searchResultCount = 0;
+    }
+
     function fecharPopup() {
       vm.popup.visible = false;
       vm.popup.dados = [];
@@ -1856,6 +1914,10 @@
         prioridade = ['numero', 'estado', 'equipeAtribuida', 'equipeDeslocada', 'dataAtribuicao', 'dataInicioDeslocamento', 'dataChegada', 'duracao', 'clientesAfetadosAtual', 'cd', 'alimentador'];
       } else if (tipo === 'equipe') {
         prioridade = ['atribuicao', 'equipeAtribuida', 'equipeDeslocada'];
+      } else if (tipo === 'busca') {
+        prioridade = ['numero', 'estado', 'polo', 'conjunto', 'municipio', 'causa',
+                      'equipeAtribuida', 'equipeDeslocada', 'clientesAfetadosAtual',
+                      'duracao', 'urgente', 'eletrodependente', 'dataInicio'];
       }
 
       // Reordenar: prioridade primeiro, depois o resto na ordem original

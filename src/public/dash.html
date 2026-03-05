@@ -44,6 +44,26 @@
       </div>
     </div>
 
+    <!-- Universal Search Bar -->
+    <div class="header-search">
+      <div class="search-bar">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input
+          id="global-search-input"
+          class="search-input"
+          type="text"
+          placeholder="Buscar em incidências... (número, local, causa, equipe...)"
+          ng-model="vm.searchQuery"
+          ng-keyup="$event.keyCode === 13 && vm.buscarIncidencias()"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <span class="search-count" ng-if="vm.searchResultCount > 0">{{vm.searchResultCount}} resultado(s)</span>
+        <button class="search-clear" ng-if="vm.searchQuery.length > 0" ng-click="vm.limparBusca()" title="Limpar busca">&times;</button>
+        <span class="search-shortcut" ng-if="!vm.searchQuery.length">Ctrl+K</span>
+      </div>
+    </div>
+
     <div class="header-right">
       <div class="filter-group">
         <label>POLO:</label>
