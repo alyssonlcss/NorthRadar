@@ -184,9 +184,11 @@
         case 'equipe':
           // Equipes: mostra TODAS incidências (ativas + encerradas) para análise de volume
           filtered = incidencias.filter(function (inc) {
-            var eqDesl = inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? inc.equipeDeslocada : null;
-            var eqAtrib = inc.equipeAtribuida && inc.equipeAtribuida !== '-' ? inc.equipeAtribuida : null;
-            return eqDesl === contexto.valor || eqAtrib === contexto.valor;
+            var target = (contexto.valor || '').trim().toUpperCase();
+            if (!target) return false;
+            var eqDesl = inc.equipeDeslocada && inc.equipeDeslocada !== '-' ? String(inc.equipeDeslocada).trim().toUpperCase() : '';
+            var eqAtrib = inc.equipeAtribuida && inc.equipeAtribuida !== '-' ? String(inc.equipeAtribuida).trim().toUpperCase() : '';
+            return eqDesl === target || eqAtrib === target;
           });
           break;
 

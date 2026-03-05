@@ -15,6 +15,7 @@
     return {
       getStatus: getStatus,
       getIncidencias: getIncidencias,
+      getIncidenciasEquipes: getIncidenciasEquipes,
       getEquipes: getEquipes,
       getClientesCriticos: getClientesCriticos,
       getDeslocamentos: getDeslocamentos,
@@ -66,6 +67,44 @@
             console.log('[DashApi] Amostra item[0] — campos:', Object.keys(items[0]).join(', '));
           } else {
             console.warn('[DashApi] ⚠️ NENHUM item retornado! Response keys:', Object.keys(data).join(', '));
+          }
+
+          return items;
+        });
+    }
+
+    /**
+     * Busca incidências (para Equipes): ACTIVO + CUMPLIMENTADO + CERRADO
+     * na janela D-1 → agora.
+     * @param {string} polo
+     * @returns {Promise<Array>}
+     */
+    function getIncidenciasEquipes(polo) {
+      return $http.get('/api/dash/incidencias-equipes', { params: { polos: polo } })
+        .then(function (res) {
+          var data = res.data;
+
+          if (data.success === false) {
+            throw { data: data, statusText: data.error };
+          }
+
+          var items = data.items || [];
+
+          // Fallback: se items vazio, procura array em qualquer chave
+          if (items.length === 0 && typeof data === 'object') {
+            var dataKeys = Object.keys(data);
+            for (var ki = 0; ki < dataKeys.length; ki++) {
+              if (Array.isArray(data[dataKeys[ki]]) && data[dataKeys[ki]].length > 0) {
+                console.log('[DashApi] Items (equipes) encontrados na chave: ' + dataKeys[ki]);
+                items = data[dataKeys[ki]];
+                break;
+              }
+            }
+          }
+
+          console.log('[DashApi] Recebidas ' + items.length + ' incidências (equipes)');
+          if (items.length > 0) {
+            console.log('[DashApi] Amostra item[0] (equipes) — campos:', Object.keys(items[0]).join(', '));
           }
 
           return items;

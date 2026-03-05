@@ -210,6 +210,56 @@ function createDashboardRouter(authProvider) {
     }
   });
 
+  // ── Proxy: incidências (equipes em turno / extras) ──
+  // Retorna ACTIVO + CUMPLIMENTADO + CERRADO na janela D-1 → agora.
+  router.get('/api/dash/incidencias-equipes', async (req, res) => {
+    try {
+      const token = authProvider?.getToken();
+      if (!token) {
+        return res.status(401).json({
+          success: false,
+          error: 'Token não disponível. Aguarde a autenticação.',
+          items: [],
+        });
+      }
+
+      const baseUrl = config.operview.domainApi;
+      if (!baseUrl) {
+        return res.status(500).json({
+          success: false,
+          error: 'OPERVIEW_DOMAIN_API não configurado no .env',
+          items: [],
+        });
+      }
+
+      const polos = req.query.polos || 'ATLANTICO';
+
+      const now = new Date();
+      const start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+
+      const url =
+        `${baseUrl}/incidencias/consultar?colNumOrder=0&orderAsc=true&skip=0&take=500` +
+        `&dataInicio=${encodeURIComponent(proxy.formatDate(start) + ' 00:00:00')}` +
+        `&dataFim=${encodeURIComponent(proxy.formatDate(now) + ' ' + hh + ':' + mm + ':' + ss)}` +
+        `&polos=${encodeURIComponent(polos)}` +
+        `&estados=ACTIVO,CUMPLIMENTADO,CERRADO`;
+
+      logger.info(`📡 Buscando incidências (equipes) para polo=${polos}...`);
+      const data = await proxy.get(url, token);
+
+      const items = proxy.normalizeItems(data);
+      const total = data.total ?? data.totalCount ?? data.recordsTotal ?? items.length;
+
+      res.json({ success: true, items, total, polo: polos, timestamp: new Date().toISOString() });
+    } catch (err) {
+      logger.error(`Erro proxy incidencias-equipes: ${err.message}`);
+      res.status(500).json({ success: false, error: err.message, items: [] });
+    }
+  });
+
   // ── Proxy: equipes ──
 
   router.get('/api/dash/equipes', async (req, res) => {

@@ -60,6 +60,10 @@
 
     // ── View-model data ──────────────────────────────────
     vm.rawIncidencias        = [];
+    // Cache de incidências para popup de equipes (ACTIVO+CUMPLIMENTADO+CERRADO; D-1→agora)
+    vm.incidenciasEquipes    = { items: [], total: 0, lastUpdated: null, polos: '' };
+    vm.loadingIncEq          = false;
+    vm.errorIncEq            = null;
 
     // ── Alert state ──────────────────────────────────────
     vm._prevIncMap    = _loadJson(PREV_INC_KEY,       {});  // persiste entre reloads
@@ -978,7 +982,7 @@
 
     /** Quando todos os loaders terminam após uma troca de polo, desliga a flag. */
     function _checkPoloChangeDone() {
-      if (vm.poloChanging && !vm.loadingInc && !vm.loadingEq && !vm.loadingDesl) {
+      if (vm.poloChanging && !vm.loadingInc && !vm.loadingEq && !vm.loadingDesl && !vm.loadingIncEq) {
         vm.poloChanging = false;
       }
     }
@@ -1102,6 +1106,50 @@
       loadIncidenciasEClientesCriticos();
       loadEquipes();
       loadDeslocamentos();
+      // Background: incidências para popup de equipes (sem request no clique)
+      loadIncidenciasEquipes();
+    }
+
+    // ── Incidências (equipes) — prefetch + cache ─────────
+    var _incEqGeneration = 0;
+    var _incEqInflight = null;
+
+    function loadIncidenciasEquipes() {
+      if (!vm.authReady) return;
+
+      var polos = _getPoloParam();
+
+      // Evita requests repetidos durante a mesma janela de refresh/filtro
+      if (vm.loadingIncEq && vm.incidenciasEquipes.polos === polos && _incEqInflight) {
+        return;
+      }
+
+      _incEqGeneration++;
+      var generation = _incEqGeneration;
+
+      vm.loadingIncEq = true;
+      vm.errorIncEq = null;
+      vm.incidenciasEquipes.polos = polos;
+
+      _incEqInflight = Api.getIncidenciasEquipes(polos)
+        .then(function (items) {
+          if (generation !== _incEqGeneration) return;
+          var arr = items || [];
+          vm.incidenciasEquipes.items = arr;
+          vm.incidenciasEquipes.total = arr.length;
+          vm.incidenciasEquipes.lastUpdated = new Date();
+        })
+        .catch(function (err) {
+          if (generation !== _incEqGeneration) return;
+          vm.errorIncEq = (err && (err.statusText || (err.data && err.data.error) || err.message)) || 'Erro ao carregar incidências (equipes)';
+          // mantém cache anterior em caso de falha
+          console.warn('[Ctrl] Falha incidencias-equipes:', vm.errorIncEq);
+        })
+        .finally(function () {
+          if (generation !== _incEqGeneration) return;
+          vm.loadingIncEq = false;
+          _checkPoloChangeDone();
+        });
     }
 
     function _eqKey(nome) {
@@ -1492,16 +1540,46 @@
 
       var contexto = { tipo: tipo, campo: campo, valor: valor || null, comClientesCriticos: comCC };
 
+      var colunasContexto = _getColunasContexto(tipo, campo, comCC);
+
+      // Contextos que exibem incidências encerradas e precisam do filtro "Somente ATIVO"
+      var mostrarFiltroAtivo = (tipo === 'equipe') || (campo === 'desl');
+
+      // Fluxo especial: clique em Equipes (em turno / extras)
+      // Usa cache pré-carregado (ACTIVO+CUMPLIMENTADO+CERRADO, D-1→agora)
+      if (tipo === 'equipe' && valor) {
+        var cached = (vm.incidenciasEquipes && vm.incidenciasEquipes.items) ? vm.incidenciasEquipes.items : [];
+        var loading = vm.loadingIncEq === true;
+
+        // Para equipes: não temos (necessariamente) cruzamento de clientes críticos.
+        var dadosEq = cached.length
+          ? Proc.filtrarIncidenciasPorContexto(contexto, cached, {})
+          : [];
+
+        vm.popup = {
+          visible: true,
+          titulo: _getTituloPopup(tipo, campo, valor) + (loading ? ' (carregando base...)' : ''),
+          contextoCampo: campo,
+          dadosTodos: dadosEq,
+          dados: dadosEq,
+          colunasContexto: colunasContexto,
+          mostrarFiltroAtivo: true,
+          filtroAtivo: false
+        };
+
+        // Reset popup sort on each open
+        vm.sort.popup = { field: '', reverse: false };
+
+        console.log('[Ctrl] Popup equipe (cache): ' + valor + ' → ' + dadosEq.length + ' ordens');
+        return;
+      }
+
+      // Fluxo padrão (baseado em incidências ativas carregadas)
       var dados = Proc.filtrarIncidenciasPorContexto(
         contexto,
         vm.rawIncidencias,
         vm.clientesPorIncidencia
       );
-
-      var colunasContexto = _getColunasContexto(tipo, campo, comCC);
-
-      // Contextos que exibem incidências encerradas e precisam do filtro "Somente ATIVO"
-      var mostrarFiltroAtivo = (tipo === 'equipe') || (campo === 'desl');
 
       vm.popup = {
         visible: true,
@@ -1523,7 +1601,15 @@
     function togglePopupFiltroAtivo() {
       if (vm.popup.filtroAtivo) {
         vm.popup.dados = (vm.popup.dadosTodos || []).filter(function (row) {
-          return row.estado === 'ACTIVO' && (!row.dataFim || row.dataFim === '-');
+          var estado = (row && row.estado != null) ? String(row.estado).trim().toUpperCase() : '';
+          var isAtivo = (estado === 'ACTIVO' || estado === 'ATIVO');
+
+          // Em alguns contextos o backend retorna placeholders como '-' ou '—'
+          var df = (row && row.dataFim != null) ? String(row.dataFim).trim() : '';
+          var semDataFim = (df === '' || df === '-' || df === '—');
+
+          // Critério principal: estado ATIVO (tolerante). Mantém fallback por dataFim vazia.
+          return isAtivo || (estado === '' && semDataFim);
         });
       } else {
         vm.popup.dados = vm.popup.dadosTodos;
