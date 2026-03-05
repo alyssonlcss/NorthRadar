@@ -186,19 +186,42 @@
           break;
 
         case 'busca':
-          // Busca universal: pesquisa literalmente TODOS os campos de cada incidência
+          // Busca universal: pesquisa TODOS os campos da incidência + clientes críticos vinculados
+          // Rastreia quais incidências tiveram match através de campos de CC
           var _q = (contexto.valor || '').toLowerCase().trim();
           if (!_q) { filtered = []; break; }
+          var _ccMatchSet = {};
           filtered = incidencias.filter(function (inc) {
+            var _matchedByInc = false;
+            // 1) campos da própria incidência
             var keys = Object.keys(inc);
             for (var _i = 0; _i < keys.length; _i++) {
               var _v = inc[keys[_i]];
               if (_v !== null && _v !== undefined && _v !== false) {
-                if (String(_v).toLowerCase().indexOf(_q) >= 0) return true;
+                if (String(_v).toLowerCase().indexOf(_q) >= 0) { _matchedByInc = true; break; }
               }
             }
-            return false;
+            // 2) campos dos clientes críticos — só verifica se a incidência NÃO já matched pelos próprios campos
+            // (evita marcar como "match de CC" quando a coincidência foi via dados da própria incidência)
+            if (!_matchedByInc) {
+              var _cls = clientesPorIncidencia[inc.numero] || [];
+              for (var _ci = 0; _ci < _cls.length; _ci++) {
+                var _cl = _cls[_ci];
+                var _clKeys = Object.keys(_cl);
+                for (var _ck = 0; _ck < _clKeys.length; _ck++) {
+                  var _cv = _cl[_clKeys[_ck]];
+                  if (_cv !== null && _cv !== undefined && _cv !== false) {
+                    if (String(_cv).toLowerCase().indexOf(_q) >= 0) {
+                      _ccMatchSet[inc.numero] = true;
+                      return true; // encontrou via CC — inclui no resultado
+                    }
+                  }
+                }
+              }
+            }
+            return _matchedByInc;
           });
+          contexto._ccMatchSet = _ccMatchSet; // usado no bloco de enriquecimento abaixo
           break;
 
         default:
@@ -324,12 +347,28 @@
 
         if (clientes.length === 0 || !contexto.comClientesCriticos) {
           // Sem clientes críticos ou CC não solicitado: 1 linha com campos CC vazios
-          baseRow.ccUc = clientes.length > 0 ? '(' + clientes.length + ')' : '—';
-          baseRow.ccNome = '—';
-          baseRow.ccSegmento = '—';
-          baseRow.ccCriticidade = '—';
-          baseRow.ccAviso = '—';
-          result.push(baseRow);
+          var _expandCC = contexto.tipo === 'busca'
+            ? !!(contexto._ccMatchSet && contexto._ccMatchSet[inc.numero]) && clientes.length > 0
+            : false;
+          if (_expandCC) {
+            // Busca via CC: expande 1 linha por cliente crítico
+            clientes.forEach(function (c) {
+              var row = angular.copy(baseRow);
+              row.ccUc = c.uc || '—';
+              row.ccNome = c.nome || '—';
+              row.ccSegmento = c.segmento || '—';
+              row.ccCriticidade = c.criticidade != null ? c.criticidade : '—';
+              row.ccAviso = c.aviso || '—';
+              result.push(row);
+            });
+          } else {
+            baseRow.ccUc = clientes.length > 0 ? '(' + clientes.length + ')' : '—';
+            baseRow.ccNome = '—';
+            baseRow.ccSegmento = '—';
+            baseRow.ccCriticidade = '—';
+            baseRow.ccAviso = '—';
+            result.push(baseRow);
+          }
         } else {
           // 1 linha por cliente crítico, repetindo os dados da incidência
           clientes.forEach(function (c) {

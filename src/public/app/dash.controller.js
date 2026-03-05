@@ -1719,15 +1719,22 @@
       var q = (vm.searchQuery || '').trim();
       if (q.length < 2) return;
 
+      // Mantém referência ao contexto para ler _ccMatchSet após a chamada
+      var contextoObj = { tipo: 'busca', campo: 'busca', valor: q };
       var dados = Proc.filtrarIncidenciasPorContexto(
-        { tipo: 'busca', campo: 'busca', valor: q },
+        contextoObj,
         vm.rawIncidencias,
         vm.clientesPorIncidencia
       );
 
       vm.searchResultCount = dados.length;
 
-      var colunas = _getColunasContexto('busca', 'busca', false);
+      // Exibe colunas CC se:
+      // 1) algum resultado tem clientes críticos vinculados (ccUc != '—'), OU
+      // 2) a busca foi relacionada a conteúdos de campos CC
+      var hasCCViaSearch = !!(contextoObj._ccMatchSet && Object.keys(contextoObj._ccMatchSet).length > 0);
+      var hasCCClients   = dados.some(function (d) { return d.ccUc && d.ccUc !== '—'; });
+      var colunas = _getColunasContexto('busca', 'busca', hasCCViaSearch || hasCCClients);
 
       vm.popup = {
         visible: true,
@@ -1917,7 +1924,8 @@
       } else if (tipo === 'busca') {
         prioridade = ['numero', 'estado', 'polo', 'conjunto', 'municipio', 'causa',
                       'equipeAtribuida', 'equipeDeslocada', 'clientesAfetadosAtual',
-                      'duracao', 'urgente', 'eletrodependente', 'dataInicio'];
+                      'duracao', 'urgente', 'eletrodependente', 'dataInicio',
+                      'ccUc', 'ccNome', 'ccSegmento', 'ccCriticidade', 'ccAviso'];
       }
 
       // Reordenar: prioridade primeiro, depois o resto na ordem original
@@ -1927,6 +1935,8 @@
 
       // Adicionar colunas prioritárias
       for (var p = 0; p < prioridade.length; p++) {
+        // Não inserir colunas de CC se não foram solicitadas
+        if (!comClientesCriticos && ccKeys.indexOf(prioridade[p]) !== -1) continue;
         for (var t = 0; t < todas.length; t++) {
           if (todas[t].key === prioridade[p] && !usedKeys[todas[t].key]) {
             result.push(todas[t]);
