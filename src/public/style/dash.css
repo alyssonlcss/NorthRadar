@@ -1099,6 +1099,15 @@ body {
 .equipes-panel .data-table { font-size: 12px; }
 .equipes-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
 .equipes-panel .data-table tbody td { padding: 7px 10px; }
+.equipes-panel .data-table tbody tr.m300-added td,
+.equipes2-panel .data-table tbody tr.m300-added td {
+  background: var(--section-desl-light);
+}
+[data-theme="dark"] .equipes-panel .data-table tbody tr.m300-added td,
+[data-theme="dark"] .equipes2-panel .data-table tbody tr.m300-added td {
+  background-color: var(--bg-card);
+  background-image: linear-gradient(var(--section-desl-light), var(--section-desl-light));
+}
 .equipes-panel .panel-header { padding: 14px 16px 10px; }
 .equipes-panel .panel-header h2 { font-size: 14px; }
 

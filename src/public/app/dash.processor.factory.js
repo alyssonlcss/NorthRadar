@@ -25,6 +25,11 @@
       processEquipes: processEquipes,
       cruzarClientesCriticos: cruzarClientesCriticos,
       filtrarIncidenciasPorContexto: filtrarIncidenciasPorContexto,
+      isEquipeExtra: function (nomeEquipe) {
+        var nome = (nomeEquipe || '').toUpperCase();
+        if (!nome) return false;
+        return _tagsExtras.some(function (tag) { return nome.indexOf(tag) >= 0; });
+      },
       setTagsEquipesExtras: function (tags) {
         if (Array.isArray(tags) && tags.length > 0) {
           _tagsExtras = tags.map(function (t) { return t.trim().toUpperCase(); }).filter(Boolean);

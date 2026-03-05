@@ -457,7 +457,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="eq in vm.equipes | orderBy:vm.sort.equipes.field:vm.sort.equipes.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
+            <tr ng-repeat="eq in vm.equipes | orderBy:vm.sort.equipes.field:vm.sort.equipes.reverse track by $index" class="clickable" ng-class="{'m300-added': eq._fromM300 === true}" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
               <td><strong>{{eq.nome}}</strong></td>
               <td>{{eq.polo}}</td>
               <td>{{eq.sucursal}}</td>
@@ -516,7 +516,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr ng-repeat="eq in vm.equipes2Recurso | orderBy:vm.sort.equipes2.field:vm.sort.equipes2.reverse track by $index" class="clickable" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
+            <tr ng-repeat="eq in vm.equipes2Recurso | orderBy:vm.sort.equipes2.field:vm.sort.equipes2.reverse track by $index" class="clickable" ng-class="{'m300-added': eq._fromM300 === true}" ng-click="vm.abrirPopup('equipe', 'equipe', eq.nome)">
               <td><strong>{{eq.nome}}</strong></td>
               <td>{{eq.polo}}</td>
               <td>{{eq.sucursal}}</td>

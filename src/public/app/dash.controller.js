@@ -1104,6 +1104,178 @@
       loadDeslocamentos();
     }
 
+    function _eqKey(nome) {
+      return (nome || '').trim().toUpperCase();
+    }
+
+    function _hasDateTime(v) {
+      if (!v) return false;
+      if (v === '—' || v === '-') return false;
+      var s = String(v).trim();
+      return s !== '' && s !== '—' && s !== '-';
+    }
+
+    function _parseM300Date(v) {
+      if (!_hasDateTime(v)) return null;
+      if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+      var s = String(v).trim();
+
+      // ISO / RFC formats
+      var d1 = new Date(s);
+      if (!isNaN(d1.getTime())) return d1;
+
+      // dd/MM/yyyy HH:mm[:ss]
+      var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/);
+      if (m) {
+        var day = parseInt(m[1], 10);
+        var mon = parseInt(m[2], 10) - 1;
+        var yr  = parseInt(m[3], 10);
+        var hh  = parseInt(m[4], 10);
+        var mm  = parseInt(m[5], 10);
+        var ss  = m[6] ? parseInt(m[6], 10) : 0;
+        var d2  = new Date(yr, mon, day, hh, mm, ss);
+        return isNaN(d2.getTime()) ? null : d2;
+      }
+
+      return null;
+    }
+
+    function _applyM300ProductividadeEquipes() {
+      var deslItems = (vm.deslocamentos && vm.deslocamentos.items) || [];
+      if (!Array.isArray(deslItems) || deslItems.length === 0) return;
+      if (!Array.isArray(vm.equipes)) return;
+      if (!Proc || typeof Proc.isEquipeExtra !== 'function') return;
+
+      // Indexa equipes já existentes (API)
+      var existing = {};
+      vm.equipes.forEach(function (eq) {
+        var k = _eqKey(eq && eq.nome);
+        if (k) existing[k] = true;
+      });
+
+      // Stats por equipe encontrados no M300
+      // key -> { nome, atribSet, emergSet, earliestDesp, latestAny }
+      var stats = {};
+      deslItems.forEach(function (d) {
+        var nome = (d && d.equipe ? String(d.equipe) : '').trim();
+        if (!nome) return;
+        var k = _eqKey(nome);
+        if (!k) return;
+
+        var ordem = (d && d.ordem != null ? String(d.ordem) : '').trim();
+        if (!ordem || ordem === '—' || ordem === '-') return;
+
+        if (!stats[k]) {
+          stats[k] = {
+            nome: nome,
+            atribSet: {},
+            emergSet: {},
+            earliestDesp: null,
+            latestAny: null
+          };
+        }
+
+        var dtDesp = _parseM300Date(d.despachado);
+        if (dtDesp && (!stats[k].earliestDesp || dtDesp.getTime() < stats[k].earliestDesp.getTime())) {
+          stats[k].earliestDesp = dtDesp;
+        }
+
+        // Última data considerada para tempo de serviço: max(despachado, noLocal, liberada)
+        var dtNoLocal = _parseM300Date(d.noLocal);
+        var dtLib     = _parseM300Date(d.liberada);
+        var latestRow = null;
+        [dtDesp, dtNoLocal, dtLib].forEach(function (dt) {
+          if (!dt) return;
+          if (!latestRow || dt.getTime() > latestRow.getTime()) latestRow = dt;
+        });
+        if (latestRow && (!stats[k].latestAny || latestRow.getTime() > stats[k].latestAny.getTime())) {
+          stats[k].latestAny = latestRow;
+        }
+
+        var hasAC  = _hasDateTime(d.aCaminho);
+        var hasLib = _hasDateTime(d.liberada);
+
+        // 2) Atribuídas: incidências sem Liberada e sem A Caminho
+        if (!hasLib && !hasAC) {
+          stats[k].atribSet[ordem] = true;
+        }
+
+        // 3) Emergenciais: incidências com Liberada preenchido
+        if (hasLib) {
+          stats[k].emergSet[ordem] = true;
+        }
+      });
+
+      // Atualiza SOMENTE equipes adicionadas via M300 (não sobrescreve as do Overview)
+      vm.equipes.forEach(function (eq) {
+        if (!eq || eq._fromM300 !== true) return;
+        var k = _eqKey(eq.nome);
+        if (!k || !stats[k]) return;
+        var st = stats[k];
+
+        var atribCount = Object.keys(st.atribSet).length;
+        var emergCount = Object.keys(st.emergSet).length;
+        var horas = 0;
+        if (st.earliestDesp && st.latestAny) {
+          horas = Math.floor((st.latestAny.getTime() - st.earliestDesp.getTime()) / 3600000);
+          if (horas < 0) horas = 0;
+        }
+
+        var prodHora = horas > 0 ? Math.round((emergCount / horas) * 100) / 100 : 0;
+
+        eq.atribuidas = atribCount;
+        eq.emergenciais = emergCount;
+        eq.tempoServico = horas;
+        eq.dataHoraInicio = st.earliestDesp ? st.earliestDesp.toISOString() : '';
+        eq.produtividadeHora = prodHora;
+      });
+
+      var added = 0;
+      Object.keys(stats).forEach(function (k) {
+        if (existing[k]) return;
+        var st = stats[k];
+
+        var atribCount = Object.keys(st.atribSet).length;
+        var emergCount = Object.keys(st.emergSet).length;
+        var horas = 0;
+        if (st.earliestDesp && st.latestAny) {
+          horas = Math.floor((st.latestAny.getTime() - st.earliestDesp.getTime()) / 3600000);
+          if (horas < 0) horas = 0;
+        }
+
+        var prodHora = horas > 0 ? Math.round((emergCount / horas) * 100) / 100 : 0;
+
+        vm.equipes.push({
+          nome: st.nome,
+          polo: vm.selectedPolo || '—',
+          sucursal: '—',
+          nivelTensao: '—',
+          nivelTensaoAtual: '—',
+          atribuidas: atribCount,
+          improdutivas: 0,
+          emergenciais: emergCount,
+          comerciais: 0,
+          tempoServico: horas,
+          dataHoraInicio: st.earliestDesp ? st.earliestDesp.toISOString() : '',
+          produtividadeHora: prodHora,
+          _fromM300: true
+        });
+
+        existing[k] = true;
+        added++;
+      });
+
+      if (added > 0) {
+        // Recalcular extras usando as tags do .env (Proc.isEquipeExtra)
+        vm.equipes2Recurso = vm.equipes.filter(function (eq) { return Proc.isEquipeExtra(eq.nome); });
+        vm.totalEquipes = vm.equipes.length;
+        vm.totalEquipes2 = vm.equipes2Recurso.length;
+        vm.kpis.totalEquipes = vm.totalEquipes;
+        $timeout(buildAllCharts, 100);
+        console.log('[Ctrl] Equipes adicionadas via M300: ' + added);
+      }
+    }
+
     // ── Deslocamentos ──────────────────────────────────
     // Contador de geração: garante que respostas atrasadas (de um polo
     // anterior) não sobrescrevam dados de uma requisição mais recente.
@@ -1140,6 +1312,8 @@
           };
           // Re-enriquecer top10 com novos dados de deslocamentos
           _applyDeslEnrichment();
+          // Aplicar produtividade/equipes faltantes vindas do M300
+          _applyM300ProductividadeEquipes();
           vm.loadingDesl = false;
           _checkPoloChangeDone();
           console.log('[Ctrl] Deslocamentos carregados: ' + vm.deslocamentos.total + ' itens');
@@ -1258,6 +1432,9 @@
           vm.equipes2Recurso = result.equipes2Recurso;
           vm.totalEquipes    = result.totalEquipes;
           vm.totalEquipes2   = result.totalEquipes2;
+
+          // Se já temos M300, adiciona equipes faltantes e calcula produtividade
+          _applyM300ProductividadeEquipes();
 
           vm.kpis.totalEquipes = vm.totalEquipes;
           vm.loadingEq = false;
