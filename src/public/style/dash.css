@@ -722,6 +722,7 @@ body {
   white-space: nowrap;
   border-right: none;
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--border);
   position: sticky;
   top: 0;
   z-index: 2;
@@ -890,7 +891,10 @@ body {
   color: var(--section-panorama);
 }
 [data-theme="dark"] .panorama-panel .data-table thead th {
+  background-color: var(--bg-card);
+  background-image: linear-gradient(var(--section-panorama-light), var(--section-panorama-light));
   color: var(--section-panorama);
+  box-shadow: 0 1px 0 var(--border);
 }
 .panorama-panel .data-table tfoot td {
   background: var(--section-panorama-light);
@@ -921,7 +925,10 @@ body {
   color: var(--section-top10);
 }
 [data-theme="dark"] .top10-panel .data-table thead th {
+  background-color: var(--bg-card);
+  background-image: linear-gradient(var(--section-top10-light), var(--section-top10-light));
   color: var(--section-top10);
+  box-shadow: 0 1px 0 var(--border);
 }
 .top10-panel .data-table { font-size: 12px; }
 .top10-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
@@ -957,7 +964,10 @@ body {
   color: var(--section-equipes);
 }
 [data-theme="dark"] .equipes-panel .data-table thead th {
+  background-color: var(--bg-card);
+  background-image: linear-gradient(var(--section-equipes-light), var(--section-equipes-light));
   color: var(--section-equipes);
+  box-shadow: 0 1px 0 var(--border);
 }
 .equipes-panel .data-table { font-size: 12px; }
 .equipes-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
@@ -1006,7 +1016,10 @@ body {
   color: var(--section-desl);
 }
 [data-theme="dark"] .desl-panel .data-table thead th {
+  background-color: var(--bg-card);
+  background-image: linear-gradient(var(--section-desl-light), var(--section-desl-light));
   color: var(--section-desl);
+  box-shadow: 0 1px 0 var(--border);
 }
 .desl-panel .data-table { font-size: 12px; }
 .desl-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
@@ -1032,7 +1045,10 @@ body {
   color: var(--section-equipes2);
 }
 [data-theme="dark"] .equipes2-panel .data-table thead th {
+  background-color: var(--bg-card);
+  background-image: linear-gradient(var(--section-equipes2-light), var(--section-equipes2-light));
   color: var(--section-equipes2);
+  box-shadow: 0 1px 0 var(--border);
 }
 .equipes2-panel .data-table { font-size: 12px; }
 .equipes2-panel .data-table thead th { font-size: 11px; padding: 8px 10px; }
