@@ -31,6 +31,7 @@
     var ALERTED_BTMT_KEY   = 'northradar_alerted_btmt';
     var ALERTED_VITALS_KEY = 'northradar_alerted_vitals';
     var PREV_INC_KEY       = 'northradar_prev_inc';
+    var TTS_VOICE_KEY      = 'northradar_tts_voice';
 
     // ── View-model state ─────────────────────────────────
     vm.polos          = ['TODOS', 'ATLANTICO', 'DECEN', 'DNORT'];
@@ -2274,7 +2275,16 @@
         ];
         vm.alertModal.dados   = [];
         vm.alertModal.colunas = [];
-        _speakAlert('Aten\u00e7\u00e3o. incid\u00eancia final ' + suffix + ' subiu para MT');
+        var _qtdClientes = inc.clientesAfetadosAtual || 0;
+
+        // Falar apenas os 4 últimos dígitos, um por vez (a, b, c, d)
+        var _numDigits = String(inc.numero || '').replace(/\D/g, '');
+        var _last4 = _numDigits.slice(-4) || String(inc.numero || '').slice(-4);
+        var _spoken = String(_last4).split('').join(', ');
+
+        var _msg = 'A Incid\u00eancia ' + _spoken + ' escalou com ' + _qtdClientes + ' clientes';
+        if (_qtdClientes > 300) { _msg += '. Vai se acabar? kkk'; }
+        _speakAlert(_msg);
 
       } else if (alertObj.tipo === 'vital') {
         vm.alertModal.tipo   = 'vital';
@@ -2319,11 +2329,38 @@
         window.speechSynthesis.cancel();
         var repeats = 3;
         var count   = 0;
+
+        function _pickVoice() {
+          var synth = window.speechSynthesis;
+          if (!synth || !synth.getVoices) return null;
+          var voices = synth.getVoices() || [];
+          if (!voices.length) return null;
+
+          var preferredName = null;
+          try { preferredName = localStorage.getItem(TTS_VOICE_KEY); } catch (e) { /* ignore */ }
+          if (preferredName) {
+            for (var i = 0; i < voices.length; i++) {
+              if (voices[i] && voices[i].name === preferredName) return voices[i];
+            }
+          }
+
+          // fallback: qualquer voz pt-BR; se não houver, qualquer pt
+          for (var j = 0; j < voices.length; j++) {
+            if (voices[j] && voices[j].lang === 'pt-BR') return voices[j];
+          }
+          for (var k = 0; k < voices.length; k++) {
+            if (voices[k] && voices[k].lang && String(voices[k].lang).toLowerCase().indexOf('pt') === 0) return voices[k];
+          }
+          return null;
+        }
+
         function _speak() {
           var utt   = new SpeechSynthesisUtterance(text);
           utt.lang  = 'pt-BR';
           utt.rate  = 0.9;
           utt.pitch = 1;
+          var v = _pickVoice();
+          if (v) utt.voice = v;
           utt.onend = function () {
             count++;
             if (count < repeats) {
