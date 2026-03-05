@@ -188,6 +188,7 @@
     vm.avancarAlerta      = avancarAlerta;
     vm.buscarIncidencias  = buscarIncidencias;
     vm.limparBusca        = limparBusca;
+    vm.isBuscaHit         = isBuscaHit;
 
     // ── Global keyboard shortcut — Ctrl+K opens search bar ──
     document.addEventListener('keydown', function (e) {
@@ -1749,11 +1750,27 @@
 
       vm.sort.popup = { field: '', reverse: false };
       console.log('[Ctrl] Busca universal: "' + q + '" → ' + dados.length + ' resultados');
+
+      // Centraliza o scroll horizontal para a informação "vir de cara"
+      $timeout(function () {
+        var body = document.querySelector('.popup-body');
+        if (!body) return;
+        var maxLeft = body.scrollWidth - body.clientWidth;
+        if (maxLeft > 0) body.scrollLeft = Math.floor(maxLeft / 2);
+      }, 0);
     }
 
     function limparBusca() {
       vm.searchQuery = '';
       vm.searchResultCount = 0;
+    }
+
+    function isBuscaHit(value) {
+      var q = (vm.searchQuery || '').toLowerCase().trim();
+      if (!q || q.length < 2) return false;
+      if (value === null || value === undefined || value === false) return false;
+      var s = String(value).toLowerCase();
+      return s.indexOf(q) >= 0;
     }
 
     function fecharPopup() {

@@ -1036,7 +1036,10 @@
           <tbody>
             <tr ng-repeat="row in vm.popup.dados | orderBy:vm.sort.popup.field:vm.sort.popup.reverse track by $index">
               <td ng-repeat="col in vm.popup.colunasContexto"
-                  ng-class="{'cell-expandable': ('' + (row[col.key] || '')).length > 35}"
+                  ng-class="{
+                    'cell-expandable': ('' + (row[col.key] || '')).length > 35,
+                    'search-hit': vm.popup.contextoCampo === 'busca' && vm.isBuscaHit(row[col.key])
+                  }"
                   ng-click="('' + (row[col.key] || '')).length > 35 && vm.expandCell($event, col.label, row[col.key])">
 
                 <!-- Incidência (hiperlink) -->

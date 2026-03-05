@@ -1697,6 +1697,16 @@ body {
   white-space: nowrap;
   position: relative;
 }
+
+@keyframes search-hit-blink {
+  0%, 100% { background: transparent; color: inherit; }
+  50% { background: var(--warning-bg); color: var(--warning); }
+}
+
+.popup-table tbody td.search-hit {
+  animation: search-hit-blink 0.95s ease-in-out infinite;
+  box-shadow: none;
+}
 .popup-table tbody td.cell-expandable { cursor: pointer; }
 .popup-table tbody td.cell-expandable:hover { background: rgba(0,0,0,0.02); }
 [data-theme="dark"] .popup-table tbody td.cell-expandable:hover { background: rgba(255,255,255,0.03); }
