@@ -1751,12 +1751,34 @@
       vm.sort.popup = { field: '', reverse: false };
       console.log('[Ctrl] Busca universal: "' + q + '" → ' + dados.length + ' resultados');
 
-      // Centraliza o scroll horizontal para a informação "vir de cara"
+      // Leva o scroll até a primeira célula que contém o termo buscado
+      // (evita ficar "adivinhando" no scroll horizontal)
       $timeout(function () {
         var body = document.querySelector('.popup-body');
         if (!body) return;
-        var maxLeft = body.scrollWidth - body.clientWidth;
-        if (maxLeft > 0) body.scrollLeft = Math.floor(maxLeft / 2);
+
+        var firstHit = document.querySelector('.popup-table tbody td.search-hit');
+        if (firstHit) {
+          var bodyRect = body.getBoundingClientRect();
+          var hitRect  = firstHit.getBoundingClientRect();
+
+          // horizontal: centraliza a célula no viewport do container
+          var hitLeftWithin = (hitRect.left - bodyRect.left) + body.scrollLeft;
+          var desiredLeft = Math.floor(hitLeftWithin - (body.clientWidth / 2) + (hitRect.width / 2));
+          var maxLeft = body.scrollWidth - body.clientWidth;
+          if (maxLeft > 0) body.scrollLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
+
+          // vertical: garante visibilidade sem pular exagerado
+          var hitTopWithin = (hitRect.top - bodyRect.top) + body.scrollTop;
+          var desiredTop = Math.floor(hitTopWithin - (body.clientHeight / 2) + (hitRect.height / 2));
+          var maxTop = body.scrollHeight - body.clientHeight;
+          if (maxTop > 0) body.scrollTop = Math.max(0, Math.min(maxTop, desiredTop));
+          return;
+        }
+
+        // Fallback: centraliza horizontalmente se não houver hits (ex: busca muito curta)
+        var maxLeft2 = body.scrollWidth - body.clientWidth;
+        if (maxLeft2 > 0) body.scrollLeft = Math.floor(maxLeft2 / 2);
       }, 0);
     }
 
