@@ -22,12 +22,15 @@
     var vm = this;
 
     // ── LocalStorage keys (declarados antes de qualquer uso) ─
-    var VIEW_KEY     = 'northradar_view';
-    var THEME_KEY    = 'northradar_theme';
-    var POLO_KEY     = 'northradar_polo';
-    var OP_ORDER_KEY = 'northradar_op_order';
-    var AN_ORDER_KEY = 'northradar_an_order';
-    var IGNORED_KEY  = 'northradar_ignored_inc';
+    var VIEW_KEY           = 'northradar_view';
+    var THEME_KEY          = 'northradar_theme';
+    var POLO_KEY           = 'northradar_polo';
+    var OP_ORDER_KEY       = 'northradar_op_order';
+    var AN_ORDER_KEY       = 'northradar_an_order';
+    var IGNORED_KEY        = 'northradar_ignored_inc';
+    var ALERTED_BTMT_KEY   = 'northradar_alerted_btmt';
+    var ALERTED_VITALS_KEY = 'northradar_alerted_vitals';
+    var PREV_INC_KEY       = 'northradar_prev_inc';
 
     // ── View-model state ─────────────────────────────────
     vm.polos          = ['TODOS', 'ATLANTICO', 'DECEN', 'DNORT'];
@@ -58,8 +61,9 @@
     vm.rawIncidencias        = [];
 
     // ── Alert state ──────────────────────────────────────
-    vm._prevIncMap    = {};   // {numero: {nivelTensao}} — estado da última atualização
-    vm._alertedVitals = {};   // {numero: true} — já alertou cliente vital nessa sessão
+    vm._prevIncMap    = _loadJson(PREV_INC_KEY,       {});  // persiste entre reloads
+    vm._alertedBtmt   = _loadJson(ALERTED_BTMT_KEY,   {});  // inc já alertadas BT→MT
+    vm._alertedVitals = _loadJson(ALERTED_VITALS_KEY, {});  // inc já alertadas vital
     var _alertQueue        = [];   // fila de alertas pendentes
     var _alertShowing      = false;
     var _alertAutoClose    = null;  // $timeout promise para fechar automático
@@ -942,12 +946,16 @@
     function changePolo(polo) {
       vm.selectedPolo = polo;
       savePolo(polo);
-      // Reset alert state when polo changes to avoid false positives
+      // Limpa todo o estado de alertas ao trocar de polo
       vm._prevIncMap    = {};
+      vm._alertedBtmt   = {};
       vm._alertedVitals = {};
       _alertQueue       = [];
       _alertShowing     = false;
       vm.alertModal.visible = false;
+      try { localStorage.removeItem(PREV_INC_KEY);       } catch (e) {}
+      try { localStorage.removeItem(ALERTED_BTMT_KEY);   } catch (e) {}
+      try { localStorage.removeItem(ALERTED_VITALS_KEY); } catch (e) {}
       loadAll();
     }
 
@@ -2084,12 +2092,15 @@
       var isFirstLoad = Object.keys(vm._prevIncMap).length === 0;
 
       if (!isFirstLoad) {
-        // 1) Escalada BT → MT
+        // 1) Escalada BT → MT (apenas se ainda não alertado persistentemente)
         items.forEach(function (inc) {
           if (!Helpers.isActive(inc)) return;
+          if (vm._alertedBtmt[inc.numero]) return;  // já alertado antes
           var prev = vm._prevIncMap[inc.numero];
           if (prev && prev.nivelTensao === 'BT' &&
               inc.nivelTensao && inc.nivelTensao.indexOf('MT') === 0) {
+            vm._alertedBtmt[inc.numero] = true;
+            _saveJson(ALERTED_BTMT_KEY, vm._alertedBtmt);
             var duracaoH = Helpers.parseDuracao(inc.duracao);
             var chi = Math.round((inc.clientesAfetadosAtual || 0) * duracaoH * 10) / 10;
             _enqueueAlert({ tipo: 'btmt', inc: inc, chi: chi });
@@ -2097,7 +2108,7 @@
         });
       }
 
-      // 2) Cliente Vital com aviso (dispara uma vez por incidência por sessão)
+      // 2) Cliente Vital com aviso (dispara uma única vez, persiste após reload)
       items.forEach(function (inc) {
         if (!Helpers.isActive(inc)) return;
         if (vm._alertedVitals[inc.numero]) return;
@@ -2107,15 +2118,17 @@
         });
         if (vitais.length > 0) {
           vm._alertedVitals[inc.numero] = true;
+          _saveJson(ALERTED_VITALS_KEY, vm._alertedVitals);
           _enqueueAlert({ tipo: 'vital', inc: inc, vitais: vitais });
         }
       });
 
-      // Atualizar mapa de estado anterior para próxima comparação
+      // Atualizar mapa de estado anterior e persistir para próximos reloads
       vm._prevIncMap = {};
       items.forEach(function (inc) {
         vm._prevIncMap[inc.numero] = { nivelTensao: inc.nivelTensao };
       });
+      _saveJson(PREV_INC_KEY, vm._prevIncMap);
 
       _processAlertQueue();
     }
@@ -2233,7 +2246,20 @@
       $timeout(_processAlertQueue, 200);
     }
 
-    // ── Helper privado ───────────────────────────────────
+    // ── Helpers privados ──────────────────────────────────
+
+    function _loadJson(key, fallback) {
+      try {
+        var raw = localStorage.getItem(key);
+        if (raw) return JSON.parse(raw);
+      } catch (e) { /* ignore */ }
+      return fallback;
+    }
+
+    function _saveJson(key, value) {
+      try { localStorage.setItem(key, JSON.stringify(value)); }
+      catch (e) { /* ignore */ }
+    }
 
     function extractErrorMsg(err) {
       if (err.data && err.data.error) return err.data.error;
